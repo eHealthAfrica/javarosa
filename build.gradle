@@ -81,6 +81,8 @@ javadoc {
 }
 
 jmh {
+    //exclude = ['\\w']
+    include = ['(benchmarkParseInternalSecondaryInstance)']
     threads = 1
     fork = 1
     timeout = '10s'
