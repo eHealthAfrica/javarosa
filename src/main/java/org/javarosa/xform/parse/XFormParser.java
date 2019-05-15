@@ -2168,7 +2168,7 @@ public class XFormParser implements IXFormParserFunctions {
     /**
      * reads all subsequent text nodes and returns the combined string
      * needed because escape sequences are parsed into consecutive text nodes
-     * e.g. "abc&amp;123" --> (abc)(&)(123)
+     * e.g. "abc--and123" --> (abc)(&)(123)
      **/
     public static String getXMLText(Node node, int i, boolean trim) {
         StringBuilder strBuff = null;
