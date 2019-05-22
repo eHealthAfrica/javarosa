@@ -79,16 +79,16 @@ javadoc {
 }
 
 jmh {
-    //exclude = ['\\w']
-    //include = ['(benchmarkParseInternalSecondaryInstance)']
+    //exclude = ['(benchmark_method_template)']
+    //include = ['(benchmarkBuildLGAs)']
     threads = 1
     fork = 1
     timeout = '10s'
     warmup = '2s'
-    warmupIterations = 10
+    warmupIterations = 5
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 20
+    iterations = 10
     timeOnIteration = '2s'
     timeUnit = 's'
     benchmarkMode = ['avgt']
