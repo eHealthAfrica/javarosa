@@ -80,7 +80,7 @@ javadoc {
 
 jmh {
     //exclude = ['(benchmark_method_template)']
-    //include = ['(FormDefCacheInternal2ndryInstanceBenchMark)']
+    include = ['(XFormParserBenchmarkSkipWhitespace)']
     threads = 1
     fork = 1
     timeout = '10s'

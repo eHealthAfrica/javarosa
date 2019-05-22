@@ -397,7 +397,7 @@ public class XFormParser implements IXFormParserFunctions {
     }
 
     public static Document getXMLDocument(Reader reader, boolean ignoreWhitespaceParsing) throws IOException {
-        return getXMLDocument(reader, ignoreWhitespaceParsing);
+        return getXMLDocument(reader,null, ignoreWhitespaceParsing);
     }
 
     public static Document getXMLDocument(Reader reader) throws IOException {
