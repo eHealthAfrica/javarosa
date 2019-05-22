@@ -91,7 +91,7 @@ jmh {
     iterations = 20
     timeOnIteration = '2s'
     timeUnit = 's'
-    benchmarkMode = ['avgt','ss']
+    benchmarkMode = ['avgt']
     includeTests = true
     resultFormat = 'CSV'
     forceGC = true
