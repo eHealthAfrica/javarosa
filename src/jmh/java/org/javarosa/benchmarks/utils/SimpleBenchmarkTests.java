@@ -193,7 +193,7 @@ public class SimpleBenchmarkTests {
         //Setup reference manager
         ReferenceManagerTestUtils.setUpSimpleReferenceManager("file", prepareAssets());
         //Parse File to FormDef
-        FormDef formDef = FormParserHelper.parse(resourcePath);
+        FormDef formDef = FormParserHelper.parse(resourcePath, true);
         //Save to cache
         FormDefCache.writeCache(formDef, resourcePath.toAbsolutePath().toString());
         //Read from cache

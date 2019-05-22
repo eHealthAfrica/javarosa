@@ -80,7 +80,7 @@ javadoc {
 
 jmh {
     //exclude = ['(benchmark_method_template)']
-    //include = ['(benchmarkBuildLGAs)']
+    //include = ['(FormDefCacheInternal2ndryInstanceBenchMark)']
     threads = 1
     fork = 1
     timeout = '10s'
