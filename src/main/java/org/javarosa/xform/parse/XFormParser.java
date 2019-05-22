@@ -155,6 +155,11 @@ public class XFormParser implements IXFormParserFunctions {
     private Reader _instReader;
     private Document _instDoc;
 
+    public void setIgnoreWhitespaceParsing(boolean ignoreWhitespaceParsing) {
+        this.ignoreWhitespaceParsing = ignoreWhitespaceParsing;
+    }
+
+    private boolean ignoreWhitespaceParsing = false;
     private boolean modelFound;
     private Localizer localizer;
     private HashMap<String, DataBinding> bindingsByID;
@@ -363,7 +368,7 @@ public class XFormParser implements IXFormParserFunctions {
             logger.info("Parsing form...");
 
             if (_xmldoc == null) {
-                _xmldoc = getXMLDocument(_reader, stringCache);
+                _xmldoc = getXMLDocument(_reader, stringCache, ignoreWhitespaceParsing);
             }
 
             parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
@@ -391,8 +396,17 @@ public class XFormParser implements IXFormParserFunctions {
         return namespacePrefixesByURI;
     }
 
+    public static Document getXMLDocument(Reader reader, boolean ignoreWhitespaceParsing) throws IOException {
+        return getXMLDocument(reader,null, ignoreWhitespaceParsing);
+    }
+
     public static Document getXMLDocument(Reader reader) throws IOException {
         return getXMLDocument(reader, null);
+    }
+
+    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
+        throws IOException {
+        return getXMLDocument(reader, stringCache, false);
     }
 
     /**
@@ -406,10 +420,10 @@ public class XFormParser implements IXFormParserFunctions {
      * @deprecated The InterningKXmlParser is not used.
      */
     @Deprecated
-    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
+    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache, boolean ignoreWhitespaceParsing)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
-        Document doc = new Document();
+        Document doc = new Document(ignoreWhitespaceParsing);
 
         try {
             KXmlParser parser;
@@ -2168,7 +2182,7 @@ public class XFormParser implements IXFormParserFunctions {
     /**
      * reads all subsequent text nodes and returns the combined string
      * needed because escape sequences are parsed into consecutive text nodes
-     * e.g. "abc&amp;123" --> (abc)(&)(123)
+     * e.g. "abc--and123" --> (abc)(&)(123)
      **/
     public static String getXMLText(Node node, int i, boolean trim) {
         StringBuilder strBuff = null;

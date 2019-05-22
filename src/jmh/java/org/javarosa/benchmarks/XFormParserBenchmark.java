@@ -47,10 +47,20 @@ public class XFormParserBenchmark {
 
     @Benchmark
     public void
-    benchmarkParseExternalInstanceXFormOnly(XFormParserState state, Blackhole bh)
+    benchmarkParseMinifiedInternalInstanceXForm(XFormParserState state, Blackhole bh)
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         Reader reader = new FileReader(state.xFormInternalSecondaryInstancesMinified.toFile());
+        Document kxmlDocument = XFormParser.getXMLDocument(reader);
+        bh.consume(kxmlDocument);
+    }
+
+    @Benchmark
+    public void
+    benchmarkParseExternalInstanceXFormOnly(XFormParserState state, Blackhole bh)
+        throws IOException, XmlPullParserException, InvalidReferenceException,
+        UnfullfilledRequirementsException, InvalidStructureException {
+        Reader reader = new FileReader(state.xFormExternalSecondaryInstances.toFile());
         Document kxmlDocument = XFormParser.getXMLDocument(reader);
         bh.consume(kxmlDocument);
     }

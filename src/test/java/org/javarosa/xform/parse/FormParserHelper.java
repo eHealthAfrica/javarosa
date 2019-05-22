@@ -16,6 +16,10 @@ public final class FormParserHelper {
         return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()));
     }
 
+    public static FormDef parse(Path formName, boolean ignoreWhitespaceParsing) throws IOException {
+        return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()), ignoreWhitespaceParsing);
+    }
+
     public static FormDef parse(Path formName, String lastSavedSrc) throws IOException {
         return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()), lastSavedSrc);
     }

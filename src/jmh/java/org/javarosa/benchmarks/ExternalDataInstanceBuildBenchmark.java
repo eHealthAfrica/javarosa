@@ -2,6 +2,7 @@ package org.javarosa.benchmarks;
 
 import org.javarosa.core.model.instance.ExternalDataInstance;
 import org.javarosa.core.reference.InvalidReferenceException;
+import org.javarosa.core.reference.ReferenceManagerTestUtils;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -20,7 +21,7 @@ import static org.javarosa.benchmarks.BenchmarkUtils.prepareAssets;
 
 public class ExternalDataInstanceBuildBenchmark {
     public static void main(String[] args) {
-        dryRun(FormDefValidateBenchmark.class);
+        dryRun(ExternalDataInstanceBuildBenchmark.class);
     }
 
     @State(Scope.Thread)
@@ -28,6 +29,7 @@ public class ExternalDataInstanceBuildBenchmark {
         @Setup(Level.Trial)
         public void initialize() {
             Path assetsDir = prepareAssets("wards.xml", "lgas.xml");
+            ReferenceManagerTestUtils.setUpSimpleReferenceManager("file", assetsDir);
         }
     }
 

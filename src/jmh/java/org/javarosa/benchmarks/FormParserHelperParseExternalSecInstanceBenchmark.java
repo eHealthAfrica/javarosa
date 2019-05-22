@@ -25,15 +25,15 @@ public class FormParserHelperParseExternalSecInstanceBenchmark {
 
         @Setup(Level.Trial)
         public void initialize() {
-            Path assetsPath = prepareAssets("nigeria_wards_external.xml", "lgas.xml", "wards.xml");
-            xFormFilePath = assetsPath.resolve("nigeria_wards_external.xml");
+            Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance.xml", "lgas.xml", "wards.xml");
+            xFormFilePath = assetsPath.resolve("nigeria_wards_internal_2ndry_instance.xml");
             setUpSimpleReferenceManager("file", assetsPath);
         }
     }
 
     @Benchmark
     public void
-    benchmark_FormParserHelper_parse_external_secondary_instance(FormParserHelperParseExternalSecondaryInstanceState state, Blackhole bh) throws IOException {
+    benchmarkFormParserHelperParseExternalSecondaryInstance(FormParserHelperParseExternalSecondaryInstanceState state, Blackhole bh) throws IOException {
         bh.consume(FormParserHelper.parse(state.xFormFilePath));
     }
 
