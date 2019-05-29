@@ -410,10 +410,10 @@ public class XFormParser implements IXFormParserFunctions {
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
-        KXmlParser parser;
         Document doc = new Document();
 
         try {
+            KXmlParser parser;
 
 
             if (stringCache != null) {
