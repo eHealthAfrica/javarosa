@@ -1,0 +1,122 @@
+package org.javarosa.core.model.instance;
+
+import org.javarosa.core.reference.InvalidReferenceException;
+import org.javarosa.core.reference.ReferenceManager;
+import org.javarosa.core.util.externalizable.DeserializationException;
+import org.javarosa.core.util.externalizable.ExtUtil;
+import org.javarosa.core.util.externalizable.PrototypeFactory;
+import org.javarosa.xml.ElementParser;
+import org.javarosa.xml.TreeElementParser;
+import org.javarosa.xml.util.InvalidStructureException;
+import org.javarosa.xml.util.UnfullfilledRequirementsException;
+import org.kxml2.io.KXmlParser;
+import org.kxml2.kdom.Element;
+import org.kxml2.kdom.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+// This is still a work in progress.
+
+public class InternalDataInstance extends DataInstance {
+    private static final Logger logger = LoggerFactory.getLogger(InternalDataInstance.class.getSimpleName());
+    private String path;
+    private TreeElement root;
+
+    // todo Make @mdudzinski’s recommended changes from https://github.com/opendatakit/javarosa/pull/154#pullrequestreview-51806826
+
+    /**
+     * No-args constructor for deserialization
+     */
+    public InternalDataInstance() {
+    }
+
+    private InternalDataInstance(TreeElement root, String instanceId, String xFormpath) {
+        super(instanceId);
+        this.path = path;
+        setName(instanceId);
+        setRoot(root);
+    }
+
+    /**
+     * Builds an InternalDataInstance
+     *
+     * @param xFormSrc the value of the instance’s src attribute…
+     * @param instanceId  the ID of the new instance
+     * @return a new ExternalDataInstance
+     * @throws IOException                       if FileInputStream can’t find the file, or ElementParser can’t read the stream
+     * @throws InvalidReferenceException         if the ReferenceManager in getPath(String srcLocation) can’t derive a reference
+     * @throws UnfullfilledRequirementsException thrown by {@link TreeElementParser#parse()}
+     * @throws XmlPullParserException            thrown by {@link TreeElementParser#parse()}
+     * @throws InvalidStructureException         thrown by {@link TreeElementParser#parse()}
+     */
+    public static InternalDataInstance build(String xFormSrc, String instanceId)
+        throws IOException, UnfullfilledRequirementsException, XmlPullParserException, InvalidStructureException, InvalidReferenceException {
+        TreeElement root = parseInternalInstance(xFormSrc, instanceId);
+        return new InternalDataInstance(root, instanceId, xFormSrc);
+    }
+
+    private static TreeElement parseInternalInstance(String xFormSrc, String instanceId) throws IOException, InvalidReferenceException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
+        return XmlExternalInstance.parse(instanceId, xFormSrc);
+    }
+
+    @Override
+    public AbstractTreeElement getBase() {
+        return root;
+    }
+
+    @Override
+    public AbstractTreeElement getRoot() {
+        if (root.getNumChildren() == 0)
+            throw new RuntimeException("root node has no children");
+
+        return root.getChildAt(0);
+    }
+
+    private void setRoot(TreeElement topLevel) {
+        root = new TreeElement();
+        root.setInstanceName(getName());
+        root.addChild(topLevel);
+    }
+
+    @Override
+    public void initialize(InstanceInitializationFactory initializer, String instanceId) {
+    }
+
+    @Override
+    public void readExternal(DataInputStream in, PrototypeFactory pf)
+        throws IOException, DeserializationException {
+        super.readExternal(in, pf);
+        path = ExtUtil.readString(in);
+        try {
+            setRoot(parseInternalInstance(path, getInstanceId()));
+        } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
+            throw new DeserializationException("Unable to parse external instance: " + e);
+        }
+    }
+
+    @Override
+    public void writeExternal(DataOutputStream out) throws IOException {
+        super.writeExternal(out);
+        ExtUtil.write(out, path);
+    }
+
+    public static TreeElement parse(String instanceId, String path) throws IOException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
+        InputStream inputStream = new FileInputStream(path);
+        KXmlParser xmlParser = ElementParser.instantiateParser(inputStream);
+        TreeElementParser treeElementParser = new TreeElementParser(xmlParser, 0, instanceId);
+        return treeElementParser.parse();
+    }
+
+
+
+}

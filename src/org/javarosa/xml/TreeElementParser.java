@@ -25,6 +25,11 @@ public class TreeElementParser extends ElementParser<TreeElement> {
     }
 
     @Override
+    public TreeElement parse(String... skipSubTrees) throws InvalidStructureException, IOException, XmlPullParserException, UnfullfilledRequirementsException {
+        return parse();
+    }
+
+    @Override
     public TreeElement parse() throws InvalidStructureException, IOException,
             XmlPullParserException, UnfullfilledRequirementsException {
 

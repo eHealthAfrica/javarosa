@@ -94,6 +94,8 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
+import org.javarosa.xml.ElementParser;
+import org.javarosa.xml.KxmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
@@ -409,20 +411,21 @@ public class XFormParser implements IXFormParserFunctions {
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
+        KXmlParser parser = new KXmlParser();
         Document doc = new Document();
 
         try {
-            KXmlParser parser;
+
 
             if (stringCache != null) {
                 parser = new InterningKXmlParser(stringCache);
+                doc.parse(parser);
             } else {
-                parser = new KXmlParser();
+                parser.setInput(reader);
+                KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
+                doc.addChild(Node.ELEMENT, kxmlElementParser.parse("instance"));
             }
 
-            parser.setInput(reader);
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-            doc.parse(parser);
         } catch (XmlPullParserException e) {
             String errorMsg = "XML Syntax Error at Line: " + e.getLineNumber() + ", Column: " + e.getColumnNumber() + "!";
             logger.error(errorMsg, e);
@@ -525,6 +528,7 @@ public class XFormParser implements IXFormParserFunctions {
         logger.info(codeTimer.logLine("Creating FormDef from parsed XML"));
     }
 
+
     private String parseInstanceSrc(Element instance, String lastSavedSrc) {
         String rawSrc = instance.getAttributeValue(null, "src");
         String rawSrcLower = rawSrc == null ? null : rawSrc.toLowerCase();
@@ -558,6 +562,12 @@ public class XFormParser implements IXFormParserFunctions {
         "delHeader"
     )));
 
+    /**
+     *
+     * @param e
+     * @param parent
+     * @param handlers
+     */
     private void parseElement(Element e, Object parent, HashMap<String, IElementHandler> handlers) {
         String name = e.getName();
 

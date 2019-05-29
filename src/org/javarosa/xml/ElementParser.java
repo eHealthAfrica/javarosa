@@ -1,14 +1,20 @@
 package org.javarosa.xml;
 
+import org.kxml2.kdom.Element;
+import org.kxml2.kdom.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.kxml2.io.KXmlParser;
+import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * <p>Element Parser is the core parsing element for XML files. Implementations
@@ -74,6 +80,22 @@ public abstract class ElementParser<T> {
         }
     }
 
+
+    /**
+     * Parses the XML document at the current level, returning the datatype
+     * described by the document but skips parsing element in skipSubTrees
+     *
+     * @param skipSubTrees List of subtree element names to exclude from the parsed tree
+     * @return The datatype which is described by the appropriate XML
+     * definition.
+     * @throws InvalidStructureException If the XML does not contain properly
+     *                                   structured XML
+     * @throws IOException               If there is a problem retrieving the document
+     * @throws XmlPullParserException    If the document does not contain well-
+     *                                   formed XML.
+     */
+    public abstract T parse(String ...skipSubTrees) throws InvalidStructureException, IOException, XmlPullParserException, UnfullfilledRequirementsException;
+
     /**
      * Parses the XML document at the current level, returning the datatype
      * described by the document.
@@ -96,4 +118,16 @@ public abstract class ElementParser<T> {
         }
         return ret;
     }
+
+
+    int nextInstanceNode() throws XmlPullParserException, IOException {
+        int ret = nextNonWhitespace();
+        if (ret == Node.ELEMENT && parser.getName().equals("instance") ) {
+            return ret;
+        }else{
+            nextNonWhitespace();
+        }
+        return ret;
+    }
+
 }
