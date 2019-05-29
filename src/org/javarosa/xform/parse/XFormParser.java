@@ -94,7 +94,6 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
-import org.javarosa.xml.ElementParser;
 import org.javarosa.xml.KxmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
@@ -411,7 +410,7 @@ public class XFormParser implements IXFormParserFunctions {
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
-        KXmlParser parser = new KXmlParser();
+        KXmlParser parser;
         Document doc = new Document();
 
         try {
@@ -421,6 +420,7 @@ public class XFormParser implements IXFormParserFunctions {
                 parser = new InterningKXmlParser(stringCache);
                 doc.parse(parser);
             } else {
+                parser = new KXmlParser();
                 parser.setInput(reader);
                 KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
                 doc.addChild(Node.ELEMENT, kxmlElementParser.parse("instance"));
