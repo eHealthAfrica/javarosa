@@ -415,13 +415,15 @@ public class XFormParser implements IXFormParserFunctions {
         try {
             KXmlParser parser;
 
-
             if (stringCache != null) {
                 parser = new InterningKXmlParser(stringCache);
+                parser.setInput(reader);
+                parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
                 doc.parse(parser);
             } else {
-                parser = new KXmlParser();
-                parser.setInput(reader);
+                parser = new KXmlParser(); parser.setInput(reader);
+                parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
+                parser.next();
                 KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
                 doc.addChild(Node.ELEMENT, kxmlElementParser.parse("instance"));
             }
@@ -562,12 +564,6 @@ public class XFormParser implements IXFormParserFunctions {
         "delHeader"
     )));
 
-    /**
-     *
-     * @param e
-     * @param parent
-     * @param handlers
-     */
     private void parseElement(Element e, Object parent, HashMap<String, IElementHandler> handlers) {
         String name = e.getName();
 

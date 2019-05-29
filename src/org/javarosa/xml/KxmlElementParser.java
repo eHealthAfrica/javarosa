@@ -22,44 +22,18 @@ import java.util.Map;
 
 /**
  * @author johnthebeloved
+ * Most of logic copied from #TreeElementParser
+ * Implementation builds Elements as in TreeElement parser and
+ * also can be used to skip white space to improve performance
  */
 public class KxmlElementParser extends ElementParser<Element> {
 
     public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException {
         super(parser);
-        initialize(reader);
 
     }
 
     private static final Logger logger = LoggerFactory.getLogger(KxmlElementParser.class);
-
-    /**
-     * Prepares a parser that will be used by the element parser, configuring relevant
-     * parameters and setting it to the appropriate point in the document.
-     *
-     * @param reader A stream which is reading the XML content
-     *               of the document.
-     * @throws IOException If the stream cannot be read for any reason
-     *                     other than invalid XML Structures.
-     */
-    public void initialize(Reader reader) throws IOException {
-       try {
-            parser.setInput(reader);
-            parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
-
-            //Point to the first available tag.
-            parser.next();
-
-        } catch (XmlPullParserException e) {
-            // TODO Auto-generated catch block
-            logger.error("Element Parser", e);
-            throw new IOException(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            throw new IOException(e.getMessage());
-        }
-    }
-
 
     public Element parse(String ...skipSubTrees)
         throws IOException, XmlPullParserException {

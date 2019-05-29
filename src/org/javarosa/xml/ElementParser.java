@@ -83,9 +83,9 @@ public abstract class ElementParser<T> {
 
     /**
      * Parses the XML document at the current level, returning the datatype
-     * described by the document but skips parsing element in skipSubTrees
+     * described by the document but skips parsing element names provided in skipSubTrees
      *
-     * @param skipSubTrees List of subtree element names to exclude from the parsed tree
+     * @param skipSubTrees String array of subtree element names to exclude from the parsed root
      * @return The datatype which is described by the appropriate XML
      * definition.
      * @throws InvalidStructureException If the XML does not contain properly
@@ -115,17 +115,6 @@ public abstract class ElementParser<T> {
         int ret = parser.next();
         if (ret == KXmlParser.TEXT && parser.isWhitespace()) {
             ret = parser.next();
-        }
-        return ret;
-    }
-
-
-    int nextInstanceNode() throws XmlPullParserException, IOException {
-        int ret = nextNonWhitespace();
-        if (ret == Node.ELEMENT && parser.getName().equals("instance") ) {
-            return ret;
-        }else{
-            nextNonWhitespace();
         }
         return ret;
     }
