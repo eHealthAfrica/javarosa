@@ -94,6 +94,7 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
+import org.javarosa.xml.KxmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
@@ -416,13 +417,17 @@ public class XFormParser implements IXFormParserFunctions {
 
             if (stringCache != null) {
                 parser = new InterningKXmlParser(stringCache);
+                parser.setInput(reader);
+                parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
+                doc.parse(parser);
             } else {
-                parser = new KXmlParser();
+                parser = new KXmlParser(); parser.setInput(reader);
+                parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
+                parser.next();
+                KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
+                doc.addChild(Node.ELEMENT, kxmlElementParser.parse("instance"));
             }
 
-            parser.setInput(reader);
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-            doc.parse(parser);
         } catch (XmlPullParserException e) {
             String errorMsg = "XML Syntax Error at Line: " + e.getLineNumber() + ", Column: " + e.getColumnNumber() + "!";
             logger.error(errorMsg, e);
@@ -524,6 +529,7 @@ public class XFormParser implements IXFormParserFunctions {
 
         logger.info(codeTimer.logLine("Creating FormDef from parsed XML"));
     }
+
 
     private String parseInstanceSrc(Element instance, String lastSavedSrc) {
         String rawSrc = instance.getAttributeValue(null, "src");
