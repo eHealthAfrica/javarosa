@@ -1,7 +1,8 @@
-package org.javarosa.benchmarks.utils;
+package org.javarosa.benchmarks.tests;
 
 
 import org.javarosa.benchmarks.BenchmarkUtils;
+import org.javarosa.benchmarks.utils.FormDefCache;
 import org.javarosa.core.model.CoreModelModule;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
