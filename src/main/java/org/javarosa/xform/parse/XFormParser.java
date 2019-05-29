@@ -108,7 +108,6 @@ import org.kxml2.kdom.Element;
 import org.kxml2.kdom.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 /* droos: i think we need to start storing the contents of the <bind>s in the formdef again */
@@ -425,7 +424,7 @@ public class XFormParser implements IXFormParserFunctions {
                 parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
                 parser.next();
                 KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
-                doc.addChild(Node.ELEMENT, kxmlElementParser.parse("instance"));
+                doc.addChild(Node.ELEMENT, kxmlElementParser.parse());
             }
 
         } catch (XmlPullParserException e) {
