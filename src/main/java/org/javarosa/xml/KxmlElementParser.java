@@ -1,11 +1,6 @@
 package org.javarosa.xml;
 
-import org.javarosa.core.model.data.UncastData;
-import org.javarosa.core.model.instance.TreeElement;
-import org.javarosa.xml.util.InvalidStructureException;
-import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.kxml2.io.KXmlParser;
-import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
 import org.kxml2.kdom.Node;
 import org.slf4j.Logger;
@@ -17,7 +12,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,17 +33,8 @@ public class KxmlElementParser extends ElementParser<Element> {
         throws IOException, XmlPullParserException {
 
         final int depth = parser.getDepth();
-        Element element =   new Element().createElement(parser.getNamespace(), parser.getName());
-        for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
-             i < parser.getNamespaceCount (parser.getDepth ()); i++) {
-            element.setPrefix (parser.getNamespacePrefix (i), parser.getNamespaceUri(i));
-        }
-
-        for (int i = 0; i < parser.getAttributeCount(); ++i) {
-            element.setAttribute(parser.getAttributeNamespace(i), parser.getAttributeName(i), parser.getAttributeValue(i));
-        }
+        Element element = initCurrentElement();
         final Map<String, Integer> multiplicitiesByName = new HashMap();
-
         while (parser.getDepth() >= depth) {
             int type = nextNonWhitespace();
             switch (type) {
@@ -84,11 +69,8 @@ public class KxmlElementParser extends ElementParser<Element> {
        return Arrays.asList(texts).contains(text);
     }
 
+    private Element initCurrentElement(){
 
-    public Element parse()
-        throws IOException, XmlPullParserException {
-
-        final int depth = parser.getDepth();
         Element element =   new Element().createElement(parser.getNamespace(), parser.getName());
         for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
              i < parser.getNamespaceCount (parser.getDepth ()); i++) {
@@ -98,8 +80,15 @@ public class KxmlElementParser extends ElementParser<Element> {
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             element.setAttribute(parser.getAttributeNamespace(i), parser.getAttributeName(i), parser.getAttributeValue(i));
         }
-        final Map<String, Integer> multiplicitiesByName = new HashMap();
+        return element;
+    }
 
+
+    public Element parse()
+        throws IOException, XmlPullParserException {
+        final int depth = parser.getDepth();
+        Element element = initCurrentElement();
+        final Map<String, Integer> multiplicitiesByName = new HashMap();
         while (parser.getDepth() >= depth) {
             int type = nextNonWhitespace();
             switch (type) {
