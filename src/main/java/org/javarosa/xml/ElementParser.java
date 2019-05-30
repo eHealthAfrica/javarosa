@@ -83,21 +83,6 @@ public abstract class ElementParser<T> {
 
     /**
      * Parses the XML document at the current level, returning the datatype
-     * described by the document but skips parsing element names provided in skipSubTrees
-     *
-     * @param skipSubTrees String array of subtree element names to exclude from the parsed root
-     * @return The datatype which is described by the appropriate XML
-     * definition.
-     * @throws InvalidStructureException If the XML does not contain properly
-     *                                   structured XML
-     * @throws IOException               If there is a problem retrieving the document
-     * @throws XmlPullParserException    If the document does not contain well-
-     *                                   formed XML.
-     */
-    public abstract T parse(String ...skipSubTrees) throws InvalidStructureException, IOException, XmlPullParserException, UnfullfilledRequirementsException;
-
-    /**
-     * Parses the XML document at the current level, returning the datatype
      * described by the document.
      *
      * @return The datatype which is described by the appropriate XML

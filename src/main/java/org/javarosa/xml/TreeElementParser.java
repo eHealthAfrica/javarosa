@@ -2,13 +2,21 @@ package org.javarosa.xml;
 
 import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.model.instance.TreeElement;
+import org.javarosa.core.model.instance.XmlExternalInstance;
+import org.javarosa.core.reference.InvalidReferenceException;
+import org.javarosa.core.util.InvalidIndexException;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.kxml2.io.KXmlParser;
+import org.kxml2.kdom.Node;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,11 +30,6 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         super(parser);
         this.multiplicity = multiplicity;
         this.instanceId = instanceId;
-    }
-
-    @Override
-    public TreeElement parse(String... skipSubTrees) throws InvalidStructureException, IOException, XmlPullParserException, UnfullfilledRequirementsException {
-        throw  new UnsupportedOperationException("Skipping subtrees not currently supported for TreeElement");
     }
 
     @Override
@@ -66,4 +69,59 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
         return element;
     }
+
+
+    public TreeElement parseInternalInstance(Integer index) throws IOException, InvalidReferenceException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
+
+        final int depth = parser.getDepth();
+        int foundInstanceIndex = -1;
+
+        findInstanceNode();
+        while (parser.getDepth() >= depth) {
+            while(findInstanceNode()){
+                foundInstanceIndex+=1;
+                if(foundInstanceIndex == index){
+                    return new TreeElementParser(parser, 0, "").parse();
+                }else{
+                    parser.skipSubTree();
+                }
+            }
+        }
+        throw new InvalidIndexException(String.format("The instance index %s was not found in the XForm file at ", index), index.toString());
+    }
+
+
+    public List<TreeElement> parseInternalInstance() throws IOException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
+        List<TreeElement> internalInstances = new ArrayList<>();
+        final int depth = parser.getDepth();
+        while (parser.getDepth() >= depth) {
+            while(findInstanceNode()){
+                TreeElement treeElement = new TreeElementParser(parser, 0, "").parse();
+                if(treeElement.getAttributeValue("","id") !=null){
+                    String instanceId = treeElement.getAttributeValue("","id");
+                    if(instanceId != null){
+                        treeElement.setInstanceName(instanceId);
+                        internalInstances.add(treeElement);
+                    }
+                }
+            }
+        }
+        return internalInstances;
+    }
+
+
+
+
+
+    public boolean findInstanceNode() throws XmlPullParserException, IOException {
+        int ret = nextNonWhitespace();
+        if (ret == Node.ELEMENT && parser.getName().equals("instance") ) {
+            return true;
+        }else if(ret != KXmlParser.END_TAG) {
+            return false;
+        }else {
+            return findInstanceNode();
+        }
+    }
+
 }

@@ -22,31 +22,40 @@ import java.util.Map;
  */
 public class KxmlElementParser extends ElementParser<Element> {
 
-    public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException {
+    private ElementSkipper[] elementSkippers;
+
+    public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException, XmlPullParserException {
         super(parser);
+        parser.setInput(reader);
+        parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
+        //Point to the first available tag.
+        parser.next();
 
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(KxmlElementParser.class);
+    public KxmlElementParser(KXmlParser parser, Reader reader, ElementSkipper ...elementSkippers) throws IOException, XmlPullParserException {
+        this(parser, reader);
+        this.elementSkippers = elementSkippers;
+    }
 
-    public Element parse(String ...skipSubTrees)
+
+    public Element parse()
         throws IOException, XmlPullParserException {
 
         final int depth = parser.getDepth();
         Element element = initCurrentElement();
         final Map<String, Integer> multiplicitiesByName = new HashMap();
         while (parser.getDepth() >= depth) {
-            int type = nextNonWhitespace();
-            switch (type) {
+            switch (nextNonWhitespace()) {
                 case XmlPullParser.START_TAG:
                     String name = parser.getName();
-                    if(containsElementName(name, skipSubTrees)){
+                    if(shouldSkip(name, elementSkippers)){
                         parser.skipSubTree();
                     }else{
                         final Integer multiplicity = multiplicitiesByName.get(name);
                         int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
                         multiplicitiesByName.put(name, newMultiplicity);
-                        Element childElement = parse(skipSubTrees);
+                        Element childElement = parse();
                         element.addChild(Node.ELEMENT, childElement);
                     }
                     break;
@@ -65,8 +74,14 @@ public class KxmlElementParser extends ElementParser<Element> {
 
     }
 
-    private boolean containsElementName(String text, String ...texts){
-       return Arrays.asList(texts).contains(text);
+    private boolean shouldSkip(String elementName, ElementSkipper ...elementSkippers){
+       for(int e= 0;e<elementSkippers.length; e++){
+           ElementSkipper elementSkipper = elementSkippers[e];
+           if(elementSkipper.skip(elementName)){
+               return true;
+           }
+       }
+       return false;
     }
 
     private Element initCurrentElement(){
@@ -83,35 +98,35 @@ public class KxmlElementParser extends ElementParser<Element> {
         return element;
     }
 
+    /**
+     * Abstracts algorithm for skipping child elements
+     * I am aware this could be implemented with XPath
+     */
+    public static class ElementSkipper
+    {
+        private String elementName;
+        private int from;
+        private int to;
+        private int index;
 
-    public Element parse()
-        throws IOException, XmlPullParserException {
-        final int depth = parser.getDepth();
-        Element element = initCurrentElement();
-        final Map<String, Integer> multiplicitiesByName = new HashMap();
-        while (parser.getDepth() >= depth) {
-            int type = nextNonWhitespace();
-            switch (type) {
-                case XmlPullParser.START_TAG:
-                    String name = parser.getName();
-                    final Integer multiplicity = multiplicitiesByName.get(name);
-                    int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
-                    multiplicitiesByName.put(name, newMultiplicity);
-                    Element childElement = parse();
-                    element.addChild(Node.ELEMENT, childElement);
-                    break;
-                case XmlPullParser.END_TAG:
-                    return element;
-                case XmlPullParser.TEXT:
-                    if (parser.getText() != null)
-                        element.addChild(Node.TEXT, parser.getText().trim());
-                    break;
-                default:
-                    throw new XmlPullParserException(
-                        "Exception while trying to parse an XML Tree, got something other than tags and text");
-            }
+        public ElementSkipper(String elementName, int from){
+            this(elementName,from, 0);
         }
-        return  element;
+
+        public ElementSkipper(String elementName, int from, int to){
+            this.from = from;
+            this.to = to;
+            index = -1;
+            this.elementName = elementName;
+        }
+
+        public boolean skip(String elementName){
+            if(this.elementName.equals(elementName)){
+                index+=1;
+                return (index >= from && (index <= to || to == 0));
+            }
+            return false;
+        }
 
     }
 

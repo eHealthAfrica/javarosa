@@ -1,6 +1,7 @@
 package org.javarosa.xform.parse;
 
-import java.io.Reader;
+import java.io.*;
+import java.nio.file.Path;
 
 import org.javarosa.core.util.CacheTable;
 import org.kxml2.kdom.Document;
@@ -24,6 +25,12 @@ public class XFormParserFactory implements IXFormParserFactory {
 
     public XFormParserFactory(CacheTable<String> stringCache) {
         this.stringCache = stringCache;
+    }
+
+    public XFormParser getXFormParser(String xFormPath) throws IOException {
+        XFormParser parser = new XFormParser(xFormPath);
+        init(parser);
+        return parser;
     }
 
     public XFormParser getXFormParser(Reader reader) {
