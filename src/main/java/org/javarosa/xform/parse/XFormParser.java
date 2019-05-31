@@ -372,7 +372,7 @@ public class XFormParser implements IXFormParserFunctions {
             logger.info("Parsing form...");
 
             if (_xmldoc == null) {
-                _xmldoc = getXMLDocument(_xFormPath, _reader, stringCache);
+                _xmldoc = getXMLDocument(_reader, stringCache);
             }
 
             parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
@@ -405,7 +405,11 @@ public class XFormParser implements IXFormParserFunctions {
 //    }
 
     public static Document getXMLDocument(Reader reader) throws IOException {
-        return getXMLDocument(reader, null);
+        return getXMLDocument(reader, null, false);
+    }
+
+    public static Document getXMLDocument(Reader reader, boolean skipSecondaryInstance) throws IOException {
+        return getXMLDocument(reader, null, skipSecondaryInstance);
     }
 
     /**
@@ -421,7 +425,7 @@ public class XFormParser implements IXFormParserFunctions {
     @Deprecated
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
-        return getXMLDocument(null, reader, stringCache);
+        return getXMLDocument(reader, stringCache, false);
     }
 
     /**
@@ -451,15 +455,14 @@ public class XFormParser implements IXFormParserFunctions {
             } else {
                 parser = new KXmlParser();
                 if(skipInternalInstance){
-                    //Skip parsing the Internal secondary instances in the xform
+                    //Skip parsing the internal secondary instances in the XForm
                     //This assumes the first instance node is the main instance
                     //or how else?
                     ElementSkipper elementSkipper = new ElementSkipper("instance",1);
                     KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader, elementSkipper);
-                    Element htmlElement = kxmlElementParser.parse();
-                    doc.addChild(Node.ELEMENT, htmlElement);
+                    doc = kxmlElementParser.parseDoc();
                 }else{
-                    //Parse the old way
+                    //Parses the whole xform
                     parser.setInput(reader);
                     parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                     doc.parse(parser);
@@ -516,7 +519,7 @@ public class XFormParser implements IXFormParserFunctions {
                 final String instanceId = instanceNodeIdStrs.get(instanceIndex);
                 final String instanceSrc = parseInstanceSrc(instance, lastSavedSrc);
 
-                //Parse External instance
+                //External secondary instances
                 // Disable jr://file-csv/ support by explicitly only supporting jr://file/
                 // until https://github.com/opendatakit/javarosa/issues/417 is addressed
                 if (instanceSrc != null && instanceSrc.toLowerCase().startsWith("jr://file/")) {
@@ -531,7 +534,9 @@ public class XFormParser implements IXFormParserFunctions {
                     }
                     _f.addNonMainInstance(externalDataInstance);
                 } else {
+                    //Internal Secondary instances
                     if(_xFormPath != null){
+                        //Internal secondary instances were not parsed with xform - skipped
                         final InternalDataInstance internalDataInstance;
                         try{
                             internalDataInstance = InternalInstanceParser.build( _xFormPath, instanceId);
@@ -543,7 +548,7 @@ public class XFormParser implements IXFormParserFunctions {
                         }
                         _f.addNonMainInstance(internalDataInstance);
                     }else {
-                        //Go the old way
+                        //Internal instances already parsed
                         FormInstance fi = instanceParser.parseInstance(instance, false,
                             instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
                         loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below

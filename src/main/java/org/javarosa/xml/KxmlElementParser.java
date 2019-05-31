@@ -1,6 +1,7 @@
 package org.javarosa.xml;
 
 import org.kxml2.io.KXmlParser;
+import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
 import org.kxml2.kdom.Node;
 import org.xmlpull.v1.XmlPullParser;
@@ -13,17 +14,22 @@ import java.util.Map;
 
 /**
  * @author johnthebeloved
- * Most of logic copied from #TreeElementParser
- * Implementation builds Elements as in TreeElement parser and
- * also can be used to skip white space to improve performance
+ *
+ * <p>
+ *     Alternative to using KXMLParser.parse() for creating
+ *     KXML Documents.
+ *     Element creation logic copied from from #TreeElementParser
+ *     implementation, builds Element instead of #TreeElement  as
+ *     done in #TreeElementParser.
+ * </p>
+ * <p>
+ *      Also skips creating whitespace elements to improve parsing time.
+ * </p>
  */
 public class KxmlElementParser extends ElementParser<Element> {
 
-    private ElementSkipper[] elementSkippers;
-
-    public KxmlElementParser(Reader reader) throws IOException, XmlPullParserException {
-        this(new KXmlParser(), reader);
-    }
+    private ElementSkipper[] elementsToSkip;
+    private Element elementCreator;
 
     public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException, XmlPullParserException {
         super(parser);
@@ -31,15 +37,38 @@ public class KxmlElementParser extends ElementParser<Element> {
         parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
         //Point to the first available tag.
         parser.next();
-
+        elementCreator = new Element();
     }
 
-    public KxmlElementParser(KXmlParser parser, Reader reader, ElementSkipper ...elementSkippers) throws IOException, XmlPullParserException {
+    public KxmlElementParser(KXmlParser parser, Reader reader,ElementSkipper ...elementsToSkip) throws IOException, XmlPullParserException {
         this(parser, reader);
-        this.elementSkippers = elementSkippers;
+        this.elementsToSkip = elementsToSkip;
     }
 
+    /**
+     * Creates a KXML Document from the KXML parser
+     * and skips creating whitespace nodes
+     *
+     * @return The Document analogous to doc.parse() in KXML
+     * @throws IOException There was an issue reading the XML File
+     * @throws XmlPullParserException There was an issue Parsing the XML File
+     */
+    public Document parseDoc() throws IOException, XmlPullParserException {
+        Document document = new Document();
+        Element root = parse();
+        document.addChild(Node.ELEMENT, root);
+        return document;
+    }
 
+    /**
+     * Parses the current parser into an ELEMENT
+     * from the current position of the KXMLParser instance used
+     *
+     * @return KXML Element which is the Element at the current
+     * parsing position
+     * @throws IOException There was an issue reading the XML File
+     * @throws XmlPullParserException There was an issue Parsing the XML File
+     */
     public Element parse()
         throws IOException, XmlPullParserException {
 
@@ -50,7 +79,7 @@ public class KxmlElementParser extends ElementParser<Element> {
             switch (nextNonWhitespace()) {
                 case XmlPullParser.START_TAG:
                     String name = parser.getName();
-                    if(shouldSkipSubTree(name, elementSkippers)){
+                    if(shouldSkipSubTree(name, elementsToSkip)){
                         Element elementToSkip = initCurrentElement();
                         element.addChild(Node.ELEMENT,elementToSkip);
                         parser.skipSubTree();
@@ -77,9 +106,20 @@ public class KxmlElementParser extends ElementParser<Element> {
 
     }
 
-    private boolean shouldSkipSubTree(String elementName, ElementSkipper ...elementSkippers){
-       for(int e= 0;e<elementSkippers.length; e++){
-           ElementSkipper elementSkipper = elementSkippers[e];
+    /**
+     * Check to see if parser should
+     * skip the parsing child nodes
+     * of the provided element name
+     *
+     * @param elementName The Element name that it's children shouldn't
+     *                    be parsed
+     * @param elementsToSkip Representation of predefined elements
+     *                       intended to be skip
+     * @return if this Element should be skipped
+     */
+    private boolean shouldSkipSubTree(String elementName, ElementSkipper ...elementsToSkip){
+       for(int e= 0;e<elementsToSkip.length; e++){
+           ElementSkipper elementSkipper = elementsToSkip[e];
            if(elementSkipper.skip(elementName)){
                return true;
            }
@@ -87,8 +127,12 @@ public class KxmlElementParser extends ElementParser<Element> {
        return false;
     }
 
+    /**
+     * Sets the namespaces and attribute nodes of the current element
+     * @return Element
+     */
     private Element initCurrentElement(){
-        Element element = new Element();
+        Element element = elementCreator.createElement("", parser.getName());
         element.setName(parser.getName());
         for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
              i < parser.getNamespaceCount (parser.getDepth ()); i++) {

@@ -28,6 +28,7 @@ public class XFormParserFactory implements IXFormParserFactory {
     }
 
     public XFormParser getXFormParser(String xFormPath) throws IOException {
+        //xForm path is used in XFormParser
         XFormParser parser = new XFormParser(xFormPath);
         init(parser);
         return parser;
