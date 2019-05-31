@@ -326,8 +326,16 @@ public class XFormParser implements IXFormParserFunctions {
 
     CacheTable<String> stringCache;
 
-    public XFormParser(String xFormPath) throws IOException {
-        this(new InputStreamReader(new FileInputStream(xFormPath), "UTF-8"));
+    /**
+     * Instantiates the XFormParser using the provided
+     * path to an XForm while keeping a reference to the path,
+     * the path is also used for creating the internal instance
+     *
+     * @param xFormPath The path to the XForm file
+     * @throws FileNotFoundException
+     */
+    public XFormParser(String xFormPath) throws FileNotFoundException {
+        this(new FileReader(xFormPath));
         _xFormPath = xFormPath;
     }
 
@@ -354,9 +362,10 @@ public class XFormParser implements IXFormParserFunctions {
     }
 
     /**
+     *  @see #parse()
+     *
      * @param lastSavedSrc The src of the last-saved instance of this form (for auto-filling). If null,
      *                     no data will be loaded and the instance will be blank.
-     * @see #parse()
      */
     public FormDef parse(String lastSavedSrc) throws IOException {
         if (_f == null) {
@@ -366,7 +375,7 @@ public class XFormParser implements IXFormParserFunctions {
                 _xmldoc = getXMLDocument(_xFormPath, _reader, stringCache);
             }
 
-            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), null, lastSavedSrc);
+            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
 
             //load in a custom xml instance, if applicable
             if (_instReader != null) {
@@ -390,6 +399,10 @@ public class XFormParser implements IXFormParserFunctions {
 
         return namespacePrefixesByURI;
     }
+
+//    public static Document getXMLDocument(String xFormPath) throws IOException {
+//        return getXMLDocument(xFormPath, new FileReader(xFormPath), null);
+//    }
 
     public static Document getXMLDocument(Reader reader) throws IOException {
         return getXMLDocument(reader, null);
@@ -422,7 +435,7 @@ public class XFormParser implements IXFormParserFunctions {
      * @deprecated The InterningKXmlParser is not used.
      */
     @Deprecated
-    public static Document getXMLDocument(String xFormPath, Reader reader, CacheTable<String> stringCache)
+    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache,boolean skipInternalInstance)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
         Document doc = new Document();
@@ -437,12 +450,16 @@ public class XFormParser implements IXFormParserFunctions {
                 doc.parse(parser);
             } else {
                 parser = new KXmlParser();
-                if(xFormPath != null){
+                if(skipInternalInstance){
+                    //Skip parsing the Internal secondary instances in the xform
+                    //This assumes the first instance node is the main instance
+                    //or how else?
                     ElementSkipper elementSkipper = new ElementSkipper("instance",1);
                     KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader, elementSkipper);
-                    doc.addChild(Node.ELEMENT, kxmlElementParser.parse());
+                    Element htmlElement = kxmlElementParser.parse();
+                    doc.addChild(Node.ELEMENT, htmlElement);
                 }else{
-                    //parse the old way
+                    //Parse the old way
                     parser.setInput(reader);
                     parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                     doc.parse(parser);
@@ -476,7 +493,7 @@ public class XFormParser implements IXFormParserFunctions {
         return doc;
     }
 
-    private void parseDoc(Map<String, String> namespacePrefixesByUri,String xFormPath, String lastSavedSrc) {
+    private void parseDoc(Map<String, String> namespacePrefixesByUri, String lastSavedSrc) {
         final StopWatch codeTimer = StopWatch.start();
         _f = new FormDef();
 

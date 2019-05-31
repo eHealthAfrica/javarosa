@@ -13,7 +13,6 @@ import org.kxml2.kdom.Document;
  *
  */
 public interface IXFormParserFactory {
-    public XFormParser getXFormParser(String xFormSrc) throws IOException;
 
     public XFormParser getXFormParser(Reader reader);
 

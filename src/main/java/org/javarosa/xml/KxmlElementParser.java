@@ -21,6 +21,10 @@ public class KxmlElementParser extends ElementParser<Element> {
 
     private ElementSkipper[] elementSkippers;
 
+    public KxmlElementParser(Reader reader) throws IOException, XmlPullParserException {
+        this(new KXmlParser(), reader);
+    }
+
     public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException, XmlPullParserException {
         super(parser);
         parser.setInput(reader);
