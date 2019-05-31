@@ -46,7 +46,6 @@ import static org.javarosa.xform.parse.RandomizeHelper.cleanSeedDefinition;
 import static org.javarosa.xform.parse.RangeParser.populateQuestionWithRangeAttributes;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -87,6 +86,7 @@ import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
 import org.javarosa.xml.ElementSkipper;
+import org.javarosa.xml.InternalInstanceParser;
 import org.javarosa.xml.KxmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
@@ -517,7 +517,7 @@ public class XFormParser implements IXFormParserFunctions {
                     if(_xFormPath != null){
                         final InternalDataInstance internalDataInstance;
                         try{
-                            internalDataInstance = InternalDataInstance.build( _xFormPath, instanceId);
+                            internalDataInstance = InternalInstanceParser.build( _xFormPath, instanceId);
                         } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
                             XmlPullParserException | InvalidReferenceException e) {
                             String msg = "Unable to parse internal secondary instance";
