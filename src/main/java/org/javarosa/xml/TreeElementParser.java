@@ -2,7 +2,6 @@ package org.javarosa.xml;
 
 import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.model.instance.TreeElement;
-import org.javarosa.core.model.instance.XmlExternalInstance;
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.core.util.InvalidIndexException;
 import org.javarosa.xml.util.InvalidStructureException;
@@ -11,9 +10,7 @@ import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Node;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +23,9 @@ public class TreeElementParser extends ElementParser<TreeElement> {
     private final int multiplicity;
     private final String instanceId;
 
+    private static final String INSTANCE_ELEMENT = "instance";
+    private static final String ID_ATTR = "is";
+
     public TreeElementParser(KXmlParser parser, int multiplicity, String instanceId) {
         super(parser);
         this.multiplicity = multiplicity;
@@ -34,7 +34,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
     @Override
     public TreeElement parse() throws InvalidStructureException, IOException,
-            XmlPullParserException, UnfullfilledRequirementsException {
+            XmlPullParserException {
 
         final int depth = parser.getDepth();
         final TreeElement element = new TreeElement(parser.getName(), multiplicity);
@@ -71,42 +71,70 @@ public class TreeElementParser extends ElementParser<TreeElement> {
     }
 
 
-    public TreeElement parseInternalInstance(Integer index) throws IOException, InvalidReferenceException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
-
+    /**
+     * Returns the internal secondary instance with the instance ID created
+     * Used for deserializing
+     * @return The TreeElement node of the internal instance
+     * @throws IOException
+     * @throws InvalidReferenceException
+     * @throws InvalidStructureException
+     * @throws XmlPullParserException
+     * @throws UnfullfilledRequirementsException
+     */
+    public TreeElement parseInternalSecondaryInstance() throws IOException, InvalidReferenceException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
         final int depth = parser.getDepth();
+        //instance node is assumed not to be the first node
         int foundInstanceIndex = -1;
-
-        findInstanceNode();
         while (parser.getDepth() >= depth) {
             while(findInstanceNode()){
-                foundInstanceIndex+=1;
-                if(foundInstanceIndex == index){
-                    return new TreeElementParser(parser, 0, "").parse();
+                //instance names are in the default namespace
+                String instanceId = parser.getAttributeValue( null, "id");
+                if(this.instanceId.equals(instanceId)){
+                    return new TreeElementParser(parser, foundInstanceIndex, instanceId).parse();
                 }else{
                     parser.skipSubTree();
                 }
             }
         }
-        throw new InvalidIndexException(String.format("The instance index %s was not found in the XForm file at ", index), index.toString());
+        throw new InvalidReferenceException(String.format("The instance ID %s was not found in the XForm file ", instanceId),instanceId);
     }
 
-
-    public List<TreeElement> parseInternalInstance() throws IOException, InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException {
+    /**
+     *
+     * Parses the internal instances from an XForm (excluding the main instance)
+     * @return List of #TreeElement representation of the internal
+     * instance nodes.
+     *
+     * @throws IOException There was an error parsing the xml file
+     * @throws InvalidStructureException
+     * @throws XmlPullParserException
+     * @throws UnfullfilledRequirementsException
+     */
+    public List<TreeElement> parseInternalSecondaryInstances() throws InvalidStructureException, XmlPullParserException, UnfullfilledRequirementsException, IOException {
+        /**
+         * This could be implemented using the XPath reference to target specifically
+         * the path of the instance node, but currently, this targets any path where
+         * <instance></instance> node is found
+         */
         List<TreeElement> internalInstances = new ArrayList<>();
         final int depth = parser.getDepth();
-        while (parser.getDepth() >= depth) {
-            while(findInstanceNode()){
-                TreeElement treeElement = new TreeElementParser(parser, 0, "").parse();
-                if(treeElement.getAttributeValue("","id") !=null){
-                    String instanceId = treeElement.getAttributeValue("","id");
-                    if(instanceId != null){
-                        treeElement.setInstanceName(instanceId);
-                        internalInstances.add(treeElement);
+        if(depth > 0){
+            while (parser.getDepth() >= depth) {
+                while(findInstanceNode()){
+                    TreeElement treeElement = new TreeElementParser(parser, 0, "").parse();
+                    if(treeElement.getAttributeValue("","id") !=null){
+                        String instanceId = treeElement.getAttributeValue("","id");
+                        if(instanceId != null){
+                            treeElement.setInstanceName(instanceId);
+                            internalInstances.add(treeElement);
+                        }
                     }
                 }
             }
+            return internalInstances;
+        }else{
+            throw new InvalidStructureException("Invalid XML File, no detected xml node - Depth is 0");
         }
-        return internalInstances;
     }
 
 

@@ -3,14 +3,11 @@ package org.javarosa.xml;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Element;
 import org.kxml2.kdom.Node;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,7 +46,9 @@ public class KxmlElementParser extends ElementParser<Element> {
             switch (nextNonWhitespace()) {
                 case XmlPullParser.START_TAG:
                     String name = parser.getName();
-                    if(shouldSkip(name, elementSkippers)){
+                    if(shouldSkipSubTree(name, elementSkippers)){
+                        Element elementToSkip = initCurrentElement();
+                        element.addChild(Node.ELEMENT,elementToSkip);
                         parser.skipSubTree();
                     }else{
                         final Integer multiplicity = multiplicitiesByName.get(name);
@@ -74,7 +73,7 @@ public class KxmlElementParser extends ElementParser<Element> {
 
     }
 
-    private boolean shouldSkip(String elementName, ElementSkipper ...elementSkippers){
+    private boolean shouldSkipSubTree(String elementName, ElementSkipper ...elementSkippers){
        for(int e= 0;e<elementSkippers.length; e++){
            ElementSkipper elementSkipper = elementSkippers[e];
            if(elementSkipper.skip(elementName)){
@@ -85,8 +84,8 @@ public class KxmlElementParser extends ElementParser<Element> {
     }
 
     private Element initCurrentElement(){
-
-        Element element =   new Element().createElement(parser.getNamespace(), parser.getName());
+        Element element = new Element();
+        element.setName(parser.getName());
         for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
              i < parser.getNamespaceCount (parser.getDepth ()); i++) {
             element.setPrefix (parser.getNamespacePrefix (i), parser.getNamespaceUri(i));
@@ -97,39 +96,5 @@ public class KxmlElementParser extends ElementParser<Element> {
         }
         return element;
     }
-
-    /**
-     * Abstracts algorithm for skipping child elements
-     * I am aware this could be implemented with XPath
-     */
-    public static class ElementSkipper
-    {
-        private String elementName;
-        private int from;
-        private int to;
-        private int index;
-
-        public ElementSkipper(String elementName, int from){
-            this(elementName,from, 0);
-        }
-
-        public ElementSkipper(String elementName, int from, int to){
-            this.from = from;
-            this.to = to;
-            index = -1;
-            this.elementName = elementName;
-        }
-
-        public boolean skip(String elementName){
-            if(this.elementName.equals(elementName)){
-                index+=1;
-                return (index >= from && (index <= to || to == 0));
-            }
-            return false;
-        }
-
-    }
-
-
 
 }
