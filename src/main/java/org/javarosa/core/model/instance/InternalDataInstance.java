@@ -14,13 +14,16 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Copied and modified from implementation of #ExternalDataInstance
+ * Representation of an internal data instance.
+ *
+ * Created from implementation of #ExternalDataInstance with few differences.
+ *
+ * The path to XForm is stored instead of the path to the external data instance file
+ *
+ * Serialization logic also based on the XForm file instead of external instance file
+ *
  * @author johnthebeloved
  *
- * Representation of an InternalDataInstance.
- *
- *  Difference from #ExternalDataInstance is
- * the Path to the XForm instead of the path to the external data instance file
  */
 public class InternalDataInstance extends DataInstance {
     private String xFormPath;
@@ -32,6 +35,14 @@ public class InternalDataInstance extends DataInstance {
     public InternalDataInstance() {
     }
 
+    /**
+     *
+     * @param root The TreeElement represents the first child element of the internal
+     *             instance since internal instance always have only one child
+     *             which is the root of the ItemSets
+     * @param instanceId
+     * @param xFormPath
+     */
     public InternalDataInstance(TreeElement root, String instanceId, String xFormPath) {
         super(instanceId);
         this.xFormPath = xFormPath;
@@ -41,8 +52,7 @@ public class InternalDataInstance extends DataInstance {
 
 
     /**
-     *  Parses
-     *  * the XForm file to a TreeElement instead of Element in
+     *  Parses the XForm file to a TreeElement instead of Element in
      *  * KXML Library.
      * @return
      */

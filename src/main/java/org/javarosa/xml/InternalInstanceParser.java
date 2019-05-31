@@ -79,7 +79,8 @@ public class InternalInstanceParser {
         InputStream inputStream = new FileInputStream(xFormSrc);
         KXmlParser parser = ElementParser.instantiateParser(inputStream);
         TreeElement treeElement =  new TreeElementParser(parser, 0, instanceId).parseInternalSecondaryInstance();
-        return treeElement.getChildAt(0); //Returns the root TreeElement, not the instance node
+        //Returns the instance child TreeElement, not the instance TreeElement
+        return treeElement.getChildAt(0);
     }
 
 }
