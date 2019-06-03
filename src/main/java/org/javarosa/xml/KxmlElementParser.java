@@ -82,7 +82,7 @@ public class KxmlElementParser extends ElementParser<Element> {
                     if(shouldSkipSubTree(name, elementsToSkip)){
                         Element elementToSkip = initCurrentElement();
                         element.addChild(Node.ELEMENT,elementToSkip);
-                        parser.skipSubTree();
+                        skipSubTree();
                     }else{
                         final Integer multiplicity = multiplicitiesByName.get(name);
                         int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;

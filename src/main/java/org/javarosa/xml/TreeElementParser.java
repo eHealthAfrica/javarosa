@@ -92,7 +92,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                 if(this.instanceId.equals(instanceId)){
                     return new TreeElementParser(parser, foundInstanceIndex, instanceId).parse();
                 }else{
-                    parser.skipSubTree();
+                    skipSubTree();
                 }
             }
         }
@@ -136,10 +136,6 @@ public class TreeElementParser extends ElementParser<TreeElement> {
             throw new InvalidStructureException("Invalid XML File, no detected xml node - Depth is 0");
         }
     }
-
-
-
-
 
     public boolean findInstanceNode() throws XmlPullParserException, IOException {
         int ret = nextNonWhitespace();

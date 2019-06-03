@@ -372,7 +372,12 @@ public class XFormParser implements IXFormParserFunctions {
             logger.info("Parsing form...");
 
             if (_xmldoc == null) {
-                _xmldoc = getXMLDocument(_reader, stringCache);
+                if(_xFormPath == null){
+                    _xmldoc = getXMLDocument(_reader, stringCache);
+                }else{
+                    _xmldoc = getXMLDocument(_reader, stringCache, true);
+                }
+
             }
 
             parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
