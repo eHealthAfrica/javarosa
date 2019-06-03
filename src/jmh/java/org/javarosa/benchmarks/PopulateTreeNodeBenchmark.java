@@ -1,7 +1,5 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.prepareAssets;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,13 +15,14 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 
+
 public class PopulateTreeNodeBenchmark {
     public static void main(String[] args) {
-        dryRun(PopulateTreeNodeBenchmark.class);
+        BenchmarkUtils.dryRun(PopulateTreeNodeBenchmark.class);
     }
 
     @Benchmark
-    public void benchmark_TreeElement_populate(TreeElementPopulateState state) {
+    public void benchmarkPopulate(TreeElementPopulateState state) {
         state.dataRootNode.populate(state.savedRoot, state.formDef);
     }
 
@@ -35,9 +34,8 @@ public class PopulateTreeNodeBenchmark {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            Path assetsDir = prepareAssets("nigeria_wards_external_combined.xml", "wards.xml", "lgas.xml", "populate-nodes-attributes-instance.xml");
-            Path formFile = assetsDir.resolve("nigeria_wards_external_combined.xml");
-            Path submissionFile = assetsDir.resolve("populate-nodes-attributes-instance.xml");
+             Path formFile = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance();
+            Path submissionFile = BenchmarkUtils.getSubmissionFile();
             FormParseInit formParseInit = new FormParseInit(formFile);
             FormEntryController formEntryController = formParseInit.getFormEntryController();
             byte[] formInstanceAsBytes = Files.readAllBytes(submissionFile);

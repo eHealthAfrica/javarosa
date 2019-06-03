@@ -74,6 +74,7 @@ public abstract class ElementParser<T> {
         }
     }
 
+
     /**
      * Parses the XML document at the current level, returning the datatype
      * described by the document.
@@ -96,4 +97,27 @@ public abstract class ElementParser<T> {
         }
         return ret;
     }
+
+    /**
+     * Skip sub tree that is currently porser positioned on.
+     * <br>NOTE: parser must be on START_TAG and when funtion returns
+     * parser will be positioned on corresponding END_TAG.
+     */
+
+    //	Implementation copied from Alek's mail...
+
+    public void skipSubTree() throws XmlPullParserException, IOException {
+        parser.require(KXmlParser.START_TAG, null, null);
+        int level = 1;
+        while (level > 0) {
+            int eventType = parser.next();
+            if (eventType == KXmlParser.END_TAG) {
+                --level;
+            }
+            else if (eventType == KXmlParser.START_TAG) {
+                ++level;
+            }
+        }
+    }
+
 }

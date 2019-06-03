@@ -1,13 +1,7 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.prepareAssets;
-
-import java.io.IOException;
-import java.nio.file.Path;
 import org.javarosa.core.model.instance.ExternalDataInstance;
 import org.javarosa.core.reference.InvalidReferenceException;
-import org.javarosa.core.reference.ReferenceManagerTestUtils;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.openjdk.jmh.annotations.Benchmark;
@@ -18,6 +12,12 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
+import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.BenchmarkUtils.prepareAssets;
+
 public class ExternalDataInstanceBuildBenchmark {
     public static void main(String[] args) {
         dryRun(FormDefValidateBenchmark.class);
@@ -27,16 +27,26 @@ public class ExternalDataInstanceBuildBenchmark {
     public static class ExternalDataInstanceState {
         @Setup(Level.Trial)
         public void initialize() {
-            Path assetsDir = prepareAssets("wards.xml");
-            ReferenceManagerTestUtils.setUpSimpleReferenceManager("file", assetsDir);
+            Path assetsDir = prepareAssets("wards.xml", "lgas.xml");
         }
     }
 
     @Benchmark
-    public void benchmark_ExternalDataInstance_build(ExternalDataInstanceState state, Blackhole bh)
+    public void benchmarkBuildWards(ExternalDataInstanceState state, Blackhole bh)
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
-        bh.consume(ExternalDataInstance.build("jr://file/wards.xml", "wards"));
+        ExternalDataInstance wardsExternalInstance =
+            ExternalDataInstance.build("jr://file/wards.xml", "wards");
+        bh.consume(wardsExternalInstance);
     }
 
+    @Benchmark
+    public void
+    benchmarkBuildLGAs(ExternalDataInstanceState state, Blackhole bh)
+        throws IOException, XmlPullParserException, InvalidReferenceException,
+        UnfullfilledRequirementsException, InvalidStructureException {
+        ExternalDataInstance lgaIExternalInstance =
+            ExternalDataInstance.build("jr://file/lgas.xml", "lgas");
+        bh.consume(lgaIExternalInstance);
+    }
 }
