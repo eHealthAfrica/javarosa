@@ -1,20 +1,14 @@
 package org.javarosa.xml;
 
-import org.kxml2.kdom.Element;
-import org.kxml2.kdom.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.kxml2.io.KXmlParser;
-import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * <p>Element Parser is the core parsing element for XML files. Implementations
@@ -83,21 +77,6 @@ public abstract class ElementParser<T> {
 
     /**
      * Parses the XML document at the current level, returning the datatype
-     * described by the document but skips parsing element names provided in skipSubTrees
-     *
-     * @param skipSubTrees String array of subtree element names to exclude from the parsed root
-     * @return The datatype which is described by the appropriate XML
-     * definition.
-     * @throws InvalidStructureException If the XML does not contain properly
-     *                                   structured XML
-     * @throws IOException               If there is a problem retrieving the document
-     * @throws XmlPullParserException    If the document does not contain well-
-     *                                   formed XML.
-     */
-    public abstract T parse(String ...skipSubTrees) throws InvalidStructureException, IOException, XmlPullParserException, UnfullfilledRequirementsException;
-
-    /**
-     * Parses the XML document at the current level, returning the datatype
      * described by the document.
      *
      * @return The datatype which is described by the appropriate XML
@@ -117,6 +96,28 @@ public abstract class ElementParser<T> {
             ret = parser.next();
         }
         return ret;
+    }
+
+    /**
+     * Skip sub tree that is currently porser positioned on.
+     * <br>NOTE: parser must be on START_TAG and when funtion returns
+     * parser will be positioned on corresponding END_TAG.
+     */
+
+    //	Implementation copied from Alek's mail...
+
+    public void skipSubTree() throws XmlPullParserException, IOException {
+        parser.require(KXmlParser.START_TAG, null, null);
+        int level = 1;
+        while (level > 0) {
+            int eventType = parser.next();
+            if (eventType == KXmlParser.END_TAG) {
+                --level;
+            }
+            else if (eventType == KXmlParser.START_TAG) {
+                ++level;
+            }
+        }
     }
 
 }
