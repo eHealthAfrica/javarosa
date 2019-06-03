@@ -134,7 +134,7 @@ public class KxmlElementParser extends ElementParser<Element> {
      * @return Element
      */
     private Element initCurrentElement(){
-        Element element = elementCreator.createElement("", parser.getName());
+        Element element = elementCreator.createElement(parser.getNamespace(), parser.getName());
         element.setName(parser.getName());
         for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
              i < parser.getNamespaceCount (parser.getDepth ()); i++) {
