@@ -4,7 +4,7 @@ import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
-import org.javarosa.xml.InternalInstanceParser;
+import org.javarosa.xml.InternalDataInstanceParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.xmlpull.v1.XmlPullParserException;
@@ -86,7 +86,7 @@ public class InternalDataInstance extends DataInstance {
         super.readExternal(in, pf);
         xFormPath = ExtUtil.readString(in);
         try {
-            setRoot(InternalInstanceParser.parseInternalInstance(xFormPath, getInstanceId()));
+            setRoot(InternalDataInstanceParser.parseInternalInstance(xFormPath, getInstanceId()));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
             throw new DeserializationException("Unable to parse external instance: " + e);
         }

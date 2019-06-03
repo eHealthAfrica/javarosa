@@ -2,6 +2,7 @@ package org.javarosa.benchmarks.utils;
 
 
 import org.javarosa.benchmarks.BenchmarkUtils;
+import org.javarosa.benchmarks.InternalDataInstanceBuildBenchmark;
 import org.javarosa.core.model.CoreModelModule;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
@@ -14,6 +15,7 @@ import org.javarosa.core.model.data.StringData;
 import org.javarosa.core.model.data.helper.Selection;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
+import org.javarosa.core.model.instance.InternalDataInstance;
 import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.core.reference.ReferenceManager;
@@ -26,10 +28,13 @@ import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.model.xform.XFormsModule;
 import org.javarosa.xform.parse.FormParserHelper;
 import org.javarosa.xform.parse.XFormParser;
+import org.javarosa.xml.InternalDataInstanceParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.junit.Test;
 import org.kxml2.kdom.Document;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.infra.Blackhole;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.FileReader;
@@ -68,6 +73,34 @@ public class SimpleBenchmarkTests {
         assertEquals(774, formDef.getNonMainInstance("lgas").getRoot().getNumChildren());
         assertEquals(37, formDef.getNonMainInstance("states").getRoot().getNumChildren());
     }
+
+    @Test
+    public void
+    benchmarkInternalLGADataInstance()
+        throws IOException, XmlPullParserException, InvalidReferenceException,
+        UnfullfilledRequirementsException, InvalidStructureException {
+        String xFormInternalSecondaryInstances;
+        xFormInternalSecondaryInstances = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance().toString();
+
+        InternalDataInstance lgaIInternalInstance =
+            InternalDataInstanceParser.build(xFormInternalSecondaryInstances, "lgas");
+       assertNotNull(lgaIInternalInstance);
+    }
+
+
+    @Test
+    public void
+    benchmarkInternalWardsDataInstance()
+        throws IOException, XmlPullParserException, InvalidReferenceException,
+        UnfullfilledRequirementsException, InvalidStructureException {
+        String xFormInternalSecondaryInstances;
+        xFormInternalSecondaryInstances = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance().toString();
+
+        InternalDataInstance lgaIInternalInstance =
+            InternalDataInstanceParser.build(xFormInternalSecondaryInstances, "wards");
+        assertNotNull(lgaIInternalInstance);
+    }
+
 
 
     @Test
