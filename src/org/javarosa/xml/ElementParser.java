@@ -114,6 +114,10 @@ public abstract class ElementParser<T> {
     }
 
 
+     // Copied from most recent KxmlParser in
+     // https://github.com/stefanhaustein/kxml2/blob/87f02cdcd8e826e7741cfd5ae854c4b985c62218/src/main/java/org/kxml2/io/KXmlParser.java#L1434
+     // Not currently in an android phone's embedded kxml library
+
     /**
      * Skip sub tree that is currently porser positioned on.
      * <br>NOTE: parser must be on START_TAG and when funtion returns
