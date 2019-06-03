@@ -30,12 +30,12 @@ public class KxmlElementParser extends ElementParser<Element> {
     private ElementSkipper[] elementsToSkip;
     private Element elementCreator;
 
-    public KxmlElementParser(KXmlParser parser) throws IOException, XmlPullParserException {
+    public KxmlElementParser(KXmlParser parser) {
         super(parser);
         elementCreator = new Element();
     }
 
-    public KxmlElementParser(KXmlParser parser,ElementSkipper ...elementsToSkip) throws IOException, XmlPullParserException {
+    public KxmlElementParser(KXmlParser parser, ElementSkipper ...elementsToSkip) {
         this(parser);
         this.elementsToSkip = elementsToSkip;
     }

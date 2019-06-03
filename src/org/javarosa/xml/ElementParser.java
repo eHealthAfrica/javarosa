@@ -51,7 +51,7 @@ public abstract class ElementParser<T> {
      * Prepares a parser that will be used by the element parser, configuring relevant
      * parameters and setting it to the appropriate point in the document.
      *
-     * @param reader A stream which is reading the XML content
+     * @param reader A reader reading the XML content
      *               of the document.
      * @throws IOException If the stream cannot be read for any reason
      *                     other than invalid XML Structures.
