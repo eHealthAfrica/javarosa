@@ -8,7 +8,6 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,17 +30,13 @@ public class KxmlElementParser extends ElementParser<Element> {
     private ElementSkipper[] elementsToSkip;
     private Element elementCreator;
 
-    public KxmlElementParser(KXmlParser parser, Reader reader) throws IOException, XmlPullParserException {
+    public KxmlElementParser(KXmlParser parser) throws IOException, XmlPullParserException {
         super(parser);
-        parser.setInput(reader);
-        parser.setFeature(KXmlParser.FEATURE_PROCESS_NAMESPACES, true);
-        //Point to the first available tag.
-        parser.next();
         elementCreator = new Element();
     }
 
-    public KxmlElementParser(KXmlParser parser, Reader reader,ElementSkipper ...elementsToSkip) throws IOException, XmlPullParserException {
-        this(parser, reader);
+    public KxmlElementParser(KXmlParser parser,ElementSkipper ...elementsToSkip) throws IOException, XmlPullParserException {
+        this(parser);
         this.elementsToSkip = elementsToSkip;
     }
 
@@ -135,7 +130,6 @@ public class KxmlElementParser extends ElementParser<Element> {
      */
     private Element initCurrentElement(){
         Element element = elementCreator.createElement(parser.getNamespace(), parser.getName());
-        element.setName(parser.getName());
         for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
              i < parser.getNamespaceCount (parser.getDepth ()); i++) {
             element.setPrefix (parser.getNamespacePrefix (i), parser.getNamespaceUri(i));

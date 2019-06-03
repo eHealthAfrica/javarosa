@@ -422,8 +422,8 @@ public class XFormParser implements IXFormParserFunctions {
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                 doc.parse(parser);
             } else {
-                parser = new KXmlParser();
-                KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, reader);
+                parser = KxmlElementParser.instantiateParser(reader);
+                KxmlElementParser kxmlElementParser = new KxmlElementParser(parser);
                 doc = kxmlElementParser.parseDoc();
             }
         } catch (XmlPullParserException e) {
