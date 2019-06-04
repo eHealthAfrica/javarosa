@@ -86,7 +86,7 @@ public class InternalDataInstance extends DataInstance {
         super.readExternal(in, pf);
         xFormPath = ExtUtil.readString(in);
         try {
-            setRoot(InternalDataInstanceParser.parseInternalInstance(xFormPath, getInstanceId()).getChildAt(0));
+            setRoot(InternalDataInstanceParser.parseInternalInstance(xFormPath, getInstanceId()));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
             throw new DeserializationException("Unable to parse external instance: " + e);
         }

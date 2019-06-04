@@ -17,6 +17,7 @@
 package org.javarosa.xform.util;
 
 import java.io.DataInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -121,7 +122,7 @@ public class XFormUtils {
             XFormParser xFormParser = _factory.getXFormParser(isr);
             return xFormParser.parse(xFormPath, lastSavedSrc);
         } catch(IOException e) {
-            throw new XFormParseException("IO Exception during parse! " + e.getMessage());
+            throw new XFormParseException("IO Exception duringz parse! " + e.getMessage());
         } finally {
             try {
                 if (isr != null) {
