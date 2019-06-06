@@ -34,7 +34,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
     @Override
     public TreeElement parse() throws InvalidStructureException, IOException,
-        XmlPullParserException {
+        XmlPullParserException, UnfullfilledRequirementsException {
 
         final int depth = parser.getDepth();
         final TreeElement element = new TreeElement(parser.getName(), multiplicity);
