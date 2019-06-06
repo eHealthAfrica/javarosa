@@ -6,11 +6,13 @@ import org.kxml2.kdom.Document;
 import org.kxml2.kdom.Element;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
-import static org.junit.Assert.assertEquals;
 
 import static org.javarosa.test.utils.ResourcePathHelper.r;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class KxmlElementParserTest {
