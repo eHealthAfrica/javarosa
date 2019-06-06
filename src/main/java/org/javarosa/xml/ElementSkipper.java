@@ -5,9 +5,14 @@ package org.javarosa.xml;
  * @author johnthebeloved
  * Abstracts algorithm for skipping child elements
  * This could be implemented with XPath reference
+ * Also assumes that the elements to be skipped are siblings
  */
 public class ElementSkipper
 {
+    /**
+     * Signifies skipping should be from the start sibling to the last sibling
+     */
+    public static final int LAST_ELEMENT_INDEX = -1;
     private String elementName;
     private int from;
     private int to;
@@ -20,7 +25,7 @@ public class ElementSkipper
      *
      */
     public ElementSkipper(String elementName, int from){
-        this(elementName,from, 0);
+        this(elementName,from, LAST_ELEMENT_INDEX);
     }
 
     /**
@@ -32,14 +37,15 @@ public class ElementSkipper
     public ElementSkipper(String elementName, int from, int to){
         this.from = from;
         this.to = to;
-        currentParsingIndex = -1;
+        currentParsingIndex = 0;
         this.elementName = elementName;
     }
 
     public boolean skip(String elementName){
         if(this.elementName.equals(elementName)){
+            boolean skip = (currentParsingIndex >= from && (currentParsingIndex <= to || to == LAST_ELEMENT_INDEX));
             currentParsingIndex +=1;
-            return (currentParsingIndex >= from && (currentParsingIndex <= to || to == 0));
+            return skip;
         }
         return false;
     }

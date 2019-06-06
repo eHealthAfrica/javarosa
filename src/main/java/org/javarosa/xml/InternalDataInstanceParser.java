@@ -43,8 +43,8 @@ public class InternalDataInstanceParser {
         List<TreeElement> instances = treeElementParser.parseInternalSecondaryInstances();
         List<InternalDataInstance> internalDataInstances = new ArrayList<>();
         for(TreeElement element: instances){
-            String id = element.getAttribute("", "id").getAttributeValue();
-            InternalDataInstance internalDataInstance  = new InternalDataInstance(element.getChild("root",0), id,  xFormSrc);
+            String id = element.getAttribute(null, "id").getAttributeValue();
+            InternalDataInstance internalDataInstance  = new InternalDataInstance(element.getChildAt(0), id,  xFormSrc);
             internalDataInstances.add(internalDataInstance);
         }
         return internalDataInstances;
@@ -70,6 +70,8 @@ public class InternalDataInstanceParser {
         TreeElementParser treeElementParser =
             new TreeElementParser(parser,0, instanceId);
         TreeElement treeElement = treeElementParser.parseInternalSecondaryInstance();
+        if (treeElement.getNumChildren() == 0)
+            throw new RuntimeException("Root TreeElement node has no children");
         InternalDataInstance internalDataInstance  = new InternalDataInstance(treeElement.getChildAt(0), instanceId,  xFormSrc);
 
         return internalDataInstance;
@@ -80,6 +82,8 @@ public class InternalDataInstanceParser {
         KXmlParser parser = ElementParser.instantiateParser(inputStream);
         TreeElement treeElement =  new TreeElementParser(parser, 0, instanceId).parseInternalSecondaryInstance();
         //Returns the instance child TreeElement, not the instance TreeElement
+        if (treeElement.getNumChildren() == 0)
+            throw new RuntimeException("Root TreeElement node has no children");
         return treeElement.getChildAt(0);
     }
 

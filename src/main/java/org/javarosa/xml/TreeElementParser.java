@@ -70,7 +70,6 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         return element;
     }
 
-
     /**
      * Returns the internal secondary instance with the instance ID created
      * Used for deserializing
@@ -86,12 +85,12 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         //instance node is assumed not to be the first node
         int foundInstanceIndex = -1;
         while (parser.getDepth() >= depth) {
-            while(findInstanceNode()){
+            while (findInstanceNode()){
                 //instance names are in the default namespace
                 String instanceId = parser.getAttributeValue( null, ID_ATTR);
-                if(this.instanceId.equals(instanceId)){
+                if (this.instanceId.equals(instanceId)) {
                     return new TreeElementParser(parser, foundInstanceIndex, instanceId).parse();
-                }else{
+                } else {
                     skipSubTree();
                 }
             }
@@ -118,12 +117,12 @@ public class TreeElementParser extends ElementParser<TreeElement> {
          */
         List<TreeElement> internalInstances = new ArrayList<>();
         final int depth = parser.getDepth();
-        if(depth > 0){
+        if (depth > 0) {
             while (parser.getDepth() >= depth) {
                 while(findInstanceNode()){
                     TreeElement treeElement = new TreeElementParser(parser, 0, "").parse();
-                    if(treeElement.getAttributeValue("",ID_ATTR) !=null){
-                        String instanceId = treeElement.getAttributeValue("",ID_ATTR);
+                    if(treeElement.getAttributeValue(null, ID_ATTR) !=null){
+                        String instanceId = treeElement.getAttributeValue(null,ID_ATTR);
                         if(instanceId != null){
                             treeElement.setInstanceName(instanceId);
                             internalInstances.add(treeElement);
@@ -132,18 +131,18 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                 }
             }
             return internalInstances;
-        }else{
+        } else {
             throw new InvalidStructureException("Invalid XML File, no detected xml node - Depth is 0");
         }
     }
 
     public boolean findInstanceNode() throws XmlPullParserException, IOException {
         int ret = nextNonWhitespace();
-        if (ret == Node.ELEMENT && parser.getName().equals(INSTANCE_ELEMENT) ) {
+        if (ret == Node.ELEMENT && parser.getName().equals(INSTANCE_ELEMENT)) {
             return true;
-        }else if(ret != KXmlParser.END_TAG) {
+        } else if (ret != KXmlParser.END_TAG) {
             return false;
-        }else {
+        } else {
             return findInstanceNode();
         }
     }

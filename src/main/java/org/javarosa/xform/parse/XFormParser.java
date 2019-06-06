@@ -439,12 +439,13 @@ public class XFormParser implements IXFormParserFunctions {
                 parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
                 doc.parse(parser);
             } else {
-                if(skipInternalInstance){
+
+                if (skipInternalInstance) {
                     ElementSkipper elementSkipper = new ElementSkipper(INSTANCE_ELEMENT,1);
                     parser = KxmlElementParser.instantiateParser(reader);
                     KxmlElementParser kxmlElementParser = new KxmlElementParser(parser, elementSkipper);
                     doc = kxmlElementParser.parseDoc();
-                }else{
+                } else {
                     parser = new KXmlParser();
                     doc = new Document();
                     //Parses the whole xform
@@ -454,8 +455,8 @@ public class XFormParser implements IXFormParserFunctions {
 
                 }
 
-
             }
+
         } catch (XmlPullParserException e) {
             String errorMsg = "XML Syntax Error at Line: " + e.getLineNumber() + ", Column: " + e.getColumnNumber() + "!";
             logger.error(errorMsg, e);
