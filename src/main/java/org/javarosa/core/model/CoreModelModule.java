@@ -31,6 +31,7 @@ public class CoreModelModule implements IModule {
             "org.javarosa.core.model.GroupDef",
             "org.javarosa.core.model.instance.FormInstance",
             "org.javarosa.core.model.instance.ExternalDataInstance",
+            "org.javarosa.core.model.instance.InternalDataInstance",
             "org.javarosa.core.model.data.BooleanData",
             "org.javarosa.core.model.data.DateData",
             "org.javarosa.core.model.data.DateTimeData",
