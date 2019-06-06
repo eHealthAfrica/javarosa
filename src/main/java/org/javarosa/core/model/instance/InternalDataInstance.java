@@ -14,13 +14,11 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Representation of an internal data instance.
+ * Representation of an internal secondary data instance.
  *
  * Created from implementation of #ExternalDataInstance with few differences.
  *
- * The path to XForm is stored instead of the path to the external data instance file
- *
- * Serialization logic also based on the XForm file instead of external instance file
+ * The path to XForm is stored instead of the path to the external secondary data instance file
  *
  * @author johnthebeloved
  *
