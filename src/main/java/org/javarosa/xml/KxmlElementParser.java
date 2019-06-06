@@ -74,11 +74,11 @@ public class KxmlElementParser extends ElementParser<Element> {
             switch (nextNonWhitespace()) {
                 case XmlPullParser.START_TAG:
                     String name = parser.getName();
-                    if(shouldSkipSubTree(name, elementsToSkip)){
+                    if (shouldSkipSubTree(name, elementsToSkip)) {
                         Element elementToSkip = initCurrentElement();
                         element.addChild(Node.ELEMENT,elementToSkip);
                         skipSubTree();
-                    }else{
+                    } else {
                         final Integer multiplicity = multiplicitiesByName.get(name);
                         int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
                         multiplicitiesByName.put(name, newMultiplicity);
