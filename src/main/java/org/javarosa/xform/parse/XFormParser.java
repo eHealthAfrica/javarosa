@@ -94,6 +94,7 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
+import org.javarosa.xml.KxmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
@@ -409,20 +410,22 @@ public class XFormParser implements IXFormParserFunctions {
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
-        Document doc = new Document();
+        Document doc;
 
         try {
             KXmlParser parser;
 
             if (stringCache != null) {
+                doc = new Document();
                 parser = new InterningKXmlParser(stringCache);
+                parser.setInput(reader);
+                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+                doc.parse(parser);
             } else {
-                parser = new KXmlParser();
+                parser = KxmlElementParser.instantiateParser(reader);
+                KxmlElementParser kxmlElementParser = new KxmlElementParser(parser);
+                doc = kxmlElementParser.parseDoc();
             }
-
-            parser.setInput(reader);
-            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-            doc.parse(parser);
         } catch (XmlPullParserException e) {
             String errorMsg = "XML Syntax Error at Line: " + e.getLineNumber() + ", Column: " + e.getColumnNumber() + "!";
             logger.error(errorMsg, e);
