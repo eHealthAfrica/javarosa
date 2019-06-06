@@ -122,7 +122,7 @@ public class XFormUtils {
             XFormParser xFormParser = _factory.getXFormParser(isr);
             return xFormParser.parse(xFormPath, lastSavedSrc);
         } catch(IOException e) {
-            throw new XFormParseException("IO Exception duringz parse! " + e.getMessage());
+            throw new XFormParseException("IO Exception during parse! " + e.getMessage());
         } finally {
             try {
                 if (isr != null) {
