@@ -3,6 +3,7 @@ package org.javarosa.benchmarks;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -14,6 +15,7 @@ import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.stream.Stream;
 import org.javarosa.core.model.QuestionDef;
@@ -130,7 +132,6 @@ public class BenchmarkUtils {
                 return new StringData("");
         }
     }
-
 
     public static Path getNigeriaWardsXMLWithInternal2ndryInstance(){
         Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance.xml");
