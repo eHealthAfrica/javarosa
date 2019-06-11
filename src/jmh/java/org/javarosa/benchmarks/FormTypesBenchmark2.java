@@ -17,10 +17,10 @@ import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
 
-public class FormTypesBenchmark {
+public class FormTypesBenchmark2 {
 
     public static void main(String[] args) {
-        dryRun(FormTypesBenchmark.class);
+        dryRun(FormTypesBenchmark2.class);
     }
 
     @State(Scope.Thread)
@@ -36,8 +36,8 @@ public class FormTypesBenchmark {
     }
 
     @Benchmark
-    public void benchmarkForm_eIMCI_new(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = FormParserHelper.parse(state.eIMCI, true);
+    public void benchmarkForm_eIMCI_old(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+        FormDef formDef = FormParserHelper.parse(state.eIMCI, false);
         bh.consume(formDef);
     }
 

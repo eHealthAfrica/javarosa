@@ -85,5 +85,6 @@ jmh {
     warmupIterations = 5
     includeTests = true
     //profilers = ['stack']
+    benchmarkMode = ['avgt','ss']
     forceGC = true
 }
