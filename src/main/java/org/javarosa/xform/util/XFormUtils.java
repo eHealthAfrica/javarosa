@@ -17,6 +17,7 @@
 package org.javarosa.xform.util;
 
 import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -115,10 +116,10 @@ public class XFormUtils {
      * @param lastSavedSrc The src of the last-saved instance of this form (for auto-filling). If null,
      *                     no data will be loaded and the instance will be blank.
      */
-    public static FormDef getFormFromFile(String xFormPath, String lastSavedSrc) throws XFormParseException {
+    public static FormDef getFormFromFile(String xFormPath, String lastSavedSrc) throws XFormParseException, IOException {
         InputStreamReader isr = null;
-        try {
-            isr = new FileReader(xFormPath);
+        try{
+            isr = new InputStreamReader(new FileInputStream(xFormPath));
             XFormParser xFormParser = _factory.getXFormParser(isr);
             return xFormParser.parse(xFormPath, lastSavedSrc);
         } catch(IOException e) {
