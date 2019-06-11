@@ -11,6 +11,13 @@ public final class FormParserHelper {
     private FormParserHelper() {
     }
 
+    public static FormDef parse(Path formName, boolean skipInternalInstance) throws IOException {
+        if(skipInternalInstance){
+            return XFormUtils.getFormFromFile(formName.toString(),  null);
+        }
+        return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()));
+    }
+
     public static FormDef parse(Path formName) throws IOException {
         return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()));
     }

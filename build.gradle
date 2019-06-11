@@ -74,13 +74,15 @@ javadoc {
 }
 
 jmh {
-    iterations = 1
+    include = ['(FormTypesBenchmark)']
+    iterations = 10
     fork = 0
-    timeOnIteration = '1s'
+    timeOnIteration = '10s'
     timeout = '1s'
     warmup = '1s'
     warmupBatchSize = 1
     warmupForks = 0
-    warmupIterations = 1
+    warmupIterations = 5
     includeTests = true
+    profilers = ['stack']
 }
