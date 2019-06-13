@@ -17,7 +17,6 @@ public final class FormParserHelper {
         }else{
             return XFormUtils.getFormFromInputStream(new FileInputStream(formName.toString()));
         }
-
     }
 
     public static FormDef parse(Path formName) throws IOException {

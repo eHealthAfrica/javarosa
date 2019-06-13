@@ -6,8 +6,8 @@ import java.nio.file.Path;
 
 public class FormBinUtils{
 
-    public static Path getEIMCI(){
-        Path assetsPath = prepareAssets("random_eIMCI.xml");
+    public static Path prepForm(String fileName){
+        Path assetsPath = prepareAssets(fileName);
         Path filePath = assetsPath.resolve("random_eIMCI.xml");
         return filePath;
     }

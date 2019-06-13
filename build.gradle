@@ -15,9 +15,10 @@ sourceSets {
     test.java.srcDirs = ['src/test/java']
     test.resources.srcDirs = ['src/test/resources']
 }
-
+compileJava {options.encoding = "UTF-8"}
 compileJava {
     options.compilerArgs << "-Xlint:deprecation"
+
 }
 
 compileTestJava {
@@ -74,15 +75,15 @@ javadoc {
 }
 
 jmh {
-    include = ['(FormTypesBenchmark)']
-    iterations = 10
+    include = ['(FormTypes)']
+    iterations = 5
     fork = 0
     timeOnIteration = '10s'
     timeout = '1s'
     warmup = '1s'
     warmupBatchSize = 1
     warmupForks = 0
-    warmupIterations = 5
+    warmupIterations = 10
     includeTests = true
     //profilers = ['stack']
     benchmarkMode = ['avgt','ss']

@@ -85,7 +85,7 @@ import org.javarosa.xpath.expr.XPathStringLiteral;
     private String preloadParams = null;
     private List<TreeElement> bindAttributes = new ArrayList<TreeElement>(0);
 
-    // TODO see what’s required here from commented-out code removed 2017-04-23
+    // TODO see what's required here from commented-out code removed 2017-04-23
 
     private static final int MASK_REQUIRED = 0x01;
     private static final int MASK_REPEATABLE = 0x02;

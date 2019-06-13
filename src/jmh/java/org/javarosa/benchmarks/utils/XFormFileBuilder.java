@@ -12,6 +12,23 @@ import java.util.Map;
 
 public class XFormFileBuilder{
 
+
+    public static void main(String [] args) throws IOException {
+        HashMap<String, String> namespaces = new HashMap()
+        {{
+            put("", "http://www.w3.org/2002/xforms");
+            put("h", "http://www.w3.org/1999/xhtml");
+            put("ev", "http://www.w3.org/2001/xml-events");
+            put("jr", "http://openrosa.org/javarosa");
+        }};
+
+        XFormComplexity xFormComplexity = new XFormComplexity("Generated Form",5,3,
+            3, namespaces);
+
+        XFormFileBuilder xFormFileBuilder = new XFormFileBuilder(xFormComplexity);
+        System.out.println(xFormFileBuilder.build());
+    }
+
     String DOUBLE_QUOTE = "\"";
     String SPACE = " ";
     String OPEN_TOKEN = "<";
@@ -34,18 +51,6 @@ public class XFormFileBuilder{
     StringBuilder stringBuilder;
     XFormComplexity xFormComplexity;
 
-    public XFormFileBuilder(){
-       stringBuilder = new StringBuilder();
-        bindAttributeTemplate = new HashMap()
-        {{
-            put("nodeset", "/data/meta/instanceID");
-            put("type", "string");
-            put("readonly", "true()");
-            put("calculate", "concat('uuid:',uuid())");
-        }};
-        this.xFormComplexity = new XFormComplexity(5,3, 3);
-    }
-
     public XFormFileBuilder(XFormComplexity xFormComplexity){
         stringBuilder = new StringBuilder();
         bindAttributeTemplate = new HashMap()
@@ -58,43 +63,45 @@ public class XFormFileBuilder{
        this.xFormComplexity = xFormComplexity;
     }
 
-    public XFormFileBuilder buildHtml(){
+    private XFormFileBuilder buildHtml(){
         if(!hasHtml()){
-            String htmlElementString = openAndClose(HTML);
+            String htmlElementString = openAndClose(HTML, xFormComplexity.getNamespaces());
             stringBuilder.append(htmlElementString);
         }
         return this;
     }
 
-    public XFormFileBuilder buildHead(){
+    private XFormFileBuilder buildHead(){
         addChild(HTML, openAndClose(HEAD));
         return this;
     }
 
-    public XFormFileBuilder buildBody(){
+    private XFormFileBuilder buildBody(){
         addChild(HTML, openAndClose(BODY));
         return this;
     }
 
-    public XFormFileBuilder buildTitle(){
-        addChild(HEAD, openAndClose(TITLE));
+    private XFormFileBuilder buildTitle(){
+        addChild(HEAD, openAndClose(TITLE, null, "Form Title here"));
         return this;
     }
 
-    public XFormFileBuilder buildModel(){
+    private XFormFileBuilder buildModel(){
         addChild(HEAD, openAndClose(MODEL));
         return this;
     }
 
-    public XFormFileBuilder buildInstance(){
-        StringBuilder sb = new StringBuilder();
-        sb.append(openingTag(INSTANCE))
-            .append(openingTag("root"))
-            .append(generateInstanceItems(10))
-            .append(closingTag("root"))
-            .append(closingTag(INSTANCE));
+    private XFormFileBuilder buildInstances(){
+        for(int i = 0; i < xFormComplexity.getNoOfInternalInstances(); i++){
+            StringBuilder sb = new StringBuilder();
+            sb.append(openingTag(INSTANCE))
+                .append(openingTag("root"))
+                .append(generateInstanceItems(xFormComplexity.getNoOfItemSets()))
+                .append(closingTag("root"))
+                .append(closingTag(INSTANCE));
 
-        addChild(HEAD, sb.toString());
+            addChild(HEAD, sb.toString());
+        }
         return this;
     }
 
@@ -122,6 +129,10 @@ public class XFormFileBuilder{
         return openingTag(name, attributes) + closingTag(name);
     }
 
+    public String openAndClose(String name, Map attributes, String xmlText){
+        return openingTag(name, attributes) + xmlText + closingTag(name);
+    }
+
     public String openingTag(String name){
         return OPEN_TOKEN + name + CLOSE_TOKEN + NEW_LINE;
     }
@@ -141,14 +152,17 @@ public class XFormFileBuilder{
     }
 
     public String buildAttributes(Map<String, String> attributes){
-        StringBuilder stringBuilder = new StringBuilder();
-        Iterator iterator = attributes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, String> pair = (Map.Entry)iterator.next();
-            stringBuilder.append(buildAttribute(pair.getKey(), pair.getValue()));
-            stringBuilder.append(SPACE);
+        if (attributes != null) {
+            StringBuilder stringBuilder = new StringBuilder();
+            Iterator iterator = attributes.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String, String> pair = (Map.Entry) iterator.next();
+                stringBuilder.append(buildAttribute(pair.getKey(), pair.getValue()));
+                stringBuilder.append(SPACE);
+            }
+            return stringBuilder.toString();
         }
-        return stringBuilder.toString();
+        return "";
     }
 
     public String buildAttribute(String key, String value){
@@ -176,56 +190,18 @@ public class XFormFileBuilder{
         return stringBuilder.toString();
     }
 
-
-    private  class  XFormComplexity{
-        public XFormComplexity(int noOfQuestions, int noOfInternalInstances, int noOfExternalInstances) {
-            this.noOfQuestions = noOfQuestions;
-            this.noOfInternalInstances = noOfInternalInstances;
-            this.noOfExternalInstances = noOfExternalInstances;
-        }
-
-        int noOfQuestions;
-        int noOfInternalInstances;
-        int noOfExternalInstances;
-
-        public int getNoOfQuestions() {
-            return noOfQuestions;
-        }
-
-        public void setNoOfQuestions(int noOfQuestions) {
-            this.noOfQuestions = noOfQuestions;
-        }
-
-        public int getNoOfInternalInstances() {
-            return noOfInternalInstances;
-        }
-
-        public void setNoOfInternalInstances(int noOfInternalInstances) {
-            this.noOfInternalInstances = noOfInternalInstances;
-        }
-
-        public int getNoOfExternalInstances() {
-            return noOfExternalInstances;
-        }
-
-        public void setNoOfExternalInstances(int noOfExternalInstances) {
-            this.noOfExternalInstances = noOfExternalInstances;
-        }
-
-    }
-
-    public String createXFormWithComplexity() throws IOException {
+    public String build() throws IOException {
         String content = buildHtml()
             .buildHead()
             .buildBody()
             .buildTitle()
             .buildModel()
-            .buildInstance()
+            .buildInstances()
             .buildBind()
             .buildInput()
             .toString();
 
-        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), null);
+        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), "xml");
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(content);
         fileWriter.close();
@@ -233,8 +209,6 @@ public class XFormFileBuilder{
         String xml = new String(Files.readAllBytes(file.toPath()));
         return  xml;
     }
-
-
 
 }
 
