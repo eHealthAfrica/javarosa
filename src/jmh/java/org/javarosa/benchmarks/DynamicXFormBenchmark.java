@@ -28,20 +28,18 @@ public class DynamicXFormBenchmark {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            level1 = FileGeneratorUtil.level1();
-//            Path assetsPath = prepareAssets(filePathString);
-//            level1 = assetsPath.resolve(filePathString);
+            level1 = FileGeneratorUtil.generate(5,100,100,null);
         }
     }
 
     @Benchmark
-    public void benchmarkBeforeLevel1(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+    public void before(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
         FormDef formDef = runBeforeBenchmark(state.level1);
         bh.consume(formDef);
     }
 
     @Benchmark
-    public void benchmarkAfterLevel1(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+    public void after(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
         FormDef formDef = runAfterBenchmark(state.level1);
         bh.consume(formDef);
     }

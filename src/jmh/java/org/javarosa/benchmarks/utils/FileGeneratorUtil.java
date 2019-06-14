@@ -4,18 +4,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 public class FileGeneratorUtil {
 
-    public static Path level1() throws IOException {
-        return level1(null);
-    }
-        public static Path level1(File directory) throws IOException {
-
-        int itemsetMultiplier = 200;
+        public static Path generate(int multiplier, int noOfQuestions, int noOfSecondaryInstances, File directory) throws IOException {
 
         Map<String, String> namespaces =
             XFormFileBuilder.buildMap(
@@ -27,29 +23,12 @@ public class FileGeneratorUtil {
                 new String[]{"xsd", "http://www.w3.org/2001/XMLSchema"}
             );
 
-        List<SecondaryInstanceDef> secondaryInstanceDefList = Arrays.asList(
-            new SecondaryInstanceDef("first", itemsetMultiplier),
-            new SecondaryInstanceDef("second", itemsetMultiplier * 2),
-            new SecondaryInstanceDef("third", itemsetMultiplier * 3),
-            new SecondaryInstanceDef("forth", itemsetMultiplier * 4),
-            new SecondaryInstanceDef("fifth", itemsetMultiplier * 5)
-        );
-
-
-        List<QuestionGroup> questionGroups = Arrays.asList(
-            new QuestionGroup("group1", itemsetMultiplier),
-            new QuestionGroup("group2", itemsetMultiplier * 2),
-            new QuestionGroup("group3", itemsetMultiplier * 3),
-            new QuestionGroup("group4", itemsetMultiplier * 4),
-            new QuestionGroup("group5", itemsetMultiplier * 5)
-        );
-
         XFormComplexity xFormComplexity =
             new XFormComplexity(
-                "Generated Form",
-                itemsetMultiplier * 5,
-                questionGroups,
-                secondaryInstanceDefList,
+                "Dynamic form generated at " + new Date().toString(),
+                multiplier,
+                generateQuestionGroups(multiplier, noOfQuestions),
+                generateSecondaryInstances(multiplier, noOfSecondaryInstances),
             null,
                 namespaces);
 
@@ -60,5 +39,23 @@ public class FileGeneratorUtil {
         fileWriter.write(xFormFileBuilder.build());
         fileWriter.close();
         return file.toPath();
+    }
+
+    public static List<QuestionGroup> generateQuestionGroups(int multiplier, int count){
+        List<QuestionGroup> questionGroups = new ArrayList<>(count);
+        while(count > 0){
+            questionGroups.add(0, new QuestionGroup("group"+count,count * multiplier));
+            count--;
+        }
+        return questionGroups;
+    }
+
+    public static List<SecondaryInstanceDef> generateSecondaryInstances(int multiplier, int count){
+        List<SecondaryInstanceDef> instances = new ArrayList<>(count);
+        while(count > 0){
+            instances.add(0, new SecondaryInstanceDef("first"+ count , count * multiplier));
+            count--;
+        }
+        return instances;
     }
 }

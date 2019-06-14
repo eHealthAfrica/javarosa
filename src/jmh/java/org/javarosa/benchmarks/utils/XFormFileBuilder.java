@@ -20,8 +20,7 @@ public class XFormFileBuilder{
     String MODEL = "model";
     String INSTANCE = "instance";
     String BIND = "bind";
-    String INPUT = "input";
-    String QUESTION_GROUP = "question_group";
+    String CONTROL = "input";
     String QUESTION = "question";
     String NEW_LINE = System.getProperty("line.separator");
 
@@ -67,7 +66,7 @@ public class XFormFileBuilder{
     }
 
     private XFormFileBuilder buildTitle(){
-        addChild(HEAD, openAndClose(TITLE, null, "Form Title here"));
+        addChild(HEAD, openAndClose(TITLE, null, xFormComplexity.getTitle()));
         return this;
     }
 
@@ -168,14 +167,37 @@ public class XFormFileBuilder{
     }
 
     public XFormFileBuilder buildControls(){
-        String question = "What is the answer to Question %s ?";
+        String question = "<label>What is the answer to Question %s?</label>";
+        String groupQuestion = "<label>What is the answer to Group %s Question %s?</label>";
+
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
             int no = i + 1;
-            String ref = generatePath(xFormComplexity.getMainInstanceTagName(), QUESTION+no);
+            String ref = generatePath(xFormComplexity.getMainInstanceTagName(), QUESTION + no);
             Map attrs = buildMap(new String[]{"ref", ref});
             String text = String.format(question, no);
-            stringBuilder.append(openAndClose(INPUT, attrs, text));
+            stringBuilder.append(openAndClose(CONTROL, attrs, text));
+        }
+
+        List<QuestionGroup> questionGroups = xFormComplexity.getQuestionGroups();
+        for(int i = 0; i < questionGroups.size(); i++){
+            stringBuilder.append(openingTag("group",  buildMap(new String[]{"appearance", "field-list"})));
+            QuestionGroup questionGroup = questionGroups.get(i);
+            for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
+                String ref = generatePath(
+                    xFormComplexity.getMainInstanceTagName(),
+                    questionGroup.getName(),
+                    QUESTION + (j + 1)
+                );
+                Map questionAttrs = buildMap(
+                    new String[]{"ref", ref},
+                    new String[]{"type", "string"}
+                );
+                int no = j + 1;
+                String text = String.format(groupQuestion, j, no);
+                stringBuilder.append(openAndClose(CONTROL, questionAttrs, text));
+            }
+            stringBuilder.append(closingTag("group"));
         }
         addChild(BODY, stringBuilder.toString());
         return this;
@@ -239,7 +261,6 @@ public class XFormFileBuilder{
 
     public void addChild(String parentName, String childString){
         String CLOSING_TAG_TOKEN = closingTag(parentName);
-
         int insertionIndex = stringBuilder.indexOf(CLOSING_TAG_TOKEN);
         stringBuilder.insert(insertionIndex, childString);
     }
@@ -252,9 +273,9 @@ public class XFormFileBuilder{
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < noOfItems; i++){
             int no =  i + 1;
-            String realTagName = makeTagUnique ? tagName + no : tagName;
+            String realTagName = makeTagUnique ? (tagName + no) : tagName;
             stringBuilder.append(openingTag(realTagName))
-                .append(tagName + " " + no + newLine())
+                //.append(tagName + " " + no + newLine())
                 .append(closingTag(realTagName));
         }
         return stringBuilder.toString();

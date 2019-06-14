@@ -18,15 +18,15 @@ public class Runner {
 
     public static void main(String [] args) throws IOException, XmlPullParserException {
 
-        File file = new File(FileGeneratorUtil.level1().toString());
+        File file = new File(FileGeneratorUtil.generate(5,2,2,null).toString());
         String xml = new String(Files.readAllBytes(file.toPath()));
 
         KXmlParser kXmlParser = ElementParser.instantiateParser(new FileReader(file));
         Document document;
         document = new KXmlElementParser(kXmlParser).parseDoc();
 
-        FormDef formDef = XFormUtils.getFormFromFile(file.getPath(),null);
         System.out.println(xml);
+        FormDef formDef = XFormUtils.getFormFromFile(file.getPath(),null);
         System.out.println("Path - " + file.getPath());
         System.out.println("Document child count - " + document.getChildCount());
         System.out.println("Form title  - " + formDef.getName());
