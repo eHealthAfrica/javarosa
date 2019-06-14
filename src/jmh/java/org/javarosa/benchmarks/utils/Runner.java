@@ -25,12 +25,12 @@ public class Runner {
         Document document;
         document = new KXmlElementParser(kXmlParser).parseDoc();
 
-        //FormDef formDef = XFormUtils.getFormFromFile(file.getPath(),null);
+        FormDef formDef = XFormUtils.getFormFromFile(file.getPath(),null);
         System.out.println(xml);
         System.out.println("Document child count - " + document.getChildCount());
-//        System.out.println("Form title  - " + formDef.getName());
-//        System.out.println("Name of main instance - " + formDef.getMainInstance().getName());
-//        System.out.println("No Of non main instances - " + Collections.list(formDef.getNonMainInstances()).size());
+        System.out.println("Form title  - " + formDef.getName());
+        System.out.println("Name of main instance - " + formDef.getMainInstance().getName());
+        System.out.println("No Of non main instances - " + Collections.list(formDef.getNonMainInstances()).size());
     }
 
 
