@@ -18,7 +18,7 @@ public class Runner {
 
     public static void main(String [] args) throws IOException, XmlPullParserException {
 
-        File file = new File(FileGeneratorUtil.generate(5,2,2,null).toString());
+        File file = new File(FileGeneratorUtil.generate(5,100,0,10,null).toString());
         String xml = new String(Files.readAllBytes(file.toPath()));
 
         KXmlParser kXmlParser = ElementParser.instantiateParser(new FileReader(file));

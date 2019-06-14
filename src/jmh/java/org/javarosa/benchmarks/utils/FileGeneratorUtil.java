@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class FileGeneratorUtil {
 
-        public static Path generate(int multiplier, int noOfQuestions, int noOfSecondaryInstances, File directory) throws IOException {
+        public static Path generate(int multiplier, int noOfQuestions,int noOfQuestionGroups, int noOfSecondaryInstances, File directory) throws IOException {
 
         Map<String, String> namespaces =
             XFormFileBuilder.buildMap(
@@ -26,8 +26,8 @@ public class FileGeneratorUtil {
         XFormComplexity xFormComplexity =
             new XFormComplexity(
                 "Dynamic form generated at " + new Date().toString(),
-                multiplier,
-                generateQuestionGroups(multiplier, noOfQuestions),
+                noOfQuestions,
+                generateQuestionGroups(multiplier, noOfQuestionGroups),
                 generateSecondaryInstances(multiplier, noOfSecondaryInstances),
             null,
                 namespaces);

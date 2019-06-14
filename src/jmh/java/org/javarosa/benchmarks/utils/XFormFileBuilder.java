@@ -172,7 +172,7 @@ public class XFormFileBuilder{
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(
-            buildQuestion(null, xFormComplexity.getNoOfQuestions(),
+            buildControl(null, xFormComplexity.getNoOfQuestions(),
                 xFormComplexity.getMainInstanceTagName(),
                 question)
         );
@@ -183,8 +183,9 @@ public class XFormFileBuilder{
             QuestionGroup questionGroup = questionGroups.get(i);
 
             for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
+                System.out.println(i+"-"+j);
                 stringBuilder.append(
-                    buildQuestion(j, questionGroup.getNoOfQuestions(),
+                    buildControl(j, questionGroup.getNoOfQuestions(),
                         generatePath(xFormComplexity.getMainInstanceTagName(), questionGroup.getName()),
                         groupQuestion)
                 );
@@ -195,13 +196,13 @@ public class XFormFileBuilder{
         return this;
     }
 
-    public String buildQuestion(Integer groupIndex, int noOfQuestions, String parentNode, String textTemplate){
+    public String buildControl(Integer groupIndex, int noOfQuestions, String parentNode, String textTemplate){
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < noOfQuestions; i++){
             int no = i + 1;
             String ref = generatePath(parentNode, QUESTION + no);
             Map attrs = buildMap(new String[]{"ref", ref});
-            String text = String.format(textTemplate, no, groupIndex);
+            String text = String.format(textTemplate, groupIndex == null ? no : groupIndex, no);
             stringBuilder.append(openAndClose(CONTROL, attrs, text));
         }
         return stringBuilder.toString();
@@ -270,7 +271,7 @@ public class XFormFileBuilder{
     }
 
     public String generatePath(String ...parts){
-        return FORWARD_SLASH + String.join(FORWARD_SLASH,parts).replace("//","/");
+        return (FORWARD_SLASH + String.join(FORWARD_SLASH,parts)).replaceAll("//","/");
     }
 
     public String generateItemset(String tagName, int noOfItems, boolean makeTagUnique){
@@ -279,7 +280,7 @@ public class XFormFileBuilder{
             int no =  i + 1;
             String realTagName = makeTagUnique ? (tagName + no) : tagName;
             stringBuilder.append(openingTag(realTagName))
-                //.append(tagName + " " + no + newLine())
+                .append(tagName + " " + no + newLine())
                 .append(closingTag(realTagName));
         }
         return stringBuilder.toString();
