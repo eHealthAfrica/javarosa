@@ -2,6 +2,7 @@ package org.javarosa.benchmarks.utils;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class XFormFileBuilder{
@@ -20,6 +21,7 @@ public class XFormFileBuilder{
     String INSTANCE = "instance";
     String BIND = "bind";
     String INPUT = "input";
+    String QUESTION_GROUP = "question_group";
     String QUESTION = "question";
     String NEW_LINE = System.getProperty("line.separator");
 
@@ -96,7 +98,8 @@ public class XFormFileBuilder{
                 .append(shortOpenAndClose("subscriberid"))
                 .append(shortOpenAndClose("simserial"))
                 .append(shortOpenAndClose("phonenumber"))
-                .append(generateInstanceItems(QUESTION,xFormComplexity.getNoOfQuestions(), true))
+                .append(generateQuestionGroup(xFormComplexity.getQuestionGroups()))
+                .append(generateItemset(QUESTION,xFormComplexity.getNoOfQuestions(), true))
                 .append(closingTag(ROOT))
                 .append(closingTag(INSTANCE));
 
@@ -104,14 +107,30 @@ public class XFormFileBuilder{
         return this;
     }
 
+    private String generateQuestionGroup(List<QuestionGroup> questionGroupList){
+        if(questionGroupList != null){
+            StringBuilder stringBuilder = new StringBuilder();
+            for(int i = 0;  i < questionGroupList.size(); i++){
+                QuestionGroup questionGroup = questionGroupList.get(i);
+                stringBuilder
+                    .append(openingTag(questionGroup.getName()))
+                    .append(generateItemset(QUESTION,questionGroup.getNoOfQuestions(), true))
+                    .append(closingTag(questionGroup.getName()));
+            }
+            return stringBuilder.toString();
+        }
+        return "";
+    }
+
     private XFormFileBuilder buildSecondaryInstances(){
         final String ROOT = xFormComplexity.getMainInstanceTagName();
-       final Map idAttr = buildMap(new String[]{"id", xFormComplexity.getFormId()});
+       int counter = 1;
         for(SecondaryInstanceDef secondaryInstanceDef: xFormComplexity.getInternalSecondaryInstanceDefList()){
             StringBuilder sb = new StringBuilder();
+            final Map idAttr = buildMap(new String[]{"id", xFormComplexity.getFormId() + "_" + counter++});
             sb.append(openingTag(INSTANCE, idAttr))
                 .append(openingTag(ROOT))
-                .append(generateInstanceItems("option",secondaryInstanceDef.getNoOfItems(), false))
+                .append(generateItemset("option",secondaryInstanceDef.getNoOfItems(), false))
                 .append(closingTag(ROOT))
                 .append(closingTag(INSTANCE));
 
@@ -121,6 +140,22 @@ public class XFormFileBuilder{
     }
 
     public XFormFileBuilder buildBind(){
+        List<QuestionGroup> questionGroups = xFormComplexity.getQuestionGroups();
+        for(int i = 0; i < questionGroups.size(); i++){
+            QuestionGroup questionGroup = questionGroups.get(i);
+            for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
+                String nodeset = generatePath(xFormComplexity.getMainInstanceTagName(),
+                     questionGroup.getName(),
+                    QUESTION + (j + 1)
+                );
+                Map attrs = buildMap(
+                    new String[]{"nodeset", nodeset},
+                    new String[]{"type", "string"}
+                );
+                addChild(MODEL, openAndClose(BIND, attrs));
+            }
+        }
+
         for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
             String nodeset = xFormComplexity.getMainInstanceTagName()+ "/" + QUESTION + (i + 1);
             Map attrs = buildMap(
@@ -213,7 +248,7 @@ public class XFormFileBuilder{
         return FORWARD_SLASH + String.join(FORWARD_SLASH,parts);
     }
 
-    public String generateInstanceItems(String tagName, int noOfItems,boolean makeTagUnique){
+    public String generateItemset(String tagName, int noOfItems, boolean makeTagUnique){
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < noOfItems; i++){
             int no =  i + 1;

@@ -15,6 +15,8 @@ public class FileGeneratorUtil {
     }
         public static Path level1(File directory) throws IOException {
 
+        int itemsetMultiplier = 200;
+
         Map<String, String> namespaces =
             XFormFileBuilder.buildMap(
                 new String[]{"", "http://www.w3.org/2002/xforms"},
@@ -26,25 +28,34 @@ public class FileGeneratorUtil {
             );
 
         List<SecondaryInstanceDef> secondaryInstanceDefList = Arrays.asList(
-            new SecondaryInstanceDef("first", 10),
-            new SecondaryInstanceDef("second", 20),
-            new SecondaryInstanceDef("third", 30),
-            new SecondaryInstanceDef("forth", 40),
-            new SecondaryInstanceDef("fifth", 500),
-            new SecondaryInstanceDef("fifth", 1000)
+            new SecondaryInstanceDef("first", itemsetMultiplier),
+            new SecondaryInstanceDef("second", itemsetMultiplier * 2),
+            new SecondaryInstanceDef("third", itemsetMultiplier * 3),
+            new SecondaryInstanceDef("forth", itemsetMultiplier * 4),
+            new SecondaryInstanceDef("fifth", itemsetMultiplier * 5)
+        );
+
+
+        List<QuestionGroup> questionGroups = Arrays.asList(
+            new QuestionGroup("group1", itemsetMultiplier),
+            new QuestionGroup("group2", itemsetMultiplier * 2),
+            new QuestionGroup("group3", itemsetMultiplier * 3),
+            new QuestionGroup("group4", itemsetMultiplier * 4),
+            new QuestionGroup("group5", itemsetMultiplier * 5)
         );
 
         XFormComplexity xFormComplexity =
             new XFormComplexity(
                 "Generated Form",
-                1000,
+                itemsetMultiplier * 5,
+                questionGroups,
                 secondaryInstanceDefList,
             null,
                 namespaces);
 
         XFormFileBuilder xFormFileBuilder = new XFormFileBuilder(xFormComplexity);
 
-        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), "xml", directory);
+        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), ".xml", directory);
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(xFormFileBuilder.build());
         fileWriter.close();

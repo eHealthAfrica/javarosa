@@ -1,6 +1,5 @@
 package org.javarosa.benchmarks.utils;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +10,7 @@ public  class  XFormComplexity{
     private String title;
     private String formId;
     private int noOfQuestions;
+    private List<QuestionGroup> questionGroups;
     private List<SecondaryInstanceDef> internalSecondaryInstanceDefList;
     private List<SecondaryInstanceDef> externalSecondaryInstanceDefList;
 
@@ -18,12 +18,14 @@ public  class  XFormComplexity{
 
         String title,
         int noOfQuestions,
+        List<QuestionGroup> questionGroups,
         List<SecondaryInstanceDef> internalSecondaryInstanceDefList,
         List<SecondaryInstanceDef> externalSecondaryInstanceDefList,
         Map<String, String> namespaces) {
 
         this.title = title;
         this.noOfQuestions = noOfQuestions;
+        this.questionGroups = questionGroups;
         this.internalSecondaryInstanceDefList = internalSecondaryInstanceDefList;
         this.externalSecondaryInstanceDefList = externalSecondaryInstanceDefList;
 
@@ -62,6 +64,14 @@ public  class  XFormComplexity{
 
     public void setNoOfQuestions(int noOfQuestions) {
         this.noOfQuestions = noOfQuestions;
+    }
+
+    public List<QuestionGroup> getQuestionGroups() {
+        return questionGroups;
+    }
+
+    public void setQuestionGroups(List<QuestionGroup> questionGroups) {
+        this.questionGroups = questionGroups;
     }
 
     public List<SecondaryInstanceDef> getexternalSecondaryInstanceDefList() {

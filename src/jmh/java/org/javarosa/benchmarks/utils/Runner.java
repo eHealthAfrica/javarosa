@@ -27,6 +27,7 @@ public class Runner {
 
         FormDef formDef = XFormUtils.getFormFromFile(file.getPath(),null);
         System.out.println(xml);
+        System.out.println("Path - " + file.getPath());
         System.out.println("Document child count - " + document.getChildCount());
         System.out.println("Form title  - " + formDef.getName());
         System.out.println("Name of main instance - " + formDef.getMainInstance().getName());
