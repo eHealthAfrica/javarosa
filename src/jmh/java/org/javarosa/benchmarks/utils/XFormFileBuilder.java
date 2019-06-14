@@ -1,5 +1,7 @@
 package org.javarosa.benchmarks.utils;
 
+import com.sun.tools.javac.util.StringUtils;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -171,36 +173,40 @@ public class XFormFileBuilder{
         String groupQuestion = "<label>What is the answer to Group %s Question %s?</label>";
 
         StringBuilder stringBuilder = new StringBuilder();
-        for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
-            int no = i + 1;
-            String ref = generatePath(xFormComplexity.getMainInstanceTagName(), QUESTION + no);
-            Map attrs = buildMap(new String[]{"ref", ref});
-            String text = String.format(question, no);
-            stringBuilder.append(openAndClose(CONTROL, attrs, text));
-        }
+        stringBuilder.append(
+            buildQuestion(null, xFormComplexity.getNoOfQuestions(),
+                xFormComplexity.getMainInstanceTagName(),
+                question)
+        );
 
         List<QuestionGroup> questionGroups = xFormComplexity.getQuestionGroups();
         for(int i = 0; i < questionGroups.size(); i++){
             stringBuilder.append(openingTag("group",  buildMap(new String[]{"appearance", "field-list"})));
             QuestionGroup questionGroup = questionGroups.get(i);
+
             for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
-                String ref = generatePath(
-                    xFormComplexity.getMainInstanceTagName(),
-                    questionGroup.getName(),
-                    QUESTION + (j + 1)
+                stringBuilder.append(
+                    buildQuestion(j, questionGroup.getNoOfQuestions(),
+                        generatePath(xFormComplexity.getMainInstanceTagName(), questionGroup.getName()),
+                        groupQuestion)
                 );
-                Map questionAttrs = buildMap(
-                    new String[]{"ref", ref},
-                    new String[]{"type", "string"}
-                );
-                int no = j + 1;
-                String text = String.format(groupQuestion, j, no);
-                stringBuilder.append(openAndClose(CONTROL, questionAttrs, text));
             }
             stringBuilder.append(closingTag("group"));
         }
         addChild(BODY, stringBuilder.toString());
         return this;
+    }
+
+    public String buildQuestion(Integer groupIndex, int noOfQuestions, String parentNode, String textTemplate){
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i = 0; i < noOfQuestions; i++){
+            int no = i + 1;
+            String ref = generatePath(parentNode, QUESTION + no);
+            Map attrs = buildMap(new String[]{"ref", ref});
+            String text = String.format(textTemplate, no, groupIndex);
+            stringBuilder.append(openAndClose(CONTROL, attrs, text));
+        }
+        return stringBuilder.toString();
     }
 
     public boolean hasHtml(){
@@ -266,7 +272,7 @@ public class XFormFileBuilder{
     }
 
     public String generatePath(String ...parts){
-        return FORWARD_SLASH + String.join(FORWARD_SLASH,parts);
+        return FORWARD_SLASH + String.join(FORWARD_SLASH,parts).replace("//","/");
     }
 
     public String generateItemset(String tagName, int noOfItems, boolean makeTagUnique){

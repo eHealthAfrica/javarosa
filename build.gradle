@@ -77,15 +77,15 @@ javadoc {
 jmh {
     include = ['(DynamicXFormBenchmark)']
     iterations = 20
-    fork = 0
+    fork = 5
     timeOnIteration = '10s'
-    timeout = '1s'
-    warmup = '1s'
+    timeout = '10s'
+    warmup = '5s'
     warmupBatchSize = 1
-    warmupForks = 0
+    warmupForks = 2
     warmupIterations = 10
     includeTests = true
-    profilers = ['stack']
-    benchmarkMode = ['avgt','ss']
+    //profilers = ['stack']
+    benchmarkMode = ['avgt']
     forceGC = true
 }
