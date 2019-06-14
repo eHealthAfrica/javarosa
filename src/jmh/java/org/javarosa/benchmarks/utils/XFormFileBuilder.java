@@ -1,7 +1,5 @@
 package org.javarosa.benchmarks.utils;
 
-import com.sun.tools.javac.util.StringUtils;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;

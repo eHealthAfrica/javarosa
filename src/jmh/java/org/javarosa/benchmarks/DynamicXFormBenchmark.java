@@ -28,7 +28,7 @@ public class DynamicXFormBenchmark {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            level1 = FileGeneratorUtil.generate(5,100,100,null);
+            level1 = FileGeneratorUtil.generate(5,100,10,null);
         }
     }
 
