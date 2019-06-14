@@ -26,12 +26,12 @@ public class FileGeneratorUtil {
             );
 
         List<SecondaryInstanceDef> secondaryInstanceDefList = Arrays.asList(
-            new SecondaryInstanceDef("first", 10),
-            new SecondaryInstanceDef("second", 20),
-            new SecondaryInstanceDef("third", 30),
-            new SecondaryInstanceDef("forth", 40),
-            new SecondaryInstanceDef("fifth", 500),
-            new SecondaryInstanceDef("fifth", 1000)
+            new SecondaryInstanceDef("first", 10)
+//            new SecondaryInstanceDef("second", 20),
+//            new SecondaryInstanceDef("third", 30),
+//            new SecondaryInstanceDef("forth", 40),
+//            new SecondaryInstanceDef("fifth", 500),
+//            new SecondaryInstanceDef("fifth", 1000)
         );
 
         XFormComplexity xFormComplexity =

@@ -217,10 +217,10 @@ public class XFormFileBuilder{
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < noOfItems; i++){
             int no =  i + 1;
-            tagName = makeTagUnique ?  tagName + no : tagName;
-            stringBuilder.append(openingTag(tagName))
-                .append(tagName + " " + (i + 1) + newLine())
-                .append(closingTag(tagName));
+            String realTagName = makeTagUnique ? tagName + no : tagName;
+            stringBuilder.append(openingTag(realTagName))
+                .append(tagName + " " + no + newLine())
+                .append(closingTag(realTagName));
         }
         return stringBuilder.toString();
     }
