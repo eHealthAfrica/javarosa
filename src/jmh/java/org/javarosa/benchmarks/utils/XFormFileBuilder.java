@@ -1,39 +1,16 @@
 package org.javarosa.benchmarks.utils;
 
-
-
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 public class XFormFileBuilder{
 
-
-    public static void main(String [] args) throws IOException {
-        HashMap<String, String> namespaces = new HashMap()
-        {{
-            put("", "http://www.w3.org/2002/xforms");
-            put("h", "http://www.w3.org/1999/xhtml");
-            put("ev", "http://www.w3.org/2001/xml-events");
-            put("jr", "http://openrosa.org/javarosa");
-        }};
-
-        XFormComplexity xFormComplexity = new XFormComplexity("Generated Form",5,3,
-            3, namespaces);
-
-        XFormFileBuilder xFormFileBuilder = new XFormFileBuilder(xFormComplexity);
-        System.out.println(xFormFileBuilder.build());
-    }
-
     String DOUBLE_QUOTE = "\"";
     String SPACE = " ";
     String OPEN_TOKEN = "<";
     String CLOSE_TOKEN = ">";
-    String CLOSE_BRACE = "/";
+    String FORWARD_SLASH = "/";
     String EQUALS = "=";
     String HTML = "html";
     String HEAD = "head";
@@ -43,24 +20,30 @@ public class XFormFileBuilder{
     String INSTANCE = "instance";
     String BIND = "bind";
     String INPUT = "input";
+    String QUESTION = "question";
     String NEW_LINE = System.getProperty("line.separator");
-
-    Map bindAttributeTemplate;
-
 
     StringBuilder stringBuilder;
     XFormComplexity xFormComplexity;
+    boolean minify;
 
     public XFormFileBuilder(XFormComplexity xFormComplexity){
-        stringBuilder = new StringBuilder();
-        bindAttributeTemplate = new HashMap()
-        {{
-            put("nodeset", "/data/meta/instanceID");
-            put("type", "string");
-            put("readonly", "true()");
-            put("calculate", "concat('uuid:',uuid())");
-        }};
+        stringBuilder = new StringBuilder("<?xml version=\"1.0\"?>\n");
        this.xFormComplexity = xFormComplexity;
+       this.minify = false;
+    }
+
+    public String build() {
+        return buildHtml()
+            .buildHead()
+            .buildBody()
+            .buildTitle()
+            .buildModel()
+            .buildPrimaryInstance()
+            .buildSecondaryInstances()
+            .buildBind()
+            .buildControls()
+            .toString();
     }
 
     private XFormFileBuilder buildHtml(){
@@ -91,34 +74,84 @@ public class XFormFileBuilder{
         return this;
     }
 
-    private XFormFileBuilder buildInstances(){
-        for(int i = 0; i < xFormComplexity.getNoOfInternalInstances(); i++){
-            StringBuilder sb = new StringBuilder();
+    public static Map buildMap(String[] ...args){
+        Map<String, String> map = new HashMap<>();
+        for(String[] pair: args){
+            map.put(pair[0], pair[1]);
+        }
+        return map;
+    }
+
+
+    private XFormFileBuilder buildPrimaryInstance(){
+        final String ROOT = xFormComplexity.getMainInstanceTagName();
+        final String[] id = {"id", xFormComplexity.getFormId()};
+        final StringBuilder sb = new StringBuilder();
             sb.append(openingTag(INSTANCE))
-                .append(openingTag("root"))
-                .append(generateInstanceItems(xFormComplexity.getNoOfItemSets()))
-                .append(closingTag("root"))
+                .append(openingTag(ROOT, buildMap(id)))
+                .append(shortOpenAndClose("start"))
+                .append(shortOpenAndClose("end"))
+                .append(shortOpenAndClose("today"))
+                .append(shortOpenAndClose("deviceid"))
+                .append(shortOpenAndClose("subscriberid"))
+                .append(shortOpenAndClose("simserial"))
+                .append(shortOpenAndClose("phonenumber"))
+                .append(generateInstanceItems(QUESTION,xFormComplexity.getNoOfQuestions(), true))
+                .append(closingTag(ROOT))
                 .append(closingTag(INSTANCE));
 
-            addChild(HEAD, sb.toString());
+            addChild(MODEL, sb.toString());
+        return this;
+    }
+
+    private XFormFileBuilder buildSecondaryInstances(){
+        final String ROOT = xFormComplexity.getMainInstanceTagName();
+       final Map idAttr = buildMap(new String[]{"id", xFormComplexity.getFormId()});
+        for(SecondaryInstanceDef secondaryInstanceDef: xFormComplexity.getInternalSecondaryInstanceDefList()){
+            StringBuilder sb = new StringBuilder();
+            sb.append(openingTag(INSTANCE, idAttr))
+                .append(openingTag(ROOT))
+                .append(generateInstanceItems("option",secondaryInstanceDef.getNoOfItems(), false))
+                .append(closingTag(ROOT))
+                .append(closingTag(INSTANCE));
+
+            addChild(MODEL, sb.toString());
         }
         return this;
     }
 
     public XFormFileBuilder buildBind(){
         for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
-            addChild(INSTANCE, openAndClose(BIND, bindAttributeTemplate));
+            String nodeset = xFormComplexity.getMainInstanceTagName()+ "/" + QUESTION + (i + 1);
+            Map attrs = buildMap(
+                new String[]{"nodeset", nodeset},
+                new String[]{"type", "string"}
+                );
+            addChild(MODEL, openAndClose(BIND, attrs));
         }
         return this;
     }
 
-    public XFormFileBuilder buildInput(){
-        addChild(BODY, openAndClose(INPUT));
+    public XFormFileBuilder buildControls(){
+        String question = "What is the answer to Question %s ?";
+        StringBuilder stringBuilder = new StringBuilder();
+        for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
+            int no = i + 1;
+            String ref = generatePath(xFormComplexity.getMainInstanceTagName(), QUESTION+no);
+            Map attrs = buildMap(new String[]{"ref", ref});
+            String text = String.format(question, no);
+            stringBuilder.append(openAndClose(INPUT, attrs, text));
+        }
+        addChild(BODY, stringBuilder.toString());
         return this;
     }
 
     public boolean hasHtml(){
         return false;
+    }
+
+    public  String shortOpenAndClose(String name){
+        return OPEN_TOKEN + name + FORWARD_SLASH + CLOSE_TOKEN + newLine();
     }
 
     public String openAndClose(String name){
@@ -134,7 +167,7 @@ public class XFormFileBuilder{
     }
 
     public String openingTag(String name){
-        return OPEN_TOKEN + name + CLOSE_TOKEN + NEW_LINE;
+        return OPEN_TOKEN + name + CLOSE_TOKEN + newLine();
     }
 
     public String openingTag(String name, Map<String, String> attributes){
@@ -148,7 +181,7 @@ public class XFormFileBuilder{
     }
 
     public String closingTag(String name){
-        return OPEN_TOKEN + CLOSE_BRACE  + name + CLOSE_TOKEN  + NEW_LINE;
+        return OPEN_TOKEN + FORWARD_SLASH + name + CLOSE_TOKEN  + newLine();
     }
 
     public String buildAttributes(Map<String, String> attributes){
@@ -176,38 +209,28 @@ public class XFormFileBuilder{
         stringBuilder.insert(insertionIndex, childString);
     }
 
-    public String generateInstanceItems(int noOfItems){
+    public String generatePath(String ...parts){
+        return FORWARD_SLASH + String.join(FORWARD_SLASH,parts);
+    }
+
+    public String generateInstanceItems(String tagName, int noOfItems,boolean makeTagUnique){
         StringBuilder stringBuilder = new StringBuilder();
         for(int i = 0; i < noOfItems; i++){
-            stringBuilder.append(openingTag("item"))
-                .append("Count " + i + NEW_LINE)
-                .append(closingTag("item"));
+            int no =  i + 1;
+            tagName = makeTagUnique ?  tagName + no : tagName;
+            stringBuilder.append(openingTag(tagName))
+                .append(tagName + " " + (i + 1) + newLine())
+                .append(closingTag(tagName));
         }
         return stringBuilder.toString();
     }
 
-    public String toString(){
-        return stringBuilder.toString();
+    public  String newLine(){
+        return minify ? "" : NEW_LINE;
     }
 
-    public String build() throws IOException {
-        String content = buildHtml()
-            .buildHead()
-            .buildBody()
-            .buildTitle()
-            .buildModel()
-            .buildInstances()
-            .buildBind()
-            .buildInput()
-            .toString();
-
-        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), "xml");
-        FileWriter fileWriter = new FileWriter(file);
-        fileWriter.write(content);
-        fileWriter.close();
-
-        String xml = new String(Files.readAllBytes(file.toPath()));
-        return  xml;
+    public String toString(){
+        return stringBuilder.toString();
     }
 
 }

@@ -3,7 +3,6 @@ package org.javarosa.benchmarks;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -15,7 +14,6 @@ import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.stream.Stream;
 import org.javarosa.core.model.QuestionDef;
@@ -28,6 +26,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class BenchmarkUtils {
+
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");

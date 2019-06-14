@@ -15,34 +15,42 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.prepareAssets;
 
-public class DynamicFormTypesBeforeChangeBenchmark {
+public class DynamicXFormBenchmark {
 
     public static void main(String[] args) {
-        dryRun(FormTypesAfterChangeBenchmark.class);
+        dryRun(DynamicXFormBenchmark.class);
     }
 
     @State(Scope.Thread)
     public static class FormTypesState {
-        Path xformM1K1S1K ;
+        Path level1 ;
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            String filePathString = FileGeneratorUtil.level1().toString();
-            Path assetsPath = prepareAssets(filePathString);
-            xformM1K1S1K = assetsPath.resolve(filePathString);
+            level1 = FileGeneratorUtil.level1();
+//            Path assetsPath = prepareAssets(filePathString);
+//            level1 = assetsPath.resolve(filePathString);
         }
     }
 
     @Benchmark
-    public void benchmarkForm_EIMCI(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runBenchmark(state.xformM1K1S1K);
+    public void benchmarkBeforeLevel1(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+        FormDef formDef = runBeforeBenchmark(state.level1);
         bh.consume(formDef);
     }
 
-    private FormDef runBenchmark(Path filePath) throws IOException {
+    @Benchmark
+    public void benchmarkAfterLevel1(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+        FormDef formDef = runAfterBenchmark(state.level1);
+        bh.consume(formDef);
+    }
+
+    private FormDef runBeforeBenchmark(Path filePath) throws IOException {
         return FormParserHelper.parse(filePath, false);
+    }
+    private FormDef runAfterBenchmark(Path filePath) throws IOException {
+        return FormParserHelper.parse(filePath, true);
     }
 
 }

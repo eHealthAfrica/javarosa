@@ -75,8 +75,8 @@ javadoc {
 }
 
 jmh {
-    include = ['(FormTypes)']
-    iterations = 5
+    include = ['(DynamicXFormBenchmark)']
+    iterations = 20
     fork = 0
     timeOnIteration = '10s'
     timeout = '1s'
@@ -85,7 +85,7 @@ jmh {
     warmupForks = 0
     warmupIterations = 10
     includeTests = true
-    //profilers = ['stack']
+    profilers = ['stack']
     benchmarkMode = ['avgt','ss']
     forceGC = true
 }

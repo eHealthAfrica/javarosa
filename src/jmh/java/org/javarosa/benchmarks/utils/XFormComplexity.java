@@ -2,28 +2,30 @@ package org.javarosa.benchmarks.utils;
 
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public  class  XFormComplexity{
 
-    private String title;
     private Map<String, String> namespaces;
+    private String title;
+    private String formId;
     private int noOfQuestions;
-    private int noOfInternalInstances;
-    private int noOfExternalInstances;
-    private int noOfItemSets;
+    private List<SecondaryInstanceDef> internalSecondaryInstanceDefList;
+    private List<SecondaryInstanceDef> externalSecondaryInstanceDefList;
 
     public XFormComplexity(
+
         String title,
         int noOfQuestions,
-        int noOfInternalInstances,
-        int noOfExternalInstances,
+        List<SecondaryInstanceDef> internalSecondaryInstanceDefList,
+        List<SecondaryInstanceDef> externalSecondaryInstanceDefList,
         Map<String, String> namespaces) {
 
         this.title = title;
         this.noOfQuestions = noOfQuestions;
-        this.noOfInternalInstances = noOfInternalInstances;
-        this.noOfExternalInstances = noOfExternalInstances;
+        this.internalSecondaryInstanceDefList = internalSecondaryInstanceDefList;
+        this.externalSecondaryInstanceDefList = externalSecondaryInstanceDefList;
 
         this.namespaces = new HashMap<>();
         for(String  key: namespaces.keySet()){
@@ -33,6 +35,17 @@ public  class  XFormComplexity{
                 this.namespaces.put("xmlns:"  + key, namespaces.get(key));
             }
         }
+    }
+
+    public String getFormId() {
+        if(formId == null){
+            formId = "ref_" + System.currentTimeMillis();
+        }
+        return formId;
+    }
+
+    public void setFormId(String formId) {
+        this.formId = formId;
     }
 
     public String getTitle() {
@@ -51,20 +64,12 @@ public  class  XFormComplexity{
         this.noOfQuestions = noOfQuestions;
     }
 
-    public int getNoOfInternalInstances() {
-        return noOfInternalInstances;
+    public List<SecondaryInstanceDef> getexternalSecondaryInstanceDefList() {
+        return externalSecondaryInstanceDefList;
     }
 
-    public void setNoOfInternalInstances(int noOfInternalInstances) {
-        this.noOfInternalInstances = noOfInternalInstances;
-    }
-
-    public int getNoOfExternalInstances() {
-        return noOfExternalInstances;
-    }
-
-    public void setNoOfExternalInstances(int noOfExternalInstances) {
-        this.noOfExternalInstances = noOfExternalInstances;
+    public void setexternalSecondaryInstanceDefList(List<SecondaryInstanceDef> externalSecondaryInstanceDefList) {
+        this.externalSecondaryInstanceDefList = externalSecondaryInstanceDefList;
     }
 
     public Map<String, String> getNamespaces() {
@@ -75,11 +80,19 @@ public  class  XFormComplexity{
         this.namespaces = namespaces;
     }
 
-    public int getNoOfItemSets() {
-        return noOfItemSets;
+    public List<SecondaryInstanceDef> getInternalSecondaryInstanceDefList() {
+        return internalSecondaryInstanceDefList;
     }
 
-    public void setNoOfItemSets(int noOfItemSets) {
-        this.noOfItemSets = noOfItemSets;
+    public void setInternalSecondaryInstanceDefList(List<SecondaryInstanceDef> internalSecondaryInstanceDefList) {
+        this.internalSecondaryInstanceDefList = internalSecondaryInstanceDefList;
+    }
+
+    //Non POJO methods
+    public String getMainInstanceTagName(){
+        String tagName = getFormId().toLowerCase()
+            .replace(" ", "_")
+            .replace("-", "_");
+        return tagName;
     }
 }
