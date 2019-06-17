@@ -524,22 +524,27 @@ public class XFormParser implements IXFormParserFunctions {
                         loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
                         loadInstanceData(instance, fi.getRoot(), _f);
                         _f.addNonMainInstance(fi);
-                    }else{
-                        //Internal secondary instances were not parsed with xform - skipped
-                        final InternalDataInstance internalDataInstance;
-                        try{
-                            internalDataInstance = InternalDataInstanceParser.build( xFormPath, instanceId);
-                        } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
-                            XmlPullParserException | InvalidReferenceException e) {
-                            String msg = "Unable to parse internal secondary instance";
-                            logger.error(msg, e);
-                            throw new XFormParseException(msg + ": " + e.toString(), null);
-                        }
-                        _f.addNonMainInstance(internalDataInstance);
                     }
 
                 }
             }
+        }
+        if(xFormPath != null){
+            //Internal secondary instances were not parsed with xform - skipped
+            final List<InternalDataInstance> internalDataInstances;
+            try{
+                internalDataInstances = InternalDataInstanceParser.buildInstances( xFormPath);
+                for(DataInstance instance: internalDataInstances)
+                    _f.addNonMainInstance(instance);
+            } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
+                XmlPullParserException | InvalidReferenceException e) {
+                String msg = "Unable to parse internal secondary instance";
+                logger.error(msg, e);
+                throw new XFormParseException(msg + ": " + e.toString(), null);
+            }
+
+
+
         }
         //now parse the main instance
         if (mainInstanceNode != null) {
