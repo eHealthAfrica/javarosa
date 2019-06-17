@@ -28,14 +28,14 @@ public class DynamicXFormCachingBenchmark {
         dryRun(DynamicXFormCachingBenchmark.class);
     }
 
-    @State(Scope.Group)
+    @State(Scope.Thread)
     public static class FormTypesState {
         Path formXmlBeforePath;
         Path formXmlAfterPath;
         String cachePath;
         FormDef formDefBefore;
         FormDef formDefAfter;
-        @Setup(Level.Iteration)
+        @Setup(Level.Trial)
         public void initialize() throws IOException {
             formXmlBeforePath = FileGeneratorUtil.generate(5,10,0,100,null);
             formXmlAfterPath = FileGeneratorUtil.generate(5,100,0,100,null);
