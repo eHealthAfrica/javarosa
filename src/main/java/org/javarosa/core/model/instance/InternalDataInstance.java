@@ -24,7 +24,7 @@ import java.io.IOException;
  *
  */
 public class InternalDataInstance extends DataInstance {
-    private String xFormPath;
+    private String dataInstanceXmlString;
     private TreeElement root;
 
     /**
@@ -39,11 +39,11 @@ public class InternalDataInstance extends DataInstance {
      *             instance since internal instance always have only one child
      *             which is the root of the ItemSets
      * @param instanceId
-     * @param xFormPath
+     * @param dataInstanceXmlString XML string of the whole tree of the data instance
      */
-    public InternalDataInstance(TreeElement root, String instanceId, String xFormPath) {
+    public InternalDataInstance(TreeElement root, String instanceId, String dataInstanceXmlString) {
         super(instanceId);
-        this.xFormPath = xFormPath;
+        this.dataInstanceXmlString = dataInstanceXmlString;
         setName(instanceId);
         setRoot(root);
     }
@@ -82,9 +82,9 @@ public class InternalDataInstance extends DataInstance {
     public void readExternal(DataInputStream in, PrototypeFactory pf)
         throws IOException, DeserializationException {
         super.readExternal(in, pf);
-        xFormPath = ExtUtil.readString(in);
+        dataInstanceXmlString = ExtUtil.readString(in);
         try {
-            setRoot(InternalDataInstanceParser.parseInternalInstance(xFormPath, getInstanceId()));
+            setRoot(InternalDataInstanceParser.buildRoot(dataInstanceXmlString));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
             throw new DeserializationException("Unable to parse external instance: " + e);
         }
@@ -93,7 +93,7 @@ public class InternalDataInstance extends DataInstance {
     @Override
     public void writeExternal(DataOutputStream out) throws IOException {
         super.writeExternal(out);
-        ExtUtil.write(out, xFormPath);
+        ExtUtil.write(out, dataInstanceXmlString);
     }
 
 }

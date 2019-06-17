@@ -14,6 +14,8 @@ import org.openjdk.jmh.infra.Blackhole;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
 
@@ -24,10 +26,11 @@ public class InternalDataInstanceBuildBenchmark {
 
     @State(Scope.Thread)
     public static class InternalDataInstanceState {
-        String xFormInternalSecondaryInstances;
+        String xFormInternalSecondaryInstance;
         @Setup(Level.Trial)
-        public void initialize() {
-            xFormInternalSecondaryInstances = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance().toString();
+        public void initialize() throws IOException {
+            Path path = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance();
+            xFormInternalSecondaryInstance = new String(Files.readAllBytes(path));
         }
     }
 
@@ -36,7 +39,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance wardsInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances, "wards");
+            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstance);
         bh.consume(wardsInternalInstance);
     }
 
@@ -46,7 +49,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance lgaIInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances, "lgas");
+            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstance);
         bh.consume(lgaIInternalInstance);
     }
 }
