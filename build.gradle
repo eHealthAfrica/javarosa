@@ -76,7 +76,7 @@ javadoc {
 }
 
 jmh {
-    include = ['(DynamicXFormBenchmark)']
+    include = ['(DynamicXFormCachingBenchmark)']
     iterations = 20
     fork = 0
     timeOnIteration = '10s'
