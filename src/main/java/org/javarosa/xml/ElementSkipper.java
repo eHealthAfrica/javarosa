@@ -1,6 +1,9 @@
 package org.javarosa.xml;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * @author johnthebeloved
  * Abstracts algorithm for skipping child elements
@@ -17,6 +20,7 @@ public class ElementSkipper
     private int from;
     private int to;
     private int currentParsingIndex;
+    private List<String> xmlTree;
 
     /**
      * Starts skipping  from the provided from parameter to the last sibling
@@ -39,6 +43,7 @@ public class ElementSkipper
         this.to = to;
         currentParsingIndex = 0;
         this.elementName = elementName;
+        this.xmlTree = new ArrayList<>();
     }
 
     public boolean skip(String elementName){
@@ -48,6 +53,14 @@ public class ElementSkipper
             return skip;
         }
         return false;
+    }
+
+    public void addXmlTree(String xmlTree){
+        this.xmlTree.add(xmlTree);
+    }
+
+    public List<String> getXmlTrees(){
+        return xmlTree;
     }
 
 }

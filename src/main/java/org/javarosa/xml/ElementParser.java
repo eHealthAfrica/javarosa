@@ -140,4 +140,48 @@ public abstract class ElementParser<T> {
         }
     }
 
+
+
+    public String gatherSubTree() throws XmlPullParserException, IOException {
+        StringBuilder stringBuilder = new StringBuilder();
+        parser.require(KXmlParser.START_TAG, null, null);
+        stringBuilder.append("<"+ parser.getName());
+        for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
+             i < parser.getNamespaceCount (parser.getDepth ()); i++) {
+            stringBuilder.append(" " + parser.getNamespacePrefix (i) + "=\"" + parser.getNamespaceUri (i) +"\"" );
+        }
+
+        for (int i = 0; i < parser.getAttributeCount(); ++i) {
+            stringBuilder.append(" " + (parser.getAttributeNamespace(i) == null ? (parser.getAttributeNamespace(i) + ":") : "") + parser.getAttributeName(i) + "=\"" + parser.getAttributeValue(i) +"\"" );
+        }
+        stringBuilder.append(">");
+        int level = 1;
+        while (level > 0) {
+            int eventType = parser.next();
+            if (eventType == KXmlParser.END_TAG) {
+                stringBuilder.append("</"+ parser.getName() + ">");
+                --level;
+            }
+            else if (eventType == KXmlParser.START_TAG) {
+                stringBuilder.append("<"+ parser.getName());
+                for (int i = parser.getNamespaceCount (parser.getDepth () - 1);
+                     i < parser.getNamespaceCount (parser.getDepth ()); i++) {
+                    stringBuilder.append(" " + parser.getNamespacePrefix (i) + "=\"" + parser.getNamespaceUri (i) +"\"" );
+                }
+
+                for (int i = 0; i < parser.getAttributeCount(); ++i) {
+                    stringBuilder.append(" " + (parser.getAttributeNamespace(i) == null ? (parser.getAttributeNamespace(i) + ":") : "") + parser.getAttributeName(i) + "=\"" + parser.getAttributeValue(i) +"\"" );
+                }
+                stringBuilder.append(">");
+                ++level;
+            }else{
+                stringBuilder.append(parser.getText());
+            }
+
+        }
+        return stringBuilder.toString();
+    }
+
+
+
 }

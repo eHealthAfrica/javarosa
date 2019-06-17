@@ -372,9 +372,13 @@ public class XFormParser implements IXFormParserFunctions {
             logger.info("Parsing form...");
 
             boolean skipSecondaryInstance = xFormFile != null;
-            _xmldoc = getXMLDocument(_reader, stringCache, skipSecondaryInstance);
+            ElementSkipper elementSkipper = null;
+            if(skipSecondaryInstance){
+                elementSkipper = new ElementSkipper(INSTANCE_ELEMENT, 1);
+            }
+            _xmldoc = getXMLDocument(_reader, stringCache, elementSkipper);
 
-            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()),xFormFile, lastSavedSrc);
+            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()),elementSkipper, lastSavedSrc);
 
             //load in a custom xml instance, if applicable
             if (_instReader != null) {
@@ -400,16 +404,16 @@ public class XFormParser implements IXFormParserFunctions {
     }
 
     public static Document getXMLDocument(Reader reader) throws IOException {
-        return getXMLDocument(reader,null, false);
+        return getXMLDocument(reader,null, null);
     }
 
-    public static Document getXMLDocument(Reader reader, boolean skipSecondaryInstance) throws IOException {
-        return getXMLDocument(reader,null, skipSecondaryInstance);
+    public static Document getXMLDocument(Reader reader, ElementSkipper elementSkipper) throws IOException {
+        return getXMLDocument(reader,null, elementSkipper);
     }
 
     public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
-        return getXMLDocument(reader, stringCache, false);
+        return getXMLDocument(reader, stringCache, null);
     }
 
     /**
@@ -423,7 +427,7 @@ public class XFormParser implements IXFormParserFunctions {
      * @deprecated The InterningKXmlParser is not used.
      */
     @Deprecated
-    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache, boolean skipInternalInstance)
+    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache, ElementSkipper elementSkipper)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
         Document doc;
@@ -439,11 +443,11 @@ public class XFormParser implements IXFormParserFunctions {
                 doc.parse(parser);
             } else {
 
-                if (skipInternalInstance) {
-                    ElementSkipper elementSkipper = new ElementSkipper(INSTANCE_ELEMENT,1);
+                if (elementSkipper != null) {
                     parser = KXmlElementParser.instantiateParser(reader);
                     KXmlElementParser kxmlElementParser = new KXmlElementParser(parser, elementSkipper);
                     doc = kxmlElementParser.parseDoc();
+                    System.out.println(2);
                 } else {
                     parser = new KXmlParser();
                     doc = new Document();
@@ -482,7 +486,7 @@ public class XFormParser implements IXFormParserFunctions {
         return doc;
     }
 
-    private void parseDoc(Map<String, String> namespacePrefixesByUri,String  xFormPath, String lastSavedSrc) {
+    private void parseDoc(Map<String, String> namespacePrefixesByUri,ElementSkipper  internalSecondaryInstances, String lastSavedSrc) {
         final StopWatch codeTimer = StopWatch.start();
         _f = new FormDef();
 
@@ -518,27 +522,41 @@ public class XFormParser implements IXFormParserFunctions {
                     }
                     _f.addNonMainInstance(externalDataInstance);
                 } else {
-                    if(xFormPath == null){
+                    if(internalSecondaryInstances == null){
                         FormInstance fi = instanceParser.parseInstance(instance, false,
                             instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
                         loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
                         loadInstanceData(instance, fi.getRoot(), _f);
                         _f.addNonMainInstance(fi);
-                    }else{
-                        //Internal secondary instances were not parsed with xform - skipped
-                        final InternalDataInstance internalDataInstance;
-                        try{
-                            internalDataInstance = InternalDataInstanceParser.build( xFormPath, instanceId);
-                        } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
-                            XmlPullParserException | InvalidReferenceException e) {
-                            String msg = "Unable to parse internal secondary instance";
-                            logger.error(msg, e);
-                            throw new XFormParseException(msg + ": " + e.toString(), null);
-                        }
-                        _f.addNonMainInstance(internalDataInstance);
                     }
+//                    else{
+//                        final InternalDataInstance internalDataInstance;
+//                        try{
+//                            internalDataInstance = InternalDataInstanceParser.build( xFormPath, instanceId);
+//                             _f.addNonMainInstance(internalDataInstance);
+//                        } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
+//                            XmlPullParserException | InvalidReferenceException e) {
+//                            String msg = "Unable to parse internal secondary instance";
+//                            logger.error(msg, e);
+//                            throw new XFormParseException(msg + ": " + e.toString(), null);
+//                        }
+//                    }
 
                 }
+            }
+        }
+        if(internalSecondaryInstances != null){
+            //Internal secondary instances were not parsed with xform - skipped
+            final List<InternalDataInstance> internalDataInstances;
+            try{
+                internalDataInstances = InternalDataInstanceParser.buildInstances( internalSecondaryInstances.getXmlTrees());
+                for(DataInstance instance: internalDataInstances)
+                    _f.addNonMainInstance(instance);
+            } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
+                XmlPullParserException | InvalidReferenceException e) {
+                String msg = "Unable to parse internal secondary instance";
+                logger.error(msg, e);
+                throw new XFormParseException(msg + ": " + e.toString(), null);
             }
         }
         //now parse the main instance

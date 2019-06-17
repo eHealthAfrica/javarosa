@@ -11,6 +11,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +51,15 @@ public class InternalDataInstanceParser {
         return internalDataInstances;
     }
 
+    public static List<InternalDataInstance> buildInstances(List<String> xmlTreeList)
+        throws IOException, UnfullfilledRequirementsException, XmlPullParserException, InvalidStructureException, InvalidReferenceException {
+        List<InternalDataInstance> internalDataInstances = new ArrayList<>();
+        for(String xmlTree: xmlTreeList){
+           internalDataInstances.add(build(xmlTree));
+        }
+        return internalDataInstances;
+    }
+
 
     /**
      * Builds the InternalDataInstances out of an XForm
@@ -73,6 +83,22 @@ public class InternalDataInstanceParser {
         if (treeElement.getNumChildren() == 0)
             throw new RuntimeException("Root TreeElement node has no children");
         InternalDataInstance internalDataInstance  = new InternalDataInstance(treeElement.getChildAt(0), instanceId,  xFormSrc);
+
+        return internalDataInstance;
+    }
+
+    public static InternalDataInstance build( String instanceTree)
+        throws IOException, UnfullfilledRequirementsException, XmlPullParserException, InvalidStructureException, InvalidReferenceException {
+
+        StringReader reader = new StringReader(instanceTree);
+        KXmlParser parser = ElementParser.instantiateParser(reader);
+        TreeElementParser treeElementParser =
+            new TreeElementParser(parser,0, "");
+        TreeElement treeElement = treeElementParser.parse();
+        if (treeElement.getNumChildren() == 0)
+            throw new RuntimeException("Root TreeElement node has no children");
+        String instanceId = treeElement.getAttributeValue("","id");
+        InternalDataInstance internalDataInstance  = new InternalDataInstance(treeElement.getChildAt(0), instanceId,  instanceTree);
 
         return internalDataInstance;
     }

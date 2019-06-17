@@ -74,10 +74,12 @@ public class KXmlElementParser extends ElementParser<Element> {
             switch (nextNonWhitespace()) {
                 case XmlPullParser.START_TAG:
                     String name = parser.getName();
-                    if (shouldSkipSubTree(name, elementsToSkip)) {
+                    ElementSkipper elementSkipper = shouldSkipSubTree(name, elementsToSkip);
+                    if (elementSkipper != null) {
                         Element elementToSkip = initCurrentElement();
                         element.addChild(Node.ELEMENT,elementToSkip);
-                        skipSubTree();
+                        String xmlTree = gatherSubTree();
+                        elementSkipper.addXmlTree(xmlTree);
                     } else {
                         final Integer multiplicity = multiplicitiesByName.get(name);
                         int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
@@ -112,16 +114,16 @@ public class KXmlElementParser extends ElementParser<Element> {
      *                       intended to be skip
      * @return if this Element should be skipped
      */
-    private boolean shouldSkipSubTree(String elementName, ElementSkipper ...elementsToSkip){
+    private ElementSkipper shouldSkipSubTree(String elementName, ElementSkipper ...elementsToSkip){
         if(elementsToSkip != null){
             for(int e = 0; e < elementsToSkip.length; e++){
                 ElementSkipper elementSkipper = elementsToSkip[e];
                 if(elementSkipper.skip(elementName)){
-                    return true;
+                    return elementSkipper;
                 }
             }
         }
-        return false;
+        return null;
     }
 
     /**
