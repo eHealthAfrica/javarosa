@@ -24,23 +24,23 @@ public class DynamicXFormBenchmark {
 
     @State(Scope.Thread)
     public static class FormTypesState {
-        Path level1 ;
+        Path formPath ;
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            level1 = FileGeneratorUtil.generate(5,100,0,100,null);
+            formPath = FileGeneratorUtil.generate(5,100,0,100,null);
         }
     }
 
     @Benchmark
     public void before(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runBeforeBenchmark(state.level1);
+        FormDef formDef = runBeforeBenchmark(state.formPath);
         bh.consume(formDef);
     }
 
     @Benchmark
     public void after(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runAfterBenchmark(state.level1);
+        FormDef formDef = runAfterBenchmark(state.formPath);
         bh.consume(formDef);
     }
 
