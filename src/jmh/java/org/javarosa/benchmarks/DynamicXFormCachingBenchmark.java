@@ -28,14 +28,14 @@ public class DynamicXFormCachingBenchmark {
         dryRun(DynamicXFormCachingBenchmark.class);
     }
 
-    @State(Scope.Thread)
+    @State(Scope.Group)
     public static class FormTypesState {
         Path formXmlBeforePath;
         Path formXmlAfterPath;
         String cachePath;
         FormDef formDefBefore;
         FormDef formDefAfter;
-        @Setup(Level.Trial)
+        @Setup(Level.Iteration)
         public void initialize() throws IOException {
             formXmlBeforePath = FileGeneratorUtil.generate(5,10,0,100,null);
             formXmlAfterPath = FileGeneratorUtil.generate(5,100,0,100,null);
@@ -49,22 +49,16 @@ public class DynamicXFormCachingBenchmark {
     }
 
     @Benchmark
-    public void benchmark9WriteBefore(FormTypesState state) throws IOException {
+    public void benchmark1Before(FormTypesState state, Blackhole bh) throws IOException {
         runWriteBenchmark(state.formDefBefore, state.formXmlBeforePath, state.cachePath);
+        FormDef formDef = runReadBenchmark(state.formXmlBeforePath.toFile(), state.cachePath);
+        bh.consume(formDef);
     }
 
-    @Benchmark
-    public void benchmark9ReadBefore(FormTypesState state) throws IOException {
-        runReadBenchmark(state.formXmlBeforePath.toFile(), state.formXmlBeforePath.toString());
-    }
 
     @Benchmark
-    public void benchmark3WriteAfter(FormTypesState state, Blackhole bh) throws IOException {
-        runWriteBenchmark(state.formDefBefore, state.formXmlAfterPath, state.cachePath);
-    }
-
-    @Benchmark
-    public void benchmark4ReadAfter(FormTypesState state, Blackhole bh) {
+    public void benchmark2After(FormTypesState state, Blackhole bh) throws IOException {
+        runWriteBenchmark(state.formDefAfter, state.formXmlAfterPath, state.cachePath);
         FormDef formDef = runReadBenchmark(state.formXmlAfterPath.toFile(), state.cachePath);
         bh.consume(formDef);
     }
