@@ -37,7 +37,7 @@ public class DynamicXFormCachingBenchmark {
         FormDef formDefAfter;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            formXmlBeforePath = FileGeneratorUtil.generate(5,100,0,100,null);
+            formXmlBeforePath = FileGeneratorUtil.generate(5,10,0,100,null);
             formXmlAfterPath = FileGeneratorUtil.generate(5,100,0,100,null);
             formDefBefore = FormParserHelper.parse(formXmlBeforePath, false);
             formDefAfter = FormParserHelper.parse(formXmlAfterPath, true);
@@ -49,31 +49,30 @@ public class DynamicXFormCachingBenchmark {
     }
 
     @Benchmark
-    public void benchmark1WriteBefore(FormTypesState state) throws IOException {
-        runWriteBeforeBenchmark(state.formDefBefore, state.formXmlBeforePath, state.cachePath);
+    public void benchmark9WriteBefore(FormTypesState state) throws IOException {
+        runWriteBenchmark(state.formDefBefore, state.formXmlBeforePath, state.cachePath);
     }
 
     @Benchmark
-    public void benchmark2ReadBefore(FormTypesState state) throws IOException {
-        runWriteBeforeBenchmark(state.formDefAfter, state.formXmlBeforePath, state.cachePath);
+    public void benchmark9ReadBefore(FormTypesState state) throws IOException {
+        runReadBenchmark(state.formXmlBeforePath.toFile(), state.formXmlBeforePath.toString());
     }
 
     @Benchmark
-    public void benchmark3WriteAfter(FormTypesState state, Blackhole bh) {
-        FormDef formDef = runWriteAfterBenchmark(state.formXmlAfterPath.toFile(), state.cachePath);
-        bh.consume(formDef);
+    public void benchmark3WriteAfter(FormTypesState state, Blackhole bh) throws IOException {
+        runWriteBenchmark(state.formDefBefore, state.formXmlAfterPath, state.cachePath);
     }
 
     @Benchmark
     public void benchmark4ReadAfter(FormTypesState state, Blackhole bh) {
-        FormDef formDef = runWriteAfterBenchmark(state.formXmlAfterPath.toFile(), state.cachePath);
+        FormDef formDef = runReadBenchmark(state.formXmlAfterPath.toFile(), state.cachePath);
         bh.consume(formDef);
     }
 
-    private void runWriteBeforeBenchmark(FormDef formDef,Path resourcePath, String cachePath) throws IOException {
+    private void runWriteBenchmark(FormDef formDef,Path resourcePath, String cachePath) throws IOException {
          FormDefCache.writeCache(formDef, resourcePath.toString(), cachePath);
     }
-    private FormDef runWriteAfterBenchmark(File formXml, String cachePath) {
+    private FormDef runReadBenchmark(File formXml, String cachePath) {
         return FormDefCache.readCache(formXml, cachePath);
     }
 
