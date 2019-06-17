@@ -447,7 +447,6 @@ public class XFormParser implements IXFormParserFunctions {
                     parser = KXmlElementParser.instantiateParser(reader);
                     KXmlElementParser kxmlElementParser = new KXmlElementParser(parser, elementSkipper);
                     doc = kxmlElementParser.parseDoc();
-                    System.out.println(2);
                 } else {
                     parser = new KXmlParser();
                     doc = new Document();
