@@ -9,12 +9,13 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
-import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.BenchmarkUtils.getWorkingDir;
 
 public class DynamicXFormBenchmark {
 
@@ -28,28 +29,21 @@ public class DynamicXFormBenchmark {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            //Parameters are 5 multiplier factor, 100 questions, 0, 100 internal instances
-            formPath = XFormFileGenerator.generate(5,100,0,100,get);
+            XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
+            final int multiplier = 5;
+            final int noOfQuestions = 100;
+            final int noOfQuestionGroups = 0;
+            final int noOfSecondaryInstances = 100;
+            final Path WORKING_DIR = getWorkingDir();
+            File xFormXmlFile = xFormFileGenerator.generate(multiplier, noOfQuestions, noOfQuestionGroups, noOfSecondaryInstances, noOfSecondaryInstances, WORKING_DIR);
+            formPath = xFormXmlFile.toPath();
         }
     }
 
     @Benchmark
-    public void before(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runBeforeBenchmark(state.formPath);
+    public void benchmarkDynamicXForm(FormTypesState state, Blackhole bh) throws IOException {
+        FormDef formDef =  FormParserHelper.parse(state.formPath);
         bh.consume(formDef);
-    }
-
-    @Benchmark
-    public void after(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runAfterBenchmark(state.formPath);
-        bh.consume(formDef);
-    }
-
-    private FormDef runBeforeBenchmark(Path filePath) throws IOException {
-        return FormParserHelper.parse(filePath, false);
-    }
-    private FormDef runAfterBenchmark(Path filePath) throws IOException {
-        return FormParserHelper.parse(filePath, true);
     }
 
 }

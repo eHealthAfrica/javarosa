@@ -3,41 +3,32 @@ package org.javarosa.benchmarks.utils.builder;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class XFormFileGenerator {
 
-    public File generate(int multiplier, int noOfQuestions,int noOfQuestionGroups, int noOfSecondaryInstances, File directory) throws IOException {
+    public File generate(int multiplier, int noOfQuestions,int noOfQuestionGroups, int noOfInternalSecondaryInstances,  int noOfExternalSecondaryInstances, Path workingDirectory) throws IOException {
 
-        Map<String, String> namespaces =
-            XFormBuilder.buildMap(
-                new String[]{"", "http://www.w3.org/2002/xforms"},
-                new String[]{"h", "http://www.w3.org/1999/xhtml"},
-                new String[]{"ev", "http://www.w3.org/2001/xml-events"},
-                new String[]{"jr", "http://openrosa.org/javarosa"},
-                new String[]{"orx", "http://openrosa.org/xforms"},
-                new String[]{"xsd", "http://www.w3.org/2001/XMLSchema"}
-            );
-
-        XFormComplexity xFormComplexity =
-            new XFormComplexity(
-                "Dynamic form generated at " + new Date().toString(),
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        DummyXForm dummyXForm =
+            new DummyXForm(
+                "Dynamic form generated at " + simpleDateFormat.format(new Date()),
                 noOfQuestions,
                 generateQuestionGroups(multiplier, noOfQuestionGroups),
-                generateSecondaryInstances(multiplier, noOfSecondaryInstances),
-                null,
-                namespaces);
+                generateSecondaryInstances(multiplier, noOfInternalSecondaryInstances),
+                generateSecondaryInstances(multiplier, noOfExternalSecondaryInstances));
 
-        XFormBuilder xFormFileBuilder = new XFormBuilder(xFormComplexity);
+        XFormBuilder xFormFileBuilder = new XFormBuilder(dummyXForm, workingDirectory);
 
-        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), ".xml", directory);
+        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), ".xml", null);
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(xFormFileBuilder.build());
         fileWriter.close();
-        return moveToDirectory(file, directory);
+        return moveToDirectory(file, workingDirectory);
     }
 
     private List<QuestionGroup> generateQuestionGroups(int multiplier, int count){
@@ -51,18 +42,20 @@ public class XFormFileGenerator {
 
     private List<SecondaryInstanceDef> generateSecondaryInstances(int multiplier, int count){
         List<SecondaryInstanceDef> instances = new ArrayList<>(count);
+        String instanceNameTemplate = "secondary_instance_%0" + (count + "").length() +"d";
         while(count > 0){
-            instances.add(0, new SecondaryInstanceDef("first"+ count , count * multiplier));
+            instances.add(0, new SecondaryInstanceDef(String.format(instanceNameTemplate, count) , count * multiplier));
             count--;
         }
         return instances;
     }
 
-    private File moveToDirectory(File sourceFile, File destinationFolder) throws IOException {
-        if (!destinationFolder.exists() || destinationFolder.mkdirs()){
-            if (!sourceFile.exists() || !sourceFile.isDirectory())
+    private File moveToDirectory(File sourceFile, Path destinationPath) throws IOException {
+        File destinationFolder = destinationPath.toFile();
+        if (destinationFolder.exists() || destinationFolder.mkdirs()){
+            if (!sourceFile.exists())
                 throw  new IOException("File " + sourceFile.getPath() + "does  not exist");
-            File destinationFile = new File(destinationFolder + "\\" + sourceFile.getName());
+            File destinationFile = new File(destinationFolder + File.separator + sourceFile.getName());
             if(sourceFile.renameTo(destinationFile)){
                 sourceFile.delete();
                 return destinationFile;

@@ -1,5 +1,9 @@
 package org.javarosa.benchmarks.utils.builder;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -9,12 +13,14 @@ import static org.javarosa.benchmarks.utils.builder.Constants.*;
 public class XFormBuilder{
 
     StringBuilder stringBuilder;
-    XFormComplexity xFormComplexity;
+    DummyXForm dummyXForm;
+    Path workingDirectory;
     boolean minify;
 
-    public XFormBuilder(XFormComplexity xFormComplexity){
+    public XFormBuilder(DummyXForm dummyXForm, Path workingDirectory){
         stringBuilder = new StringBuilder("<?xml version=\"1.0\"?>\n");
-        this.xFormComplexity = xFormComplexity;
+        this.dummyXForm = dummyXForm;
+        this.workingDirectory = workingDirectory;
         this.minify = false;
     }
 
@@ -25,7 +31,8 @@ public class XFormBuilder{
             .buildTitle()
             .buildModel()
             .buildPrimaryInstance()
-            .buildSecondaryInstances()
+            .buildInternalSecondaryInstances()
+            .buildExternalSecondaryInstances()
             .buildBind()
             .buildControls()
             .toString();
@@ -33,7 +40,7 @@ public class XFormBuilder{
 
     private XFormBuilder buildHtml(){
         if(!hasHtml()){
-            String htmlElementString = openAndClose(HTML, xFormComplexity.getNamespaces());
+            String htmlElementString = openAndClose(HTML, dummyXForm.getNamespaces());
             stringBuilder.append(htmlElementString);
         }
         return this;
@@ -50,7 +57,7 @@ public class XFormBuilder{
     }
 
     private XFormBuilder buildTitle(){
-        addChild(HEAD, openAndClose(TITLE, null, xFormComplexity.getTitle()));
+        addChild(HEAD, openAndClose(TITLE, null, dummyXForm.getTitle()));
         return this;
     }
 
@@ -66,10 +73,10 @@ public class XFormBuilder{
     }
 
     private XFormBuilder buildPrimaryInstance(){
-        final String ROOT = xFormComplexity.getMainInstanceTagName();
+        final String ROOT = dummyXForm.getMainInstanceTagName();
         final String primaryInstanceString =
             new StringBuilder(openingTag(INSTANCE))
-            .append(openingTag(ROOT, buildMap(xFormComplexity.getIdAttribute())))
+            .append(openingTag(ROOT, buildMap(dummyXForm.getIdAttribute())))
             .append(shortOpenAndClose("start"))
             .append(shortOpenAndClose("end"))
             .append(shortOpenAndClose("today"))
@@ -77,8 +84,8 @@ public class XFormBuilder{
             .append(shortOpenAndClose("subscriberid"))
             .append(shortOpenAndClose("simserial"))
             .append(shortOpenAndClose("phonenumber"))
-            .append(generateQuestionGroup(xFormComplexity.getQuestionGroups()))
-            .append(generateItemset(QUESTION,xFormComplexity.getNoOfQuestions(), true))
+            .append(generateQuestionGroup(dummyXForm.getQuestionGroups()))
+            .append(generateItemset(QUESTION, dummyXForm.getNoOfQuestions(), true))
             .append(closingTag(ROOT))
             .append(closingTag(INSTANCE))
             .toString();
@@ -101,12 +108,11 @@ public class XFormBuilder{
         return EMPTY_STRING;
     }
 
-    private XFormBuilder buildSecondaryInstances(){
-        final String ROOT = xFormComplexity.getMainInstanceTagName();
-        int counter = 1;
-        for(SecondaryInstanceDef secondaryInstanceDef: xFormComplexity.getInternalSecondaryInstanceDefList()){
+    private XFormBuilder buildInternalSecondaryInstances(){
+        final String ROOT = dummyXForm.getMainInstanceTagName();
+        for(SecondaryInstanceDef secondaryInstanceDef: dummyXForm.getInternalSecondaryInstanceDefList()){
             StringBuilder sb = new StringBuilder();
-            final Map<String, String> idAttr = buildMap(new String[]{"id", xFormComplexity.getFormId() + "_" + counter++});
+            final Map<String, String> idAttr = buildMap(new String[]{"id", secondaryInstanceDef.getInstanceId()});
             sb.append(openingTag(INSTANCE, idAttr))
                 .append(openingTag(ROOT))
                 .append(generateItemset(SecondaryInstanceDef.ITEM_TAG,secondaryInstanceDef.getNoOfItems(), false))
@@ -118,12 +124,47 @@ public class XFormBuilder{
         return this;
     }
 
+    private XFormBuilder buildExternalSecondaryInstances(){
+        Map<String, Path> paths = createExternalInstances(dummyXForm.getExternalSecondaryInstanceDefList());
+        for(SecondaryInstanceDef secondaryInstanceDef: dummyXForm.getInternalSecondaryInstanceDefList()){
+            String instanceId = secondaryInstanceDef.getInstanceId();
+            final Map<String, String> attributesMap = buildMap(
+                new String[]{"id", secondaryInstanceDef.getInstanceId()},
+                new String[]{"src", "jr://" + paths.get(instanceId)}
+                );
+            addChild(MODEL, openAndClose(INSTANCE, attributesMap));
+        }
+        return this;
+    }
+
+    private  Map<String, Path> createExternalInstances(List<SecondaryInstanceDef> secondaryInstanceDefList){
+        final String ROOT = dummyXForm.getMainInstanceTagName();
+        Map<String, Path> fileLocationMap = new HashMap<>();
+        try {
+            for(SecondaryInstanceDef secondaryInstanceDef: secondaryInstanceDefList){
+                StringBuilder sb = new StringBuilder();
+                String instanceId = secondaryInstanceDef.getInstanceId();
+                sb.append(openingTag(ROOT))
+                    .append(generateItemset(SecondaryInstanceDef.ITEM_TAG,secondaryInstanceDef.getNoOfItems(), false))
+                    .append(closingTag(ROOT));
+                File externalInstanceFile =  new File(workingDirectory + File.separator + instanceId + ".xml");
+                FileWriter fileWriter = new FileWriter(externalInstanceFile);
+                fileWriter.write(sb.toString());
+                fileWriter.close();
+                fileLocationMap.put(secondaryInstanceDef.getInstanceId(), externalInstanceFile.toPath());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileLocationMap;
+    }
+
     private XFormBuilder buildBind(){
-        List<QuestionGroup> questionGroups = xFormComplexity.getQuestionGroups();
+        List<QuestionGroup> questionGroups = dummyXForm.getQuestionGroups();
         for(int i = 0; i < questionGroups.size(); i++){
             QuestionGroup questionGroup = questionGroups.get(i);
             for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
-                String nodeset = generatePath(xFormComplexity.getMainInstanceTagName(),
+                String nodeset = generatePath(dummyXForm.getMainInstanceTagName(),
                     questionGroup.getName(),
                     QUESTION + (j + 1)
                 );
@@ -135,8 +176,8 @@ public class XFormBuilder{
             }
         }
 
-        for(int i = 0; i < xFormComplexity.getNoOfQuestions(); i++){
-            String nodeset = xFormComplexity.getMainInstanceTagName()+ FORWARD_SLASH + QUESTION + (i + 1);
+        for(int i = 0; i < dummyXForm.getNoOfQuestions(); i++){
+            String nodeset = dummyXForm.getMainInstanceTagName()+ FORWARD_SLASH + QUESTION + (i + 1);
             Map<String, String> attrs = buildMap(
                 new String[]{"nodeset", nodeset},
                 new String[]{"type", "string"}
@@ -150,20 +191,19 @@ public class XFormBuilder{
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(
-            buildControl(null, xFormComplexity.getNoOfQuestions(),
-                xFormComplexity.getMainInstanceTagName())
+            buildControl(null, dummyXForm.getNoOfQuestions(),
+                dummyXForm.getMainInstanceTagName())
         );
 
-        List<QuestionGroup> questionGroups = xFormComplexity.getQuestionGroups();
+        List<QuestionGroup> questionGroups = dummyXForm.getQuestionGroups();
         for(int i = 0; i < questionGroups.size(); i++){
             stringBuilder.append(openingTag("group",  buildMap(new String[]{"appearance", "field-list"})));
             QuestionGroup questionGroup = questionGroups.get(i);
 
             for(int j = 0; j < questionGroup.getNoOfQuestions(); j++){
-                System.out.println(i+"-"+j);
                 stringBuilder.append(
                     buildControl(j, questionGroup.getNoOfQuestions(),
-                        generatePath(xFormComplexity.getMainInstanceTagName(), questionGroup.getName()))
+                        generatePath(dummyXForm.getMainInstanceTagName(), questionGroup.getName()))
                 );
             }
             stringBuilder.append(closingTag("group"));
@@ -180,8 +220,8 @@ public class XFormBuilder{
             Map<String, String> attrsMap = buildMap(new String[]{"ref", ref});
             String text =
                 groupIndex == null ?
-                    String.format(XFormComplexity.QUESTION_TEMPLATE, questionIndex) :
-                    String.format(XFormComplexity.QUESTION_GROUP_TEMPLATE, groupIndex, questionIndex);
+                    String.format(DummyXForm.QUESTION_TEMPLATE, questionIndex) :
+                    String.format(DummyXForm.GROUP_QUESTION_TEMPLATE, groupIndex, questionIndex);
             stringBuilder.append(openAndClose(CONTROL, attrsMap, text));
         }
         return stringBuilder.toString();
@@ -214,7 +254,6 @@ public class XFormBuilder{
     private String openingTag(String name, Map<String, String> attributes){
         return
             new StringBuilder(OPEN_TOKEN)
-            .append(OPEN_TOKEN)
             .append(name)
             .append(SPACE)
             .append(buildAttributes(attributes))
@@ -229,9 +268,9 @@ public class XFormBuilder{
     private String buildAttributes(Map<String, String> attributes){
         if (attributes != null) {
             StringBuilder stringBuilder = new StringBuilder();
-            Iterator iterator = attributes.entrySet().iterator();
+            Iterator<Map.Entry<String, String>> iterator = attributes.entrySet().iterator();
             while (iterator.hasNext()) {
-                Map.Entry<String, String> pair = (Map.Entry<String, String>) iterator.next();
+                Map.Entry<String, String> pair = iterator.next();
                 stringBuilder.append(buildAttribute(pair.getKey(), pair.getValue()));
                 stringBuilder.append(SPACE);
             }
