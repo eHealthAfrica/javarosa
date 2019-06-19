@@ -126,7 +126,7 @@ public class XFormBuilder{
 
     private XFormBuilder buildExternalSecondaryInstances(){
         Map<String, Path> paths = createExternalInstances(dummyXForm.getExternalSecondaryInstanceDefList());
-        for(SecondaryInstanceDef secondaryInstanceDef: dummyXForm.getInternalSecondaryInstanceDefList()){
+        for(SecondaryInstanceDef secondaryInstanceDef: dummyXForm.getExternalSecondaryInstanceDefList()){
             String instanceId = secondaryInstanceDef.getInstanceId();
             final Map<String, String> attributesMap = buildMap(
                 new String[]{"id", secondaryInstanceDef.getInstanceId()},
@@ -144,9 +144,10 @@ public class XFormBuilder{
             for(SecondaryInstanceDef secondaryInstanceDef: secondaryInstanceDefList){
                 StringBuilder sb = new StringBuilder();
                 String instanceId = secondaryInstanceDef.getInstanceId();
-                sb.append(openingTag(ROOT))
+                String rootElementName = ROOT + "_" + instanceId;
+                sb.append(openingTag(rootElementName))
                     .append(generateItemset(SecondaryInstanceDef.ITEM_TAG,secondaryInstanceDef.getNoOfItems(), false))
-                    .append(closingTag(ROOT));
+                    .append(closingTag(rootElementName));
                 File externalInstanceFile =  new File(workingDirectory + File.separator + instanceId + ".xml");
                 FileWriter fileWriter = new FileWriter(externalInstanceFile);
                 fileWriter.write(sb.toString());

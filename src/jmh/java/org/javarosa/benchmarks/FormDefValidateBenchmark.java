@@ -1,9 +1,11 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 import java.io.IOException;
 import java.nio.file.Path;
+
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.ItemsetBinding;

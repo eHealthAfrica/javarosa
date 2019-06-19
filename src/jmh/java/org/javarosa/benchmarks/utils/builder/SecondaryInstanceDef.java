@@ -16,15 +16,8 @@ public class SecondaryInstanceDef{
         return instanceId;
     }
 
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
-    }
-
     public int getNoOfItems() {
         return noOfItems;
     }
 
-    public void setNoOfItems(int noOfItems) {
-        this.noOfItems = noOfItems;
-    }
 }

@@ -14,8 +14,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
 
 public class DynamicXFormBenchmark {
 
@@ -33,9 +33,10 @@ public class DynamicXFormBenchmark {
             final int multiplier = 5;
             final int noOfQuestions = 100;
             final int noOfQuestionGroups = 0;
-            final int noOfSecondaryInstances = 100;
+            final int noOfInternalSecondaryInstances = 50;
+            final int noOfExternalSecondaryInstances = 50;
             final Path WORKING_DIR = getWorkingDir();
-            File xFormXmlFile = xFormFileGenerator.generate(multiplier, noOfQuestions, noOfQuestionGroups, noOfSecondaryInstances, noOfSecondaryInstances, WORKING_DIR);
+            File xFormXmlFile = xFormFileGenerator.generate(multiplier, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, WORKING_DIR);
             formPath = xFormXmlFile.toPath();
         }
     }

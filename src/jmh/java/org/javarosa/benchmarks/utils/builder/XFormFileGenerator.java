@@ -19,8 +19,8 @@ public class XFormFileGenerator {
                 "Dynamic form generated at " + simpleDateFormat.format(new Date()),
                 noOfQuestions,
                 generateQuestionGroups(multiplier, noOfQuestionGroups),
-                generateSecondaryInstances(multiplier, noOfInternalSecondaryInstances),
-                generateSecondaryInstances(multiplier, noOfExternalSecondaryInstances));
+                generateSecondaryInstances(multiplier, noOfInternalSecondaryInstances, true),
+                generateSecondaryInstances(multiplier, noOfExternalSecondaryInstances, false));
 
         XFormBuilder xFormFileBuilder = new XFormBuilder(dummyXForm, workingDirectory);
 
@@ -40,9 +40,10 @@ public class XFormFileGenerator {
         return questionGroups;
     }
 
-    private List<SecondaryInstanceDef> generateSecondaryInstances(int multiplier, int count){
+    private List<SecondaryInstanceDef> generateSecondaryInstances(int multiplier, int count, boolean internal){
         List<SecondaryInstanceDef> instances = new ArrayList<>(count);
-        String instanceNameTemplate = "secondary_instance_%0" + (count + "").length() +"d";
+        String secondaryInstanceType = internal ? "internal" : "external";
+        String instanceNameTemplate = secondaryInstanceType +"_secondary_instance_%0" + (count + "").length() +"d";
         while(count > 0){
             instances.add(0, new SecondaryInstanceDef(String.format(instanceNameTemplate, count) , count * multiplier));
             count--;

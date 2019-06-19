@@ -1,4 +1,4 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.utils;
 
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
