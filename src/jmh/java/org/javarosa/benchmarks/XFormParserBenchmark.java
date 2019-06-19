@@ -1,5 +1,6 @@
 package org.javarosa.benchmarks;
 
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
@@ -18,7 +19,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 public class XFormParserBenchmark {
     public static void main(String[] args) {
