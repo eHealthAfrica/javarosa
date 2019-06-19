@@ -6,7 +6,7 @@ import java.util.Map;
 public  class DummyXForm {
 
     static String QUESTION_TEMPLATE = "<label>What is the answer to Question %s?</label>";
-    static String GROUP_QUESTION_TEMPLATE = "<label>What is the answer to Question %s?</label>";
+    static String GROUP_QUESTION_TEMPLATE = "<label>What is the answer to Group %s Question %s?</label>";
     static final Map<String, String> DEFAULT_NAMESPACES =
         XFormBuilder.buildMap(
             new String[]{"xmlns", "http://www.w3.org/2002/xforms"},
