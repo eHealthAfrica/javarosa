@@ -84,8 +84,8 @@ public class InternalDataInstance extends DataInstance {
         super.readExternal(in, pf);
         int size = in.readInt();
         byte[] stringBytes = new byte[size];
-        in.read(stringBytes);
-        dataInstanceXmlString = new String(stringBytes);
+        in.readFully(stringBytes);
+        dataInstanceXmlString = new String(stringBytes, "UTF-8");
         try {
             setRoot(InternalDataInstanceParser.buildRoot(dataInstanceXmlString).getChildAt(0));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
@@ -96,9 +96,10 @@ public class InternalDataInstance extends DataInstance {
     @Override
     public void writeExternal(DataOutputStream out) throws IOException {
         super.writeExternal(out);
-        int size = dataInstanceXmlString.getBytes().length;
+        byte[] dataInstanceXmlBytes = dataInstanceXmlString.getBytes("UTF-8");
+        int size = dataInstanceXmlBytes.length;
         out.write(size);
-        out.write(dataInstanceXmlString.getBytes());
+        out.write(dataInstanceXmlBytes);
     }
 
 }

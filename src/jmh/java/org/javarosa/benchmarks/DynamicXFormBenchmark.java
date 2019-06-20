@@ -9,6 +9,7 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
+import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,11 +31,11 @@ public class DynamicXFormBenchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
-            final int multiplier = 5;
-            final int noOfQuestions = 100;
+            final int multiplier = 1000;
+            final int noOfQuestions = 10;
             final int noOfQuestionGroups = 0;
-            final int noOfInternalSecondaryInstances = 50;
-            final int noOfExternalSecondaryInstances = 50;
+            final int noOfInternalSecondaryInstances = 1;
+            final int noOfExternalSecondaryInstances = 0;
             final Path WORKING_DIR = getWorkingDir();
             File xFormXmlFile = xFormFileGenerator.generate(multiplier, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, WORKING_DIR);
             formPath = xFormXmlFile.toPath();
@@ -46,5 +47,25 @@ public class DynamicXFormBenchmark {
         FormDef formDef =  FormParserHelper.parse(state.formPath);
         bh.consume(formDef);
     }
+
+    @Benchmark
+    public void before(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+        FormDef formDef = runBeforeBenchmark(state.formPath);
+        bh.consume(formDef);
+    }
+
+    @Benchmark
+    public void after(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
+        FormDef formDef = runAfterBenchmark(state.formPath);
+        bh.consume(formDef);
+    }
+
+    private FormDef runBeforeBenchmark(Path filePath) throws IOException {
+        return FormParserHelper.parse(filePath, false);
+    }
+    private FormDef runAfterBenchmark(Path filePath) throws IOException {
+        return FormParserHelper.parse(filePath, true);
+    }
+
 
 }
