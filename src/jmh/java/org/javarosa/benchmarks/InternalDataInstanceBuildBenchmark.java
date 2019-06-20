@@ -14,8 +14,10 @@ import org.openjdk.jmh.infra.Blackhole;
 import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
+import java.nio.file.Files;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance;
 
 public class InternalDataInstanceBuildBenchmark {
     public static void main(String[] args) {
@@ -26,8 +28,8 @@ public class InternalDataInstanceBuildBenchmark {
     public static class InternalDataInstanceState {
         String xFormInternalSecondaryInstances;
         @Setup(Level.Trial)
-        public void initialize() {
-            xFormInternalSecondaryInstances = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance().toString();
+        public void initialize() throws IOException {
+            xFormInternalSecondaryInstances = new String(Files.readAllBytes(getNigeriaWardsXMLWithInternal2ndryInstance()));
         }
     }
 
@@ -36,7 +38,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance wardsInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances, "wards");
+            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances);
         bh.consume(wardsInternalInstance);
     }
 
@@ -46,7 +48,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance lgaIInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances, "lgas");
+            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstances);
         bh.consume(lgaIInternalInstance);
     }
 }

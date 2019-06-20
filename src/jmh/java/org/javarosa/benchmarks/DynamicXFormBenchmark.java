@@ -48,24 +48,4 @@ public class DynamicXFormBenchmark {
         bh.consume(formDef);
     }
 
-    @Benchmark
-    public void before(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runBeforeBenchmark(state.formPath);
-        bh.consume(formDef);
-    }
-
-    @Benchmark
-    public void after(FormTypesState state, Blackhole bh) throws IOException, XmlPullParserException {
-        FormDef formDef = runAfterBenchmark(state.formPath);
-        bh.consume(formDef);
-    }
-
-    private FormDef runBeforeBenchmark(Path filePath) throws IOException {
-        return FormParserHelper.parse(filePath, false);
-    }
-    private FormDef runAfterBenchmark(Path filePath) throws IOException {
-        return FormParserHelper.parse(filePath, true);
-    }
-
-
 }

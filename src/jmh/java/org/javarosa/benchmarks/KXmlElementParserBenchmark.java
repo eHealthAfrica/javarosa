@@ -16,7 +16,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getLGAsExternalInstance;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getMinifiedNigeriaWardsXMLWithInternal2ndryInstance;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWardsExternalInstance;
 
 public class KXmlElementParserBenchmark {
     public static void main(String[] args) {
@@ -32,11 +37,11 @@ public class KXmlElementParserBenchmark {
         String wardsInstance;
         @Setup(Level.Trial)
         public void initialize() {
-            xFormMinifiedInternalSecondaryInstances = BenchmarkUtils.getMinifiedNigeriaWardsXMLWithInternal2ndryInstance().toString();
-            xFormInternalSecondaryInstances = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance().toString();
-            xFormExternalSecondayInstances = BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance().toString();
-            lgasInstance = BenchmarkUtils.getLGAsExternalInstance().toString();
-            wardsInstance = BenchmarkUtils.getWardsExternalInstance().toString();
+            xFormMinifiedInternalSecondaryInstances = getMinifiedNigeriaWardsXMLWithInternal2ndryInstance().toString();
+            xFormInternalSecondaryInstances = getNigeriaWardsXMLWithInternal2ndryInstance().toString();
+            xFormExternalSecondayInstances = getNigeriaWardsXMLWithExternal2ndryInstance().toString();
+            lgasInstance = getLGAsExternalInstance().toString();
+            wardsInstance = getWardsExternalInstance().toString();
         }
     }
 
