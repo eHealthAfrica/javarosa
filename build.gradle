@@ -74,7 +74,8 @@ javadoc {
 }
 
 jmh {
-    exclude = "(BenchmarkTemplate)"
+    include = "(DynamicXFormBenchmark)"
+    //exclude = "(BenchmarkTemplate)"
     threads = 1
     fork = 1
     timeout = '10s'
