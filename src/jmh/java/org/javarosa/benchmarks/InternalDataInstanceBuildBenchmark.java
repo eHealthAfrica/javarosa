@@ -1,5 +1,6 @@
 package org.javarosa.benchmarks;
 
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.model.instance.InternalDataInstance;
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.xml.InternalDataInstanceParser;
@@ -15,7 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 public class InternalDataInstanceBuildBenchmark {
     public static void main(String[] args) {

@@ -1,5 +1,6 @@
 package org.javarosa.benchmarks;
 
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.xml.ElementParser;
 import org.javarosa.xml.TreeElementParser;
@@ -18,7 +19,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 public class TreeElementParserBenchmark {
     public static void main(String[] args) {

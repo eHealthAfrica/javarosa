@@ -1,5 +1,6 @@
 package org.javarosa.benchmarks;
 
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.xml.KXmlElementParser;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Document;
@@ -16,7 +17,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 public class KXmlElementParserBenchmark {
     public static void main(String[] args) {

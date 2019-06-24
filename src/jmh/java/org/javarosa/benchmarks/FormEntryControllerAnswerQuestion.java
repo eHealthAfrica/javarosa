@@ -1,11 +1,13 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.getStubAnswer;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getStubAnswer;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
+
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.ItemsetBinding;

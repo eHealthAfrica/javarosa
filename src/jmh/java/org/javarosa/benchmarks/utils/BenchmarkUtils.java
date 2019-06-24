@@ -1,8 +1,9 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.utils;
 
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -26,10 +27,13 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 public class BenchmarkUtils {
+
     private static Path CACHE_PATH;
+    private static Path WORKING_DIR_PATH;
+
     public static Path prepareAssets(String... filenames) {
         try {
-            Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
+            Path assetsDir = getWorkingDir();
             for (String filename : filenames) {
                 String realPath = BenchmarkUtils.class
                     .getResource(filename.startsWith("/") ? filename : "/" + filename)
@@ -167,9 +171,16 @@ public class BenchmarkUtils {
 
     public static Path getCachePath() throws IOException {
         if(CACHE_PATH == null){
-            CACHE_PATH = Files.createTempDirectory("javarosa_benchmarks_cache");
+            CACHE_PATH = Files.createTempDirectory(getWorkingDir() + File.separator +"cache");
         }
         return CACHE_PATH;
+    }
+
+    public static Path getWorkingDir() throws IOException {
+        if(WORKING_DIR_PATH == null){
+            WORKING_DIR_PATH = Files.createTempDirectory("javarosa_benchmarks_");
+        }
+        return WORKING_DIR_PATH;
     }
 
 }
