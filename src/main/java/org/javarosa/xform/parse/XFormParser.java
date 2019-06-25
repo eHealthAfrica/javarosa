@@ -373,9 +373,8 @@ public class XFormParser implements IXFormParserFunctions {
 
             boolean skipSecondaryInstance = xFormFile != null;
             ElementSkipper elementSkipper = null;
-            if(skipSecondaryInstance){
-                elementSkipper = new ElementSkipper(INSTANCE_ELEMENT, 1);
-            }
+            elementSkipper = new ElementSkipper(INSTANCE_ELEMENT, 1);
+
             _xmldoc = getXMLDocument(_reader, stringCache, elementSkipper);
 
             parseDoc(buildNamespacesMap(_xmldoc.getRootElement()),elementSkipper, lastSavedSrc);

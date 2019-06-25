@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -68,8 +69,8 @@ public class ElementSkipper
         this.xmlTree.add(xmlTree);
     }
 
-    public Map<String, Path> getInstances() {
-        Map<String, Path> fileLocationMap = new HashMap<>();
+    public Map<String, String> getInstances() {
+        Map<String, String> fileLocationMap = new HashMap<>();
         try {
             for (String externalInstanceString : xmlTree) {
                 String instanceId = getInstanceName(externalInstanceString);
@@ -77,7 +78,7 @@ public class ElementSkipper
                 FileWriter fileWriter = new FileWriter(externalInstanceFile);
                 fileWriter.write(externalInstanceString);
                 fileWriter.close();
-                fileLocationMap.put(instanceId, externalInstanceFile.toPath());
+                fileLocationMap.put(instanceId, externalInstanceFile.getAbsolutePath());
             }
         } catch (IOException e) {
             e.printStackTrace();
