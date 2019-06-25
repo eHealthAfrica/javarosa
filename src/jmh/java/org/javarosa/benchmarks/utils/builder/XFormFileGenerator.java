@@ -12,14 +12,14 @@ import java.util.Random;
 
 public class XFormFileGenerator {
 
-    public File generate(int noOfQuestions,int noOfQuestionGroups, int noOfInternalSecondaryInstances,  int noOfExternalSecondaryInstances,int noOf2ndryInstanceElements,  Path workingDirectory) throws IOException {
+    public File generate(String title, int noOfQuestions,int noOfQuestionGroups, int noOfInternalSecondaryInstances,  int noOfExternalSecondaryInstances,int noOf2ndryInstanceElements,  Path workingDirectory) throws IOException {
 
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<OptionSelector> internalSecondaryInstances = generateOptionSelectors(OptionSelector.Type.INTERNAL, noOfInternalSecondaryInstances, noOf2ndryInstanceElements);
         List<OptionSelector> externalSecondaryInstances = generateOptionSelectors( OptionSelector.Type.EXTERNAL, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
         DummyXForm dummyXForm =
             new DummyXForm(
-                "Dynamic form generated at " + simpleDateFormat.format(new Date()),
+                title,
                 generateQuestionGroups(noOfQuestionGroups, internalSecondaryInstances),
                 generateQuestions(noOfQuestions, internalSecondaryInstances),
                 internalSecondaryInstances,
@@ -27,7 +27,7 @@ public class XFormFileGenerator {
 
         XFormBuilder xFormFileBuilder = new XFormBuilder(dummyXForm, workingDirectory);
 
-        File file = File.createTempFile("x_form_" + System.currentTimeMillis(), ".xml", null);
+        File file = File.createTempFile("x_form_" + title , ".xml", null);
         FileWriter fileWriter = new FileWriter(file);
         fileWriter.write(xFormFileBuilder.build());
         fileWriter.close();
@@ -50,22 +50,22 @@ public class XFormFileGenerator {
         Question question;
         int randomOptionSelector = random.nextInt(optionSelectorList.size());
         OptionSelector optionSelector = optionSelectorList.get(randomOptionSelector);
-        if (index % 9 == 0) {
-            question = new Question(QuestionType.STRING,"enter_input_" + index,"Enter the answer to the question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
-        } else if (index % 8 == 0) {
-            question = new Question(QuestionType.SELECT_ONE,"select_option_" + index,"Choose one answer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
-        } else if (index % 7 == 0) {
-            question = new Question(QuestionType.SELECT_ONE,"select_option_" + index,"Choose one answer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
-        } else if (index % 6 == 0) {
-            question = new Question(QuestionType.DATE,"select_date_" + index,"Select a Date to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.DATE );
-        } else if (index % 5 == 0) {
-            question = new Question(QuestionType.INTEGER,"enter_integer_" + index,"Enter Integer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
-        } else if (index % 3 == 0) {
-            question = new Question(QuestionType.DECIMAL,"enter_decimal_" + index,"Enter Decimal value to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
-        } else if (index % 2 == 0) {
-            question = new Question(QuestionType.RANGE,"select_range_" + index,"What is answer to question" + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
-        } else if (index % 1 == 0) {
-            question = new Question(QuestionType.RANK,"select_rank_" + index,"What is answer to question" + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
+        if (index % 2 == 0) {
+            question = new Question(QuestionType.SELECT_ONE,"select_option_" + index,"Enter the answer to the question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
+//        } else if (index % 8 == 0) {
+//            question = new Question(QuestionType.SELECT_ONE,"select_option_" + index,"Choose one answer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
+//        } else if (index % 7 == 0) {
+//            question = new Question(QuestionType.SELECT_ONE,"select_option_" + index,"Choose one answer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
+//        } else if (index % 6 == 0) {
+//            question = new Question(QuestionType.DATE,"select_date_" + index,"Select a Date to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.DATE );
+//        } else if (index % 5 == 0) {
+//            question = new Question(QuestionType.INTEGER,"enter_integer_" + index,"Enter Integer to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
+//        } else if (index % 3 == 0) {
+//            question = new Question(QuestionType.DECIMAL,"enter_decimal_" + index,"Enter Decimal value to question " + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
+//        } else if (index % 2 == 0) {
+//            question = new Question(QuestionType.RANGE,"select_range_" + index,"What is answer to question" + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
+//        } else if (index % 1 == 0) {
+//            question = new Question(QuestionType.RANK,"select_rank_" + index,"What is answer to question" + index + "?", "Hint to question " + index, optionSelector, RenderMode.LIST );
         } else {
             question = new Question(QuestionType.STRING,"enter_input_" + index,"What is answer to question" + index + "?", "Hint to question " + index, optionSelector, RenderMode.INPUT );
         }
@@ -75,7 +75,7 @@ public class XFormFileGenerator {
     private List<QuestionGroup> generateQuestionGroups(int count, List<OptionSelector> optionSelectorList){
         List<QuestionGroup> questionGroups = new ArrayList<>(count);
         while(count > 0){
-            questionGroups.add(0, new QuestionGroup("group"+ count, generateQuestions(count, optionSelectorList)));
+            questionGroups.add(0, new QuestionGroup("group"+ count, generateQuestions(4, optionSelectorList)));
             count--;
         }
         return questionGroups;
@@ -99,7 +99,7 @@ public class XFormFileGenerator {
     private List<Option> generateOptions(int noOfOptions){
         List<Option>  options = new ArrayList<>();
         for(int i = 0; i < noOfOptions; i++){
-            options.add(new Option("item " + (i + 1), "option " + (i + 1)));
+            options.add(new Option("item " + (i + 1), "option" + (i + 1)));
         }
         return options;
     }

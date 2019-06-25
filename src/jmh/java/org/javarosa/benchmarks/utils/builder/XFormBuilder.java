@@ -258,7 +258,7 @@ public class XFormBuilder {
                 case STRING:
                     return buildMap(ref);
                 case SELECT_ONE:
-                    return buildMap(ref);
+                    return buildMap(ref, new String[]{"appearance", "minimal"});
                 case SELECT_MULTIPLE:
                     return buildMap(ref);
                 case RANK:

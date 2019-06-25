@@ -1,4 +1,4 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.dynamicforms;
 
 import org.javarosa.benchmarks.utils.builder.XFormFileGenerator;
 import org.javarosa.core.model.FormDef;
@@ -17,10 +17,10 @@ import java.nio.file.Path;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
 
-public class DynamicXForm3_500_10X50_Benchmark {
+public class DynamicXForm5_10_10X500_Benchmark {
 
     public static void main(String[] args) {
-        dryRun(DynamicXForm3_500_10X50_Benchmark.class);
+        dryRun(DynamicXForm5_10_10X500_Benchmark.class);
     }
 
     @State(Scope.Thread)
@@ -30,13 +30,14 @@ public class DynamicXForm3_500_10X50_Benchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
-            final int noOf2ndryInstanceElements = 50;
-            final int noOfQuestions = 500;
-            final int noOfQuestionGroups = 1;
+            String title = "DynamicXForm5_10_10X500";
+            final int noOfQuestions = 10;
             final int noOfInternalSecondaryInstances = 10;
+            final int noOf2ndryInstanceElements = 500;
+            final int noOfQuestionGroups = 1;
             final int noOfExternalSecondaryInstances = 0;
             final Path WORKING_DIR = getWorkingDir();
-            File xFormXmlFile = xFormFileGenerator.generate(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, WORKING_DIR);
+            File xFormXmlFile = xFormFileGenerator.generate(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, WORKING_DIR);
             formPath = xFormXmlFile.toPath();
         }
     }

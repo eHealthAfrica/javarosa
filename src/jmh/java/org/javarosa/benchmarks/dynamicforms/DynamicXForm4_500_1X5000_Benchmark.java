@@ -1,4 +1,4 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.dynamicforms;
 
 import org.javarosa.benchmarks.utils.builder.XFormFileGenerator;
 import org.javarosa.core.model.FormDef;
@@ -30,13 +30,14 @@ public class DynamicXForm4_500_1X5000_Benchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
-            final int multiplier = 100;
+            String title = "DynamicXForm4_500_1X5000";
             final int noOfQuestions = 500;
+            final int noOfInternalSecondaryInstances = 1;
+            final int noOfInstanceElements = 5000;
             final int noOfQuestionGroups = 1;
-            final int noOfInternalSecondaryInstances = 5000;
             final int noOfExternalSecondaryInstances = 0;
             final Path WORKING_DIR = getWorkingDir();
-            File xFormXmlFile = xFormFileGenerator.generate(multiplier, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, WORKING_DIR);
+            File xFormXmlFile = xFormFileGenerator.generate(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOfInstanceElements, WORKING_DIR);
             formPath = xFormXmlFile.toPath();
         }
     }
