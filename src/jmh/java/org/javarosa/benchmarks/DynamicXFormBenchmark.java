@@ -13,6 +13,8 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
 
@@ -29,7 +31,30 @@ public class DynamicXFormBenchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             formPath = FileGeneratorUtil.generate(5,100,0,100,null);
+
+            String xml = "<instance id=\"idhere\"><instance id=\"idhere\"><instance id=\"idhere\"><instance id=\"idhere\"></instance></instance></instance></instance>";
+            String id = getInstanceName(xml);
+            System.out.println(id);
+
         }
+
+        private String getInstanceName(String instanceXML){
+            Pattern pattern = Pattern.compile("<instance\\sid=\"([^\"]+)");
+            Matcher matcher = pattern.matcher(instanceXML);
+            if (matcher.find())
+                System.out.println(matcher.group(1));
+            return  matcher.group(1);
+
+        }
+    }
+
+    private String getInstanceName(String instanceXML){
+        Pattern pattern = Pattern.compile("<instance\\sid=\"([^\"]+)");
+        Matcher matcher = pattern.matcher(instanceXML);
+        if (matcher.find())
+            System.out.println(matcher.group(1));
+        return  matcher.group(1);
+
     }
 
     @Benchmark

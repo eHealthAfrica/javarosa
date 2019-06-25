@@ -548,7 +548,7 @@ public class XFormParser implements IXFormParserFunctions {
             //Internal secondary instances were not parsed with xform - skipped
             final List<InternalDataInstance> internalDataInstances;
             try{
-                internalDataInstances = InternalDataInstanceParser.buildInstances( internalSecondaryInstances.getXmlTrees());
+                internalDataInstances = InternalDataInstanceParser.buildInstances( internalSecondaryInstances.getInstances());
                 for(DataInstance instance: internalDataInstances)
                     _f.addNonMainInstance(instance);
             } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |

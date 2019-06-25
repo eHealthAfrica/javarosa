@@ -1,8 +1,17 @@
 package org.javarosa.xml;
 
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author johnthebeloved
@@ -59,8 +68,31 @@ public class ElementSkipper
         this.xmlTree.add(xmlTree);
     }
 
-    public List<String> getXmlTrees(){
-        return xmlTree;
+    public Map<String, Path> getInstances() {
+        Map<String, Path> fileLocationMap = new HashMap<>();
+        try {
+            for (String externalInstanceString : xmlTree) {
+                String instanceId = getInstanceName(externalInstanceString);
+                File externalInstanceFile = File.createTempFile(instanceId, ".xml");
+                FileWriter fileWriter = new FileWriter(externalInstanceFile);
+                fileWriter.write(externalInstanceString);
+                fileWriter.close();
+                fileLocationMap.put(instanceId, externalInstanceFile.toPath());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return fileLocationMap;
     }
+
+    private String getInstanceName(String instanceXML){
+        Pattern pattern = Pattern.compile("<instance\\sid=\"([^\"]+)");
+        Matcher matcher = pattern.matcher(instanceXML);
+        if (matcher.find())
+            System.out.println(matcher.group(1));
+       return  matcher.group(1);
+
+    }
+
 
 }

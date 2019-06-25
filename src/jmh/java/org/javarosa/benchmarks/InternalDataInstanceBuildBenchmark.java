@@ -26,11 +26,14 @@ public class InternalDataInstanceBuildBenchmark {
 
     @State(Scope.Thread)
     public static class InternalDataInstanceState {
-        String xFormInternalSecondaryInstance;
+        Path lgaInternalSecondaryInstance;
+        Path wardsInternalSecondaryInstance;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            Path path = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance();
-            xFormInternalSecondaryInstance = new String(Files.readAllBytes(path));
+            //Path path = BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance();
+            wardsInternalSecondaryInstance = BenchmarkUtils.getWardsExternalInstance();
+            lgaInternalSecondaryInstance = BenchmarkUtils.getLGAsExternalInstance();
+
         }
     }
 
@@ -39,7 +42,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance wardsInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstance);
+            InternalDataInstanceParser.build("lgas",state.wardsInternalSecondaryInstance);
         bh.consume(wardsInternalInstance);
     }
 
@@ -49,7 +52,7 @@ public class InternalDataInstanceBuildBenchmark {
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
         InternalDataInstance lgaIInternalInstance =
-            InternalDataInstanceParser.build(state.xFormInternalSecondaryInstance);
+            InternalDataInstanceParser.build("wards",state.lgaInternalSecondaryInstance);
         bh.consume(lgaIInternalInstance);
     }
 }

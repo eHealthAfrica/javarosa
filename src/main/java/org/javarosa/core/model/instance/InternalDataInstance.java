@@ -24,7 +24,7 @@ import java.io.IOException;
  *
  */
 public class InternalDataInstance extends DataInstance {
-    private String dataInstanceXmlString;
+    private String path;
     private TreeElement root;
 
     /**
@@ -39,11 +39,11 @@ public class InternalDataInstance extends DataInstance {
      *             instance since internal instance always have only one child
      *             which is the root of the ItemSets
      * @param instanceId
-     * @param dataInstanceXmlString XML string of the whole tree of the data instance
+     * @param path XML string of the whole tree of the data instance
      */
-    public InternalDataInstance(TreeElement root, String instanceId, String dataInstanceXmlString) {
+    public InternalDataInstance(TreeElement root, String instanceId, String path) {
         super(instanceId);
-        this.dataInstanceXmlString = dataInstanceXmlString;
+        this.path = path;
         setName(instanceId);
         setRoot(root);
     }
@@ -82,9 +82,9 @@ public class InternalDataInstance extends DataInstance {
     public void readExternal(DataInputStream in, PrototypeFactory pf)
         throws IOException, DeserializationException {
         super.readExternal(in, pf);
-        dataInstanceXmlString = ExtUtil.readString(in);
+        path = ExtUtil.readString(in);
         try {
-            setRoot(InternalDataInstanceParser.buildRoot(dataInstanceXmlString));
+            setRoot(InternalDataInstanceParser.buildRoot(path));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
             throw new DeserializationException("Unable to parse external instance: " + e);
         }
@@ -93,7 +93,7 @@ public class InternalDataInstance extends DataInstance {
     @Override
     public void writeExternal(DataOutputStream out) throws IOException {
         super.writeExternal(out);
-        ExtUtil.write(out, dataInstanceXmlString);
+        ExtUtil.write(out, path);
     }
 
 }
