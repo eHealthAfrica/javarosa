@@ -37,6 +37,7 @@ import org.openjdk.jmh.infra.Blackhole;
 public class BenchmarkUtils {
     private static Path CACHE_PATH;
     private static Path WORKING_DIR;
+    public static Map<String, File> XFORMS = new HashMap<>();
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
@@ -138,7 +139,13 @@ public class BenchmarkUtils {
             noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
             noOfExternalSecondaryInstances, noOf2ndryInstanceElements
         );
-        File xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+        File xFormXmlFile;
+        if(XFORMS.get(title) != null){
+            xFormXmlFile = XFORMS.get(title);
+        }else{
+            xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+            XFORMS.put(title, xFormXmlFile);
+        }
         return xFormXmlFile;
     }
 
@@ -173,39 +180,6 @@ public class BenchmarkUtils {
             default:
                 return new StringData("");
         }
-    }
-
-    public static Path getNigeriaWardsXMLWithInternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance.xml");
-        Path filePath = assetsPath.resolve("nigeria_wards_internal_2ndry_instance.xml");
-        return filePath;
-    }
-
-    public static Path getMinifiedNigeriaWardsXMLWithInternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance_minified.xml");
-        Path filePath = assetsPath.resolve("nigeria_wards_internal_2ndry_instance_minified.xml");
-        return filePath;
-    }
-
-    public static Path getNigeriaWardsXMLWithExternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_external_2ndry_instance.xml", "lgas.xml", "wards.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("nigeria_wards_external_2ndry_instance.xml");
-        return filePath;
-    }
-
-    public static Path getWardsExternalInstance(){
-        Path assetsPath = prepareAssets( "wards.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("wards.xml");
-        return filePath;
-    }
-
-    public static Path getLGAsExternalInstance(){
-        Path assetsPath = prepareAssets( "lgas.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("lgas.xml");
-        return filePath;
     }
 
     public static Path getCachePath() throws IOException {
