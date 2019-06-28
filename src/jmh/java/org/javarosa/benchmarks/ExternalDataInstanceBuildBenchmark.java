@@ -33,11 +33,12 @@ public class ExternalDataInstanceBuildBenchmark {
         String instanceFileName;
         public int noOfQuestions = 1;
         public int noOfInternalSecondaryInstances = 0;
-        @Param({"50", "500", "5000"})
-        public int noOf2ndryInstanceElements = 5;
-        public int noOfQuestionGroups = 1;
+        @Param({"0", "100", "1000"})
+        public int noOf2ndryInstanceElements = 10;
         @Param({"1"})
-        public int noOfExternalSecondaryInstances = 1;
+        public int noOfQuestionGroups = 0;
+        @Param({"0","50"})
+        public int noOfExternalSecondaryInstances = 0;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             Map<String, Path> externalInstanceFiles = BenchmarkUtils.generateExternalSecondaryInstances(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);

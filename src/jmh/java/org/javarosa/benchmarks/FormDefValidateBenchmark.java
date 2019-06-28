@@ -34,16 +34,16 @@ FormDefValidateBenchmark {
     @State(Scope.Thread)
     public static class FormDefValidateState {
         FormDef formDef ;
-        @Param({"10", "500", "1000", "50000"})
-        public int noOfQuestions;
+        @Param({"10", "500"})
+        public int noOfQuestions = 1;
         @Param({"10", "50"})
-        public int noOfInternalSecondaryInstances;
-        @Param({"10", "500", "1000", "50000"})
-        public int noOf2ndryInstanceElements;
-        @Param({"0"})
-        public int noOfQuestionGroups;
-        @Param({"0"})
-        public int noOfExternalSecondaryInstances;
+        public int noOfInternalSecondaryInstances = 1;
+        @Param({"0", "50", "1000"})
+        public int noOf2ndryInstanceElements = 1;
+        @Param({"1"})
+        public int noOfQuestionGroups = 1;
+        @Param({"0","50"})
+        public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
