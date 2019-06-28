@@ -49,7 +49,7 @@ public class InternalDataInstance extends DataInstance {
     }
 
 
-    /**
+    /*
      *  Parses the XForm file to a TreeElement instead of Element in
      *  * KXML Library.
      * @return
@@ -82,7 +82,7 @@ public class InternalDataInstance extends DataInstance {
     public void readExternal(DataInputStream in, PrototypeFactory pf)
         throws IOException, DeserializationException {
         super.readExternal(in, pf);
-        dataInstanceXmlString = ExtUtil.readString(in);
+        dataInstanceXmlString = new String(ExtUtil.readBytes(in), "UTF-8");
         try {
             setRoot(InternalDataInstanceParser.buildRoot(dataInstanceXmlString));
         } catch (InvalidReferenceException | InvalidStructureException | XmlPullParserException | UnfullfilledRequirementsException e) {
@@ -93,7 +93,7 @@ public class InternalDataInstance extends DataInstance {
     @Override
     public void writeExternal(DataOutputStream out) throws IOException {
         super.writeExternal(out);
-        ExtUtil.write(out, dataInstanceXmlString);
+        ExtUtil.writeBytes(out, dataInstanceXmlString.getBytes("UTF-8"));
     }
 
 }
