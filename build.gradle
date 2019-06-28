@@ -82,7 +82,7 @@ jmh {
     warmupBatchSize = 1
     warmupForks = 1
     iterations = 10
-    timeOnIteration = '30s'
+    timeOnIteration = '1s'
     timeout = '30s'
     timeUnit = 's'
     benchmarkMode = ['avgt','ss']
