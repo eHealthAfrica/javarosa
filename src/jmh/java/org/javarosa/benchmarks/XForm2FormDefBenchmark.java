@@ -27,15 +27,15 @@ public class XForm2FormDefBenchmark {
     public static class FormTypesState {
         Path xFormXmlPath ;
         @Param({"10", "500"})
-        public int noOfQuestions;
+        public int noOfQuestions = 1;
         @Param({"10", "50"})
-        public int noOfInternalSecondaryInstances;
-        @Param({"50", "5000", "10000"})
-        public int noOf2ndryInstanceElements;
+        public int noOfInternalSecondaryInstances = 1;
+        @Param({"0", "50", "1000"})
+        public int noOf2ndryInstanceElements = 1;
         @Param({"1"})
-        public int noOfQuestionGroups;
-        @Param({"0"})
-        public int noOfExternalSecondaryInstances;
+        public int noOfQuestionGroups = 1;
+        @Param({"0","50"})
+        public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
