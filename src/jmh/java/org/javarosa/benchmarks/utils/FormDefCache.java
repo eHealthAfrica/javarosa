@@ -18,7 +18,6 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-
 /** Methods for reading from and writing to the FormDef cache */
 public class FormDefCache {
 

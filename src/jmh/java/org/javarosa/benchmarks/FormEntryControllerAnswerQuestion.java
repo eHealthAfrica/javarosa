@@ -1,11 +1,13 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.getStubAnswer;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getStubAnswer;
 
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
+
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.ItemsetBinding;
@@ -18,6 +20,7 @@ import org.javarosa.form.api.FormEntryPrompt;
 import org.javarosa.xform.parse.FormParserHelper;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -31,14 +34,22 @@ public class FormEntryControllerAnswerQuestion {
     public static class FormControllerAnswerQuestionState {
         FormEntryController formEntryController;
         FormEntryModel formEntryModel;
-
+        @Param({"10", "500"})
+        public int noOfQuestions = 2;
+        @Param({"10", "50"})
+        public int noOfInternalSecondaryInstances = 1;
+        @Param({"0", "50", "5000", "10000"})
+        public int noOf2ndryInstanceElements = 10;
+        @Param({"1"})
+        public int noOfQuestionGroups;
+        @Param({"0","50", "5000", "10000"})
+        public int noOfExternalSecondaryInstances;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            Path formFile = BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance();
-            FormDef formDef = FormParserHelper.parse(formFile);
+            File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+            FormDef formDef = FormParserHelper.parse(xFormXmlFile.toPath());
             formEntryModel = new FormEntryModel(formDef);
             formEntryController = new FormEntryController(formEntryModel);
-
             formEntryController.stepToNextEvent();
             while (formEntryModel.getFormIndex().isInForm()) {
                 FormIndex questionIndex = formEntryController.getModel().getFormIndex();
@@ -55,7 +66,7 @@ public class FormEntryControllerAnswerQuestion {
     }
 
     @Benchmark
-    public void benchmarkAnswerAndSaveAll(FormControllerAnswerQuestionState state) {
+    public void runBenchmark(FormControllerAnswerQuestionState state) {
         state.formEntryController.stepToNextEvent();
         while (state.formEntryModel.getFormIndex().isInForm()) {
             AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
@@ -91,7 +102,7 @@ public class FormEntryControllerAnswerQuestion {
                     .populateDynamicChoices(itemsetBinding, (TreeReference) question.getBind().getReference());
             }
             IAnswerData answer = getStubAnswer(formEntryPrompt.getQuestion());
-            int saveStatus = state.formEntryController.answerQuestion(questionIndex, answer, true);
+            state.formEntryController.answerQuestion(questionIndex, answer, true);
             answers.put(questionIndex, answer);
             state.formEntryController.stepToNextEvent();
         }

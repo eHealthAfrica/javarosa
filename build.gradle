@@ -75,15 +75,15 @@ javadoc {
 
 jmh {
     exclude = "(BenchmarkTemplate)"
-    threads = 1
+    threads = 10
     fork = 1
-    timeout = '10s'
     warmup = '2s'
-    warmupIterations = 10
+    warmupIterations = 5
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 20
-    timeOnIteration = '2s'
+    iterations = 10
+    timeOnIteration = '1s'
+    timeout = '30s'
     timeUnit = 's'
     benchmarkMode = ['avgt','ss']
     includeTests = true
