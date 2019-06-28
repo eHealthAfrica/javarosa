@@ -77,13 +77,13 @@ jmh {
     exclude = "(BenchmarkTemplate)"
     threads = 1
     fork = 1
-    timeout = '10s'
+    timeout = '30s'
     warmup = '2s'
     warmupIterations = 10
     warmupBatchSize = 1
     warmupForks = 1
     iterations = 20
-    timeOnIteration = '2s'
+    timeOnIteration = '30s'
     timeUnit = 's'
     benchmarkMode = ['avgt','ss']
     includeTests = true

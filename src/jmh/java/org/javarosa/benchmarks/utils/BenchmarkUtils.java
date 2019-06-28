@@ -1,8 +1,9 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.utils;
 
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -15,11 +16,19 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
+
+import org.javarosa.benchmarks.utils.builder.XFormBuilder;
+import org.javarosa.benchmarks.utils.builder.XFormFileGenerator;
+import org.javarosa.core.model.CoreModelModule;
 import org.javarosa.core.model.QuestionDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.LongData;
 import org.javarosa.core.model.data.StringData;
+import org.javarosa.core.services.PrototypeManager;
+import org.javarosa.core.util.JavaRosaCoreModule;
+import org.javarosa.model.xform.XFormsModule;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -27,6 +36,7 @@ import org.openjdk.jmh.infra.Blackhole;
 
 public class BenchmarkUtils {
     private static Path CACHE_PATH;
+    private static Path WORKING_DIR;
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
@@ -106,7 +116,40 @@ public class BenchmarkUtils {
 
     }
 
-    private static boolean hasAnnotation(Class<?> paramType, Class<? extends Annotation> annotationType) {
+    private static XFormBuilder getXFormBuilder(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
+        String title = String.format("xform_%s_%sISI%sE_%sESI%sE", noOfQuestions,
+            noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
+            noOfExternalSecondaryInstances, noOf2ndryInstanceElements
+        );
+        XFormBuilder xFormXmlFile = xFormFileGenerator.generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+        return xFormXmlFile;
+    }
+
+    public static Map<String, Path> generateExternalSecondaryInstances(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormBuilder xFormBuilder = getXFormBuilder(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+        Map<String, Path> externalInstanceFiles = xFormBuilder.buildExternalInstances();
+        return externalInstanceFiles;
+    }
+
+    public static File generateXFormFile(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
+        String title = String.format("xform_%s_%sISI%sE_%sESI%sE", noOfQuestions,
+            noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
+            noOfExternalSecondaryInstances, noOf2ndryInstanceElements
+        );
+        File xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+        return xFormXmlFile;
+    }
+
+    public static void registerCacheProtoTypes() {
+        PrototypeManager.registerPrototypes(JavaRosaCoreModule.classNames);
+        PrototypeManager.registerPrototypes(CoreModelModule.classNames);
+        new XFormsModule().registerModule();
+    }
+
+
+        private static boolean hasAnnotation(Class<?> paramType, Class<? extends Annotation> annotationType) {
         return Stream.of(paramType.getDeclaredAnnotations()).anyMatch(a -> a.annotationType().equals(annotationType));
     }
 
@@ -167,9 +210,18 @@ public class BenchmarkUtils {
 
     public static Path getCachePath() throws IOException {
         if(CACHE_PATH == null){
-            CACHE_PATH = Files.createTempDirectory("javarosa_benchmarks_cache");
+            File cacheDir = new File(getWorkingDir() + File.separator + "cache");
+            cacheDir.mkdir();
+            CACHE_PATH = cacheDir.toPath();
         }
         return CACHE_PATH;
+    }
+
+    public static Path getWorkingDir() throws IOException {
+        if(WORKING_DIR == null){
+            WORKING_DIR = Files.createTempDirectory("javarosa_benchmarks_cache");
+        }
+        return WORKING_DIR;
     }
 
 }
