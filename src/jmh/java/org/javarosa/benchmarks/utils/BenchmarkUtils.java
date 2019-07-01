@@ -184,7 +184,7 @@ public class BenchmarkUtils {
 
     public static Path getCachePath() throws IOException {
         if(CACHE_PATH == null){
-            File cacheDir = new File(getWorkingDir() + File.separator + "cache");
+            File cacheDir = new File(getWorkingDir() + File.separator + "_cache");
             cacheDir.mkdir();
             CACHE_PATH = cacheDir.toPath();
         }
@@ -193,7 +193,12 @@ public class BenchmarkUtils {
 
     public static Path getWorkingDir() throws IOException {
         if(WORKING_DIR == null){
-            WORKING_DIR = Files.createTempDirectory("javarosa_benchmarks_cache");
+            String tempDir = System.getProperty("java.io.tmpdir");
+            File file = new File(tempDir + File.separator + "javarosa_benchmarks");
+            if(!file.exists()){
+                file.mkdir();
+            }
+            WORKING_DIR = file.toPath();
         }
         return WORKING_DIR;
     }
