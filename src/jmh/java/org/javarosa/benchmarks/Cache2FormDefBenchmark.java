@@ -18,6 +18,7 @@ import java.io.IOException;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getCachePath;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.registerCacheProtoTypes;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
 public class Cache2FormDefBenchmark {
@@ -48,6 +49,7 @@ public class Cache2FormDefBenchmark {
             setUpSimpleReferenceManager("file", getWorkingDir());
             String formPath = xFormXmlFile.getPath();
             formDef =  FormParserHelper.parse(xFormXmlFile.toPath());
+            registerCacheProtoTypes();
             FormDefCache.writeCache(formDef, formPath, CACHE_PATH);
         }
     }

@@ -46,6 +46,7 @@ public class FormDef2CacheBenchmark {
             CACHE_PATH = getCachePath().toString();
             File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
             setUpSimpleReferenceManager("file", getWorkingDir());
+            registerCacheProtoTypes();
             formPath = xFormXmlFile.getPath();
             formDef =  FormParserHelper.parse(xFormXmlFile.toPath());
             registerCacheProtoTypes();
