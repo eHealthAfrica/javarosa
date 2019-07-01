@@ -76,18 +76,18 @@ javadoc {
 }
 
 jmh {
-    include = "(Cache2FormDefBenchmark)"
+    exclude = "(BenchmarkTemplate)"
     threads = 10
     fork = 1
     warmup = '2s'
-    warmupIterations = 5
+    warmupIterations = 3
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 10
+    iterations = 6
     timeOnIteration = '1s'
     timeout = '30s'
     timeUnit = 's'
-    benchmarkMode = ['avgt','ss']
+    benchmarkMode = ['avgt']
     includeTests = true
     resultFormat = 'CSV'
     forceGC = true
