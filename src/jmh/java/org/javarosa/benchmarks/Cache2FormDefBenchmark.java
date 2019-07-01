@@ -17,6 +17,8 @@ import java.io.IOException;
 
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getCachePath;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
 public class Cache2FormDefBenchmark {
 
@@ -33,8 +35,8 @@ public class Cache2FormDefBenchmark {
         public int noOfQuestions = 1;
         @Param({"10", "50"})
         public int noOfInternalSecondaryInstances = 1;
-        @Param({"0", "50", "1000"})
-        public int noOf2ndryInstanceElements = 1;
+        @Param({"1", "50", "1000"})
+        public int noOf2ndryInstanceElements = 10;
         @Param({"1"})
         public int noOfQuestionGroups = 1;
         @Param({"0","50"})
@@ -43,6 +45,7 @@ public class Cache2FormDefBenchmark {
         public void initialize() throws IOException {
             CACHE_PATH = getCachePath().toString();
             xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+            setUpSimpleReferenceManager("file", getWorkingDir());
             String formPath = xFormXmlFile.getPath();
             formDef =  FormParserHelper.parse(xFormXmlFile.toPath());
             FormDefCache.writeCache(formDef, formPath, CACHE_PATH);

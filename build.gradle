@@ -9,6 +9,8 @@ repositories {
     mavenCentral()
 }
 
+compileJava {options.encoding = "UTF-8"}
+
 sourceSets {
     main.java.srcDirs = ['src/main/java']
     main.resources.srcDirs = ['src/main/resources']
@@ -74,7 +76,7 @@ javadoc {
 }
 
 jmh {
-    exclude = "(BenchmarkTemplate)"
+    include = "(Cache2FormDefBenchmark)"
     threads = 10
     fork = 1
     warmup = '2s'

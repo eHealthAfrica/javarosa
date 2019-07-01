@@ -37,7 +37,7 @@ public class PopulateTreeNodeBenchmark {
         public int noOfQuestions = 1;
         @Param({"10", "50"})
         public int noOfInternalSecondaryInstances = 1;
-        @Param({"0", "50", "1000"})
+        @Param({"1", "50", "1000"})
         public int noOf2ndryInstanceElements = 1;
         @Param({"1"})
         public int noOfQuestionGroups = 1;
@@ -46,9 +46,9 @@ public class PopulateTreeNodeBenchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             xFormFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements).toPath();
+            setUpSimpleReferenceManager("file", getWorkingDir());
             Path assetsDir = prepareAssets("populate-nodes-attributes-instance.xml");
             Path submissionFile = assetsDir.resolve("populate-nodes-attributes-instance.xml");
-            setUpSimpleReferenceManager("file", getWorkingDir());
             FormParseInit formParseInit = new FormParseInit(xFormFile);
             FormEntryController formEntryController = formParseInit.getFormEntryController();
             byte[] formInstanceAsBytes = Files.readAllBytes(submissionFile);

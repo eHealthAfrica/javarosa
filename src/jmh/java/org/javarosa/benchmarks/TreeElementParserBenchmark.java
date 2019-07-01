@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
 public class TreeElementParserBenchmark {
     public static void main(String[] args) {
@@ -43,7 +45,7 @@ public class TreeElementParserBenchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             xFormFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements).getPath();
-
+            setUpSimpleReferenceManager("file", getWorkingDir());
         }
     }
 

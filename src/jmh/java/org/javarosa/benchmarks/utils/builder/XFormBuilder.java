@@ -239,16 +239,14 @@ public class XFormBuilder {
     }
 
     private void generateExternalInstanceFiles(List<OptionSelector> optionSelectorList) {
-        final String ROOT = dummyXForm.getMainInstanceTagName();
         externalSecondaryInstances = new HashMap<>();
         try {
             for (OptionSelector optionSelector : optionSelectorList) {
                 StringBuilder sb = new StringBuilder();
                 String instanceId = optionSelector.getInstanceId();
-                String rootElementName = ROOT + "_" + instanceId;
-                sb.append(openingTag(rootElementName))
+                sb.append(openingTag(instanceId))
                     .append(generateSecondaryInstanceOptions(optionSelector))
-                    .append(closingTag(rootElementName));
+                    .append(closingTag(instanceId));
                 File externalInstanceFile = new File(workingDirectory + File.separator + instanceId + ".xml");
                 FileWriter fileWriter = new FileWriter(externalInstanceFile);
                 fileWriter.write(sb.toString());
