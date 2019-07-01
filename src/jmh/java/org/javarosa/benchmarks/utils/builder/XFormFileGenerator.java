@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -29,12 +30,14 @@ public class XFormFileGenerator {
     public XFormBuilder generateXFormBuilder(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
         List<OptionSelector> internalSecondaryInstances = generateOptionSelectors(OptionSelector.Type.INTERNAL, noOfInternalSecondaryInstances, noOf2ndryInstanceElements);
         List<OptionSelector> externalSecondaryInstances = generateOptionSelectors( OptionSelector.Type.EXTERNAL, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
-        internalSecondaryInstances.addAll(externalSecondaryInstances);
+        List<OptionSelector> secondaryInstances = new ArrayList<>();
+        secondaryInstances.addAll(internalSecondaryInstances);
+        secondaryInstances.addAll(externalSecondaryInstances);
         DummyXForm dummyXForm =
             new DummyXForm(
                 title,
-                generateQuestionGroups(noOfQuestionGroups, internalSecondaryInstances),
-                generateQuestions(noOfQuestions, internalSecondaryInstances),
+                generateQuestionGroups(noOfQuestionGroups, secondaryInstances),
+                generateQuestions(noOfQuestions, secondaryInstances),
                 internalSecondaryInstances,
                 externalSecondaryInstances);
 
