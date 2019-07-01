@@ -133,7 +133,7 @@ public class XFormBuilder {
             String instanceId = optionSelector.getInstanceId();
             final Map<String, String> attributesMap = buildMap(
                 new String[]{"id", optionSelector.getInstanceId()},
-                new String[]{"src", "jr://" + externalSecondaryInstances.get(instanceId)}
+                new String[]{"src", "jr://file/" + externalSecondaryInstances.get(instanceId).toFile().getName()}
             );
             addChild(MODEL, openAndClose(INSTANCE, attributesMap));
         }
