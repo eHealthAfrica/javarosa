@@ -42,8 +42,8 @@ public class FormEntryControllerAnswerQuestion {
         public int noOfInternalSecondaryInstances = 1;
         @Param({"50", "1000"})
         public int noOf2ndryInstanceElements = 1;
-        @Param({"1"})
-        public int noOfQuestionGroups = 1;
+        @Param({"0"})
+        public int noOfQuestionGroups = 0;
         @Param({"0","50"})
         public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
