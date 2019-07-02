@@ -90,5 +90,5 @@ jmh {
     benchmarkMode = ['avgt']
     includeTests = true
     resultFormat = 'CSV'
-    forceGC = true
+    forceGC = false
 }

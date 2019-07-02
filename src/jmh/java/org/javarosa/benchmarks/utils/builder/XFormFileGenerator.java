@@ -13,18 +13,12 @@ import java.util.Random;
 public class XFormFileGenerator {
 
     public File generateXFormFile(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
-        File file = File.createTempFile("x_form_" + title , ".xml", null);
+        File file = new File(workingDirectory.resolve(title + ".xml").toString());
         FileWriter fileWriter = new FileWriter(file);
         XFormBuilder xFormBuilder = generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements,workingDirectory);
         fileWriter.write(xFormBuilder.build());
         fileWriter.close();
-        return moveToDirectory(file, workingDirectory);
-    }
-
-    public Map<String, Path> generateEternalInstanceFiles(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
-        XFormBuilder xFormBuilder = generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements,workingDirectory);
-        xFormBuilder.build();
-        return xFormBuilder.getExternalSecondaryInstances();
+        return file;
     }
 
     public XFormBuilder generateXFormBuilder(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
@@ -102,21 +96,5 @@ public class XFormFileGenerator {
         }
         return options;
     }
-
-    private File moveToDirectory(File sourceFile, Path destinationPath) throws IOException {
-        File destinationFolder = destinationPath.toFile();
-        if (destinationFolder.exists() || destinationFolder.mkdirs()){
-            if (!sourceFile.exists())
-                throw  new IOException("File " + sourceFile.getPath() + "does  not exist");
-            File destinationFile = new File(destinationFolder + File.separator + sourceFile.getName());
-            if(sourceFile.renameTo(destinationFile)){
-                sourceFile.delete();
-                return destinationFile;
-            }
-        }
-        throw new IOException(String.format("Unable to create XForm(%s) in destination(%s)", sourceFile, destinationFolder));
-    }
-
-
 
 }

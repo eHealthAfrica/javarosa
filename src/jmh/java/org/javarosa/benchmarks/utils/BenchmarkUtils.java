@@ -1,7 +1,6 @@
 package org.javarosa.benchmarks.utils;
 
 import static org.javarosa.test.utils.ResourcePathHelper.r;
-import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,7 +36,6 @@ import org.openjdk.jmh.infra.Blackhole;
 public class BenchmarkUtils {
     private static Path CACHE_PATH;
     private static Path WORKING_DIR;
-    public static Map<String, File> XFORMS = new HashMap<>();
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
@@ -139,12 +137,12 @@ public class BenchmarkUtils {
             noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
             noOfExternalSecondaryInstances, noOf2ndryInstanceElements
         );
+        File existingFile = getWorkingDir().resolve(title + ".xml").toFile();
         File xFormXmlFile;
-        if(XFORMS.get(title) != null){
-            xFormXmlFile = XFORMS.get(title);
+        if(existingFile.exists()){
+            xFormXmlFile = existingFile;
         }else{
             xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
-            XFORMS.put(title, xFormXmlFile);
         }
         return xFormXmlFile;
     }
