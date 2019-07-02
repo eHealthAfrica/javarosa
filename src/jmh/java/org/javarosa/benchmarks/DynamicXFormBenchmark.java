@@ -16,7 +16,7 @@ import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 
 public class DynamicXFormBenchmark {
 
@@ -46,15 +46,6 @@ public class DynamicXFormBenchmark {
             return  matcher.group(1);
 
         }
-    }
-
-    private String getInstanceName(String instanceXML){
-        Pattern pattern = Pattern.compile("<instance\\sid=\"([^\"]+)");
-        Matcher matcher = pattern.matcher(instanceXML);
-        if (matcher.find())
-            System.out.println(matcher.group(1));
-        return  matcher.group(1);
-
     }
 
     @Benchmark

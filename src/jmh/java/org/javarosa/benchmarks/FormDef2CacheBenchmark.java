@@ -1,33 +1,36 @@
 package org.javarosa.benchmarks;
 
 import org.javarosa.benchmarks.utils.BenchmarkUtils;
-import org.javarosa.xform.parse.XFormParser;
-import org.kxml2.kdom.Document;
+import org.javarosa.benchmarks.utils.FormDefCache;
+import org.javarosa.core.model.FormDef;
+import org.javarosa.xform.parse.FormParserHelper;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
 
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getCachePath;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.registerCacheProtoTypes;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
-public class XFormParserBenchmark {
+public class FormDef2CacheBenchmark {
+
     public static void main(String[] args) {
-        dryRun(XFormParserBenchmark.class);
+        dryRun(FormDef2CacheBenchmark.class);
     }
 
     @State(Scope.Thread)
-    public static class XFormParserBenchmarkState {
-        File xFormXmlFile ;
+    public static class FormTypesState {
+        String formPath ;
+        FormDef formDef ;
+        String CACHE_PATH;
         @Param({"10", "500"})
         public int noOfQuestions = 1;
         @Param({"10", "50"})
@@ -40,19 +43,20 @@ public class XFormParserBenchmark {
         public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+            CACHE_PATH = getCachePath().toString();
+            File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
             setUpSimpleReferenceManager("file", getWorkingDir());
+            registerCacheProtoTypes();
+            formPath = xFormXmlFile.getPath();
+            formDef =  FormParserHelper.parse(xFormXmlFile.toPath());
+            registerCacheProtoTypes();
         }
     }
 
-    @Benchmark
-    public void
-    runBenchmark(XFormParserBenchmarkState state, Blackhole bh)
-        throws IOException {
-        Reader reader = new FileReader(state.xFormXmlFile);
-        Document kxmlDocument = XFormParser.getXMLDocument(reader);
-        bh.consume(kxmlDocument);
-    }
 
+    @Benchmark
+    public void runBenchmark(FormTypesState state) throws IOException {
+        FormDefCache.writeCache(state.formDef,state.formPath, state.CACHE_PATH);
+    }
 
 }

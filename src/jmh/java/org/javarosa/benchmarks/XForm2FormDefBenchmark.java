@@ -1,8 +1,8 @@
 package org.javarosa.benchmarks;
 
 import org.javarosa.benchmarks.utils.BenchmarkUtils;
-import org.javarosa.xform.parse.XFormParser;
-import org.kxml2.kdom.Document;
+import org.javarosa.core.model.FormDef;
+import org.javarosa.xform.parse.FormParserHelper;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
@@ -12,22 +12,22 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.Reader;
+import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
 import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
-public class XFormParserBenchmark {
+public class XForm2FormDefBenchmark {
+
     public static void main(String[] args) {
-        dryRun(XFormParserBenchmark.class);
+        dryRun(XForm2FormDefBenchmark.class);
     }
 
     @State(Scope.Thread)
-    public static class XFormParserBenchmarkState {
-        File xFormXmlFile ;
+    public static class FormTypesState {
+        Path xFormXmlPath ;
         @Param({"10", "500"})
         public int noOfQuestions = 1;
         @Param({"10", "50"})
@@ -40,19 +40,16 @@ public class XFormParserBenchmark {
         public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+            File xFormXmlFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
             setUpSimpleReferenceManager("file", getWorkingDir());
+            xFormXmlPath = xFormXmlFile.toPath();
         }
     }
 
     @Benchmark
-    public void
-    runBenchmark(XFormParserBenchmarkState state, Blackhole bh)
-        throws IOException {
-        Reader reader = new FileReader(state.xFormXmlFile);
-        Document kxmlDocument = XFormParser.getXMLDocument(reader);
-        bh.consume(kxmlDocument);
+    public void runBenchmark(FormTypesState state, Blackhole bh) throws IOException {
+        FormDef formDef =  FormParserHelper.parse(state.xFormXmlPath);
+        bh.consume(formDef);
     }
-
 
 }

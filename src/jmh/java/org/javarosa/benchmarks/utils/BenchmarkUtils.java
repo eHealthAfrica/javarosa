@@ -1,8 +1,8 @@
-package org.javarosa.benchmarks;
+package org.javarosa.benchmarks.utils;
 
-import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 
+import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -15,11 +15,19 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
+
+import org.javarosa.benchmarks.utils.builder.XFormBuilder;
+import org.javarosa.benchmarks.utils.builder.XFormFileGenerator;
+import org.javarosa.core.model.CoreModelModule;
 import org.javarosa.core.model.QuestionDef;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.LongData;
 import org.javarosa.core.model.data.StringData;
+import org.javarosa.core.services.PrototypeManager;
+import org.javarosa.core.util.JavaRosaCoreModule;
+import org.javarosa.model.xform.XFormsModule;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
@@ -28,6 +36,7 @@ import org.openjdk.jmh.infra.Blackhole;
 public class BenchmarkUtils {
 
     private static Path CACHE_PATH;
+    private static Path WORKING_DIR;
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
@@ -107,7 +116,46 @@ public class BenchmarkUtils {
 
     }
 
-    private static boolean hasAnnotation(Class<?> paramType, Class<? extends Annotation> annotationType) {
+    private static XFormBuilder getXFormBuilder(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
+        String title = String.format("xform_%s_%sISI%sE_%sESI%sE", noOfQuestions,
+            noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
+            noOfExternalSecondaryInstances, noOf2ndryInstanceElements
+        );
+        XFormBuilder xFormXmlFile = xFormFileGenerator.generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+        return xFormXmlFile;
+    }
+
+    public static Map<String, Path> generateExternalSecondaryInstances(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormBuilder xFormBuilder = getXFormBuilder(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
+        Map<String, Path> externalInstanceFiles = xFormBuilder.buildExternalInstances();
+        return externalInstanceFiles;
+    }
+
+    public static File generateXFormFile(int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements) throws IOException {
+        XFormFileGenerator xFormFileGenerator = new XFormFileGenerator();
+        String title = String.format("xform_%s_%sISI%sE_%sESI%sE", noOfQuestions,
+            noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
+            noOfExternalSecondaryInstances, noOf2ndryInstanceElements
+        );
+        File existingFile = getWorkingDir().resolve(title + ".xml").toFile();
+        File xFormXmlFile;
+        if(existingFile.exists()){
+            xFormXmlFile = existingFile;
+        }else{
+            xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
+        }
+        return xFormXmlFile;
+    }
+
+    public static void registerCacheProtoTypes() {
+        PrototypeManager.registerPrototypes(JavaRosaCoreModule.classNames);
+        PrototypeManager.registerPrototypes(CoreModelModule.classNames);
+        new XFormsModule().registerModule();
+    }
+
+
+        private static boolean hasAnnotation(Class<?> paramType, Class<? extends Annotation> annotationType) {
         return Stream.of(paramType.getDeclaredAnnotations()).anyMatch(a -> a.annotationType().equals(annotationType));
     }
 
@@ -133,44 +181,25 @@ public class BenchmarkUtils {
         }
     }
 
-    public static Path getNigeriaWardsXMLWithInternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance.xml");
-        Path filePath = assetsPath.resolve("nigeria_wards_internal_2ndry_instance.xml");
-        return filePath;
-    }
-
-    public static Path getMinifiedNigeriaWardsXMLWithInternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_internal_2ndry_instance_minified.xml");
-        Path filePath = assetsPath.resolve("nigeria_wards_internal_2ndry_instance_minified.xml");
-        return filePath;
-    }
-
-    public static Path getNigeriaWardsXMLWithExternal2ndryInstance(){
-        Path assetsPath = prepareAssets("nigeria_wards_external_2ndry_instance.xml", "lgas.xml", "wards.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("nigeria_wards_external_2ndry_instance.xml");
-        return filePath;
-    }
-
-    public static Path getWardsExternalInstance(){
-        Path assetsPath = prepareAssets( "wards.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("wards.xml");
-        return filePath;
-    }
-
-    public static Path getLGAsExternalInstance(){
-        Path assetsPath = prepareAssets( "lgas.xml");
-        setUpSimpleReferenceManager("file", assetsPath);
-        Path filePath = assetsPath.resolve("lgas.xml");
-        return filePath;
-    }
-
     public static Path getCachePath() throws IOException {
         if(CACHE_PATH == null){
-            CACHE_PATH = Files.createTempDirectory("javarosa_benchmarks_cache");
+            File cacheDir = new File(getWorkingDir() + File.separator + "_cache");
+            cacheDir.mkdir();
+            CACHE_PATH = cacheDir.toPath();
         }
         return CACHE_PATH;
+    }
+
+    public static Path getWorkingDir() throws IOException {
+        if(WORKING_DIR == null){
+            String tempDir = System.getProperty("java.io.tmpdir");
+            File file = new File(tempDir + File.separator + "javarosa_benchmarks");
+            if(!file.exists()){
+                file.mkdir();
+            }
+            WORKING_DIR = file.toPath();
+        }
+        return WORKING_DIR;
     }
 
 }
