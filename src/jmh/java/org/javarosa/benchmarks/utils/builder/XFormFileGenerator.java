@@ -77,9 +77,9 @@ public class XFormFileGenerator {
     private List<OptionSelector> generateOptionSelectors(OptionSelector.Type type, int noOfOptionSelectors, int noOf2ndryInstanceElements){
         List<OptionSelector> instances = new ArrayList<>(noOfOptionSelectors);
         String secondaryInstanceType = type.toString().toLowerCase();
-        String instanceIdTemplate = secondaryInstanceType +"_secondary_instance_%0" + (noOfOptionSelectors + "").length() +"d";
+        String instanceIdTemplate = secondaryInstanceType +"_secondary_instance_%sE_%0" + (noOfOptionSelectors + "").length() +"d";
         while(noOfOptionSelectors > 0){
-            instances.add(0, generateOptionSelector(String.format(instanceIdTemplate, noOfOptionSelectors), noOf2ndryInstanceElements));
+            instances.add(0, generateOptionSelector(String.format(instanceIdTemplate, noOf2ndryInstanceElements, noOfOptionSelectors), noOf2ndryInstanceElements));
             noOfOptionSelectors--;
         }
         return instances;
