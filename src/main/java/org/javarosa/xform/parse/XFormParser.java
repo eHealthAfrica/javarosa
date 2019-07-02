@@ -360,7 +360,7 @@ public class XFormParser implements IXFormParserFunctions {
      */
     public FormDef parse(String lastSavedSrc) throws IOException {
         if (_f == null) {
-            logger.info("Parsing form...");
+            logger.info("Parsing form....");
 
             if (_xmldoc == null) {
                 _xmldoc = getXMLDocument(_reader, stringCache);
