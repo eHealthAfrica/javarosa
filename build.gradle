@@ -77,7 +77,7 @@ javadoc {
 
 jmh {
     exclude = "(BenchmarkTemplate)"
-    threads = 10
+    threads = 1
     fork = 1
     warmup = '2s'
     warmupIterations = 0
