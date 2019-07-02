@@ -21,7 +21,11 @@ public class InternalDataInstanceParser {
         throws IOException, UnfullfilledRequirementsException, XmlPullParserException, InvalidStructureException, InvalidReferenceException {
         List<InternalDataInstance> internalDataInstances = new ArrayList<>();
         for(String dataInstanceXmlString: dataInstanceXmlStrings){
-           internalDataInstances.add(build(dataInstanceXmlString));
+            InternalDataInstance internalDataInstance = build(dataInstanceXmlString);
+            if(internalDataInstance != null){
+                internalDataInstances.add(internalDataInstance);
+            }
+
         }
         return internalDataInstances;
     }
@@ -45,11 +49,16 @@ public class InternalDataInstanceParser {
         TreeElementParser treeElementParser =
             new TreeElementParser(parser,0, "");
         TreeElement treeElement = treeElementParser.parse();
-        if (treeElement.getNumChildren() == 0)
-            throw new RuntimeException("Root TreeElement node has no children");
-        String instanceId = treeElement.getAttributeValue("","id");
-        InternalDataInstance internalDataInstance  = new InternalDataInstance(treeElement.getChildAt(0), instanceId,  dataInstanceXmlString);
-        return internalDataInstance;
+        String src = treeElement.getAttributeValue("", "src");
+        if(src != null && src.startsWith("jr://file/")){
+            return null;
+        }else{
+            if (treeElement.getNumChildren() == 0)
+                throw new RuntimeException("Root TreeElement node has no children");
+            String instanceId = treeElement.getAttributeValue("","id");
+            InternalDataInstance internalDataInstance  = new InternalDataInstance(treeElement.getChildAt(0), instanceId,  dataInstanceXmlString);
+            return internalDataInstance;
+        }
     }
 
     /**
