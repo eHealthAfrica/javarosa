@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -12,29 +13,25 @@ import java.util.Random;
 public class XFormFileGenerator {
 
     public File generateXFormFile(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
-        File file = File.createTempFile("x_form_" + title , ".xml", null);
+        File file = new File(workingDirectory.resolve(title + ".xml").toString());
         FileWriter fileWriter = new FileWriter(file);
         XFormBuilder xFormBuilder = generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements,workingDirectory);
         fileWriter.write(xFormBuilder.build());
         fileWriter.close();
-        return moveToDirectory(file, workingDirectory);
-    }
-
-    public Map<String, Path> generateEternalInstanceFiles(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
-        XFormBuilder xFormBuilder = generateXFormBuilder(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements,workingDirectory);
-        xFormBuilder.build();
-        return xFormBuilder.getExternalSecondaryInstances();
+        return file;
     }
 
     public XFormBuilder generateXFormBuilder(String title, int noOfQuestions, int noOfQuestionGroups, int noOfInternalSecondaryInstances, int noOfExternalSecondaryInstances, int noOf2ndryInstanceElements, Path workingDirectory) throws IOException {
         List<OptionSelector> internalSecondaryInstances = generateOptionSelectors(OptionSelector.Type.INTERNAL, noOfInternalSecondaryInstances, noOf2ndryInstanceElements);
         List<OptionSelector> externalSecondaryInstances = generateOptionSelectors( OptionSelector.Type.EXTERNAL, noOfExternalSecondaryInstances, noOf2ndryInstanceElements);
-        internalSecondaryInstances.addAll(externalSecondaryInstances);
+        List<OptionSelector> secondaryInstances = new ArrayList<>();
+        secondaryInstances.addAll(internalSecondaryInstances);
+        secondaryInstances.addAll(externalSecondaryInstances);
         DummyXForm dummyXForm =
             new DummyXForm(
                 title,
-                generateQuestionGroups(noOfQuestionGroups, internalSecondaryInstances),
-                generateQuestions(noOfQuestions, internalSecondaryInstances),
+                generateQuestionGroups(noOfQuestionGroups, secondaryInstances),
+                generateQuestions(noOfQuestions, secondaryInstances),
                 internalSecondaryInstances,
                 externalSecondaryInstances);
 
@@ -80,9 +77,9 @@ public class XFormFileGenerator {
     private List<OptionSelector> generateOptionSelectors(OptionSelector.Type type, int noOfOptionSelectors, int noOf2ndryInstanceElements){
         List<OptionSelector> instances = new ArrayList<>(noOfOptionSelectors);
         String secondaryInstanceType = type.toString().toLowerCase();
-        String instanceIdTemplate = secondaryInstanceType +"_secondary_instance_%0" + (noOfOptionSelectors + "").length() +"d";
+        String instanceIdTemplate = secondaryInstanceType +"_secondary_instance_%sE_%0" + (noOfOptionSelectors + "").length() +"d";
         while(noOfOptionSelectors > 0){
-            instances.add(0, generateOptionSelector(String.format(instanceIdTemplate, noOfOptionSelectors), noOf2ndryInstanceElements));
+            instances.add(0, generateOptionSelector(String.format(instanceIdTemplate, noOf2ndryInstanceElements, noOfOptionSelectors), noOf2ndryInstanceElements));
             noOfOptionSelectors--;
         }
         return instances;
@@ -99,21 +96,5 @@ public class XFormFileGenerator {
         }
         return options;
     }
-
-    private File moveToDirectory(File sourceFile, Path destinationPath) throws IOException {
-        File destinationFolder = destinationPath.toFile();
-        if (destinationFolder.exists() || destinationFolder.mkdirs()){
-            if (!sourceFile.exists())
-                throw  new IOException("File " + sourceFile.getPath() + "does  not exist");
-            File destinationFile = new File(destinationFolder + File.separator + sourceFile.getName());
-            if(sourceFile.renameTo(destinationFile)){
-                sourceFile.delete();
-                return destinationFile;
-            }
-        }
-        throw new IOException(String.format("Unable to create XForm(%s) in destination(%s)", sourceFile, destinationFolder));
-    }
-
-
 
 }

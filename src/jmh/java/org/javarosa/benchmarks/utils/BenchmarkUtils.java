@@ -1,6 +1,5 @@
 package org.javarosa.benchmarks.utils;
 
-import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
 
 import java.io.File;
@@ -37,7 +36,6 @@ import org.openjdk.jmh.infra.Blackhole;
 public class BenchmarkUtils {
     private static Path CACHE_PATH;
     private static Path WORKING_DIR;
-    public static Map<String, File> XFORMS = new HashMap<>();
     public static Path prepareAssets(String... filenames) {
         try {
             Path assetsDir = Files.createTempDirectory("javarosa_benchmarks_");
@@ -139,12 +137,12 @@ public class BenchmarkUtils {
             noOfInternalSecondaryInstances, noOf2ndryInstanceElements,
             noOfExternalSecondaryInstances, noOf2ndryInstanceElements
         );
+        File existingFile = getWorkingDir().resolve(title + ".xml").toFile();
         File xFormXmlFile;
-        if(XFORMS.get(title) != null){
-            xFormXmlFile = XFORMS.get(title);
+        if(existingFile.exists()){
+            xFormXmlFile = existingFile;
         }else{
             xFormXmlFile = xFormFileGenerator.generateXFormFile(title, noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements, getWorkingDir());
-            XFORMS.put(title, xFormXmlFile);
         }
         return xFormXmlFile;
     }
@@ -184,7 +182,7 @@ public class BenchmarkUtils {
 
     public static Path getCachePath() throws IOException {
         if(CACHE_PATH == null){
-            File cacheDir = new File(getWorkingDir() + File.separator + "cache");
+            File cacheDir = new File(getWorkingDir() + File.separator + "_cache");
             cacheDir.mkdir();
             CACHE_PATH = cacheDir.toPath();
         }
@@ -193,7 +191,12 @@ public class BenchmarkUtils {
 
     public static Path getWorkingDir() throws IOException {
         if(WORKING_DIR == null){
-            WORKING_DIR = Files.createTempDirectory("javarosa_benchmarks_cache");
+            String tempDir = System.getProperty("java.io.tmpdir");
+            File file = new File(tempDir + File.separator + "javarosa_benchmarks");
+            if(!file.exists()){
+                file.mkdir();
+            }
+            WORKING_DIR = file.toPath();
         }
         return WORKING_DIR;
     }

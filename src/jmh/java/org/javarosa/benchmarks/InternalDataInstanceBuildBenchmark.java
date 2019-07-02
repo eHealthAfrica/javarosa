@@ -31,7 +31,7 @@ public class InternalDataInstanceBuildBenchmark {
         public int noOfQuestions = 1;
         @Param({"10", "50"})
         public int noOfInternalSecondaryInstances = 1;
-        @Param({"0", "50", "1000"})
+        @Param({"50", "1000"})
         public int noOf2ndryInstanceElements = 1;
         @Param({"1"})
         public int noOfQuestionGroups = 1;

@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getWorkingDir;
+import static org.javarosa.core.reference.ReferenceManagerTestUtils.setUpSimpleReferenceManager;
 
 public class TreeElementParserBenchmark {
     public static void main(String[] args) {
@@ -34,7 +36,7 @@ public class TreeElementParserBenchmark {
         public int noOfQuestions = 1;
         @Param({"10", "50"})
         public int noOfInternalSecondaryInstances = 1;
-        @Param({"0", "50", "1000"})
+        @Param({"50", "1000"})
         public int noOf2ndryInstanceElements = 1;
         @Param({"1"})
         public int noOfQuestionGroups = 1;
@@ -43,7 +45,7 @@ public class TreeElementParserBenchmark {
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             xFormFile = BenchmarkUtils.generateXFormFile(noOfQuestions, noOfQuestionGroups, noOfInternalSecondaryInstances, noOfExternalSecondaryInstances, noOf2ndryInstanceElements).getPath();
-
+            setUpSimpleReferenceManager("file", getWorkingDir());
         }
     }
 

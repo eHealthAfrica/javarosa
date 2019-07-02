@@ -9,6 +9,8 @@ repositories {
     mavenCentral()
 }
 
+compileJava {options.encoding = "UTF-8"}
+
 sourceSets {
     main.java.srcDirs = ['src/main/java']
     main.resources.srcDirs = ['src/main/resources']
@@ -78,15 +80,15 @@ jmh {
     threads = 10
     fork = 1
     warmup = '2s'
-    warmupIterations = 5
+    warmupIterations = 3
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 10
+    iterations = 6
     timeOnIteration = '1s'
     timeout = '30s'
     timeUnit = 's'
-    benchmarkMode = ['avgt','ss']
+    benchmarkMode = ['avgt']
     includeTests = true
     resultFormat = 'CSV'
-    forceGC = true
+    forceGC = false
 }
