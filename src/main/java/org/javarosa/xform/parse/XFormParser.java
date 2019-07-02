@@ -443,7 +443,12 @@ public class XFormParser implements IXFormParserFunctions {
         logger.info(ctParse.logLine("Reading XML and parsing with kXML2"));
 
         StopWatch ctConsolidate = StopWatch.start();
-        XmlTextConsolidator.consolidateText(stringCache, doc.getRootElement());
+        try{
+            XmlTextConsolidator.consolidateText(stringCache, doc.getRootElement());
+        }catch(Exception ex){
+
+        }
+
         logger.info(ctConsolidate.logLine("Consolidating text"));
 
         return doc;

@@ -32,7 +32,7 @@ public class FormDef2CacheBenchmark {
         FormDef formDef ;
         String CACHE_PATH;
         @Param({"10", "500"})
-        public int noOfQuestions = 10;
+        public int noOfQuestions = 500;
         @Param({"10", "50"})
         public int noOfInternalSecondaryInstances = 50;
         @Param({"50", "1000"})
@@ -40,7 +40,7 @@ public class FormDef2CacheBenchmark {
         @Param({"1"})
         public int noOfQuestionGroups = 1;
         @Param({"0","50"})
-        public int noOfExternalSecondaryInstances = 50;
+        public int noOfExternalSecondaryInstances = 0;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
             CACHE_PATH = getCachePath().toString();
