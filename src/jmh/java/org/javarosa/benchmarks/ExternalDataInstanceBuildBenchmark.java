@@ -33,7 +33,7 @@ public class ExternalDataInstanceBuildBenchmark {
         String instanceFileName;
         public int noOfQuestions = 1;
         public int noOfInternalSecondaryInstances = 0;
-        @Param({"50", "1000"})
+        @Param({"50", "5000"})
         public int noOf2ndryInstanceElements = 1;
         @Param({"1"})
         public int noOfQuestionGroups = 1;

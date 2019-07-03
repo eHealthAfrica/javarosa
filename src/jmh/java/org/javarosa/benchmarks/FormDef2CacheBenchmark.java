@@ -33,9 +33,9 @@ public class FormDef2CacheBenchmark {
         String CACHE_PATH;
         @Param({"10", "500"})
         public int noOfQuestions = 500;
-        @Param({"10", "50"})
+        @Param({"1", "50"})
         public int noOfInternalSecondaryInstances = 50;
-        @Param({"50", "1000"})
+        @Param({"50", "5000"})
         public int noOf2ndryInstanceElements = 1000;
         @Param({"1"})
         public int noOfQuestionGroups = 1;
