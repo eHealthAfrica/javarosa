@@ -369,7 +369,7 @@ public class XFormParser implements IXFormParserFunctions {
      */
     public FormDef parse(String xFormFile, String lastSavedSrc) throws IOException {
         if (_f == null) {
-            logger.info("Parsing form...");
+            logger.info("Parsing form....");
 
             boolean skipSecondaryInstance = xFormFile != null;
             ElementSkipper elementSkipper = null;
@@ -479,7 +479,12 @@ public class XFormParser implements IXFormParserFunctions {
         logger.info(ctParse.logLine("Reading XML and parsing with kXML2"));
 
         StopWatch ctConsolidate = StopWatch.start();
-        XmlTextConsolidator.consolidateText(stringCache, doc.getRootElement());
+        try{
+            XmlTextConsolidator.consolidateText(stringCache, doc.getRootElement());
+        }catch(Exception ex){
+
+        }
+
         logger.info(ctConsolidate.logLine("Consolidating text"));
 
         return doc;
