@@ -77,18 +77,18 @@ javadoc {
 
 jmh {
     exclude = "(BenchmarkTemplate)"
-    threads = 10
+    threads = 1
     fork = 1
     warmup = '2s'
-    warmupIterations = 3
+    warmupIterations = 0
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 6
+    iterations = 1
     timeOnIteration = '1s'
     timeout = '30s'
     timeUnit = 's'
     benchmarkMode = ['avgt']
     includeTests = true
     resultFormat = 'CSV'
-    forceGC = false
+    forceGC = true
 }
