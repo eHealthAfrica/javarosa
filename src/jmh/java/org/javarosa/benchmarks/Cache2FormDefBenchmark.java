@@ -34,13 +34,13 @@ public class Cache2FormDefBenchmark {
         String CACHE_PATH;
         @Param({"10", "500"})
         public int noOfQuestions = 500;
-        @Param({"1", "50"})
+        @Param({"1", "10"})
         public int noOfInternalSecondaryInstances = 50;
-        @Param({"50", "5000"})
+        @Param({"50", "500", "5000"})
         public int noOf2ndryInstanceElements = 100;
-        @Param({"1"})
+        @Param({"0"})
         public int noOfQuestionGroups = 1;
-        @Param({"0","50"})
+        @Param({"0"})
         public int noOfExternalSecondaryInstances = 50;
         @Setup(Level.Trial)
         public void initialize() throws IOException {
