@@ -45,7 +45,7 @@ public class XFormParserBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void
     runBenchmark(XFormParserBenchmarkState state, Blackhole bh)
         throws IOException {
