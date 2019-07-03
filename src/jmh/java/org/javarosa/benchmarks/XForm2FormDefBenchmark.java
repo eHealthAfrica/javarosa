@@ -28,11 +28,11 @@ public class XForm2FormDefBenchmark {
     @State(Scope.Thread)
     public static class FormTypesState {
         Path xFormXmlPath ;
-        @Param({"10", "500"})
+        @Param({"10", "200", "500"})
         public int noOfQuestions = 500;
         @Param({"1", "10"})
         public int noOfInternalSecondaryInstances = 50;
-        @Param({"50", "500", "5000"})
+        @Param({"50", "500", "5000", "50000"})
         public int noOf2ndryInstanceElements = 100;
         @Param({"0"})
         public int noOfQuestionGroups = 1;

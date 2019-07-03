@@ -13,7 +13,6 @@ import org.javarosa.core.model.instance.ExternalDataInstance;
 import org.javarosa.core.reference.InvalidReferenceException;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
-import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
