@@ -49,7 +49,7 @@ public class TreeElementParserBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void runBenchmark(TreeElementParserBenchmarkState state, Blackhole bh) throws IOException, UnfullfilledRequirementsException, XmlPullParserException, InvalidStructureException {
         TreeElement documentRootTreeElement = parse(state.xFormFile);
         bh.consume(documentRootTreeElement);

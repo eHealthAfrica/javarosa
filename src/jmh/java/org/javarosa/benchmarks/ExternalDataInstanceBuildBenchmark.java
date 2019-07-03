@@ -50,7 +50,7 @@ public class ExternalDataInstanceBuildBenchmark {
 
     }
 
-    @Benchmark
+    //@Benchmark
     public void runBenchmark(ExternalDataInstanceState state, Blackhole bh)
         throws IOException, XmlPullParserException, InvalidReferenceException,
         UnfullfilledRequirementsException, InvalidStructureException {
