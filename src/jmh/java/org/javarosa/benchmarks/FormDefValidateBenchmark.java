@@ -37,13 +37,13 @@ FormDefValidateBenchmark {
     public static class FormDefValidateState {
         FormDef formDef ;
         @Param({"10", "500"})
-        public int noOfQuestions = 1;
+        public int noOfQuestions = 500;
         @Param({"10", "50"})
-        public int noOfInternalSecondaryInstances = 1;
+        public int noOfInternalSecondaryInstances = 10;
         @Param({"50", "1000"})
-        public int noOf2ndryInstanceElements = 1;
-        @Param({"1"})
-        public int noOfQuestionGroups = 1;
+        public int noOf2ndryInstanceElements = 1000;
+        @Param({"0"})
+        public int noOfQuestionGroups = 0;
         @Param({"0","50"})
         public int noOfExternalSecondaryInstances = 1;
         @Setup(Level.Trial)
@@ -71,7 +71,7 @@ FormDefValidateBenchmark {
         }
     }
 
-    @Benchmark
+    //@Benchmark
     public void runBenchmark(FormDefValidateState state, Blackhole bh) {
         ValidateOutcome validateOutcome = state.formDef.validate(true);
         bh.consume(validateOutcome);
