@@ -82,10 +82,10 @@ jmh {
     threads = 1
     fork = 1
     warmup = '2s'
-    warmupIterations = 0
+    warmupIterations = 1
     warmupBatchSize = 1
     warmupForks = 1
-    iterations = 1
+    iterations = 2
     timeOnIteration = '1s'
     timeout = '30s'
     timeUnit = 's'
