@@ -33,7 +33,6 @@ import org.javarosa.core.model.data.SelectOneData;
 import org.javarosa.core.model.data.StringData;
 import org.javarosa.core.model.data.helper.Selection;
 import org.javarosa.core.model.instance.DataInstance;
-import org.javarosa.core.model.instance.ExternalDataInstance;
 import org.javarosa.core.model.instance.FormInstance;
 import org.javarosa.core.model.instance.InstanceInitializationFactory;
 import org.javarosa.core.model.instance.InvalidReferenceException;
@@ -62,7 +61,6 @@ import org.javarosa.form.api.FormEntryModel;
 import org.javarosa.model.xform.XPathReference;
 import org.javarosa.xform.parse.XFormParseException;
 import org.javarosa.xform.util.XFormAnswerDataSerializer;
-import org.javarosa.xml.InternalDataInstanceParser;
 import org.javarosa.xpath.XPathException;
 
 import java.io.DataInputStream;
@@ -74,13 +72,10 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.crypto.Data;
 
 /**
  * Definition of a form. This has some meta data about the form definition and a
@@ -149,13 +144,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
     /** The display title of the form */
     private String title;
 
-    /**
-     * The file path to the formXML file
-     * this is being used for deserialization of the internal instances
-     * during caching
-     * */
-    private String formXmlPath;
-
     private String name;
 
     private List<XFormExtension> extensions;
@@ -177,8 +165,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     private HashMap<String, SubmissionProfile> submissionProfiles;
 
-    private HashMap<String, DataInstance> externalFormInstances;
-    private HashMap<String, DataInstance> internalFormInstances;
+    private HashMap<String, DataInstance> formInstances;
     private FormInstance mainInstance = null;
 
     private ActionController actionController;
@@ -223,8 +210,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         resetEvaluationContext();
         outputFragments = new ArrayList<>();
         submissionProfiles = new HashMap<>();
-        internalFormInstances = new HashMap<>();
-        externalFormInstances = new HashMap<>();
+        formInstances = new HashMap<>();
         extensions = new ArrayList<>();
         actionController = new ActionController();
 
@@ -241,16 +227,8 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     /** Getters and setters for the lists */
     public void addNonMainInstance(DataInstance instance) {
-        if(instance instanceof ExternalDataInstance){
-            externalFormInstances.put(instance.getName(), instance);
-        } else {
-            internalFormInstances.put(instance.getName(), instance);
-        }
+        formInstances.put(instance.getName(), instance);
         resetEvaluationContext();
-    }
-
-    public void setFormXmlPath(String formXmlPath) {
-        this.formXmlPath = formXmlPath;
     }
 
     /**
@@ -260,7 +238,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      * @return
      */
     public DataInstance getNonMainInstance(String name) {
-        HashMap<String, DataInstance> formInstances = getFormInstances();
         if (!formInstances.containsKey(name)) {
             return null;
         }
@@ -269,7 +246,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
     }
 
     public Enumeration<DataInstance> getNonMainInstances() {
-        return Collections.enumeration(getFormInstances().values());
+        return Collections.enumeration(formInstances.values());
     }
 
     public void setInstance(FormInstance fi) {
@@ -765,7 +742,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     private void resetEvaluationContext() {
         EvaluationContext ec = new EvaluationContext(null);
-        ec = new EvaluationContext(mainInstance, getFormInstances(), ec);
+        ec = new EvaluationContext(mainInstance, formInstances, ec);
         initEvalContext(ec);
         this.exprEvalContext = ec;
     }
@@ -1220,19 +1197,8 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         submissionProfiles = (HashMap<String, SubmissionProfile>) ExtUtil.read(dis, new ExtWrapMap(
                 String.class, SubmissionProfile.class));
 
-        //Form Backward compability
-        //
-        if(formXmlPath == null){
-            HashMap<String, DataInstance> formInstances = (HashMap<String, DataInstance>) ExtUtil.read(dis, new ExtWrapMap(
+        formInstances = (HashMap<String, DataInstance>) ExtUtil.read(dis, new ExtWrapMap(
                 String.class, new ExtWrapTagged()), pf);
-            for(Map.Entry<String, DataInstance>  formInstanceEntry :formInstances.entrySet()){
-                addNonMainInstance(formInstanceEntry.getValue());
-            }
-        } else {
-            externalFormInstances = (HashMap<String, DataInstance>) ExtUtil.read(dis, new ExtWrapMap(
-                String.class, new ExtWrapTagged()), pf);
-            internalFormInstances = InternalDataInstanceParser.buildInstances(getFormXmlPath());
-        }
 
         extensions = (List<XFormExtension>) ExtUtil.read(dis, new ExtWrapListPoly(), pf);
 
@@ -1247,7 +1213,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      *                    false if it is using an existing IDataModel
      */
     public void initialize(boolean newInstance, InstanceInitializationFactory factory) {
-        HashMap<String, DataInstance> formInstances = getFormInstances();
         for (String instanceId : formInstances.keySet()) {
             DataInstance instance = formInstances.get(instanceId);
             instance.initialize(factory, instanceId);
@@ -1285,7 +1250,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         ExtUtil.writeString(dos, ExtUtil.emptyIfNull(getName()));
         ExtUtil.write(dos, new ExtWrapNullable(getTitle()));
         ExtUtil.write(dos, new ExtWrapListPoly(getChildren()));
-        ExtUtil.write(dos, getFormXmlPath());
         ExtUtil.write(dos, getMainInstance());
         ExtUtil.write(dos, new ExtWrapNullable(localizer));
 
@@ -1299,14 +1263,8 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         ExtUtil.write(dos, new ExtWrapMap(submissionProfiles));
 
         // for support of multi-instance forms
-        if(formXmlPath == null){
-            //Serialize all instances of path of the form isn't known
-            ExtUtil.write(dos, new ExtWrapMap(getFormInstances(), new ExtWrapTagged()));
-        } else {
-            //Don't serialize internal instances, if the path of the form is known
-            ExtUtil.write(dos, new ExtWrapMap(getExternalInstances(), new ExtWrapTagged()));
-        }
 
+        ExtUtil.write(dos, new ExtWrapMap(formInstances, new ExtWrapTagged()));
         ExtUtil.write(dos, new ExtWrapListPoly(extensions));
         ExtUtil.write(dos, new ExtWrapNullable(actionController));
     }
@@ -1739,24 +1697,5 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     public void addParseError(String error) {
         parseErrors.add(error);
-    }
-
-    private HashMap<String, DataInstance> getInternalInstances(){
-        return internalFormInstances;
-    }
-
-    private HashMap<String, DataInstance> getExternalInstances(){
-        return externalFormInstances;
-    }
-
-    public String getFormXmlPath() {
-        return formXmlPath;
-    }
-
-    private HashMap<String, DataInstance> getFormInstances(){
-        HashMap<String, DataInstance> formInstances = new HashMap<>();
-        formInstances.putAll(getInternalInstances());
-        formInstances.putAll(getExternalInstances());
-        return formInstances;
     }
 }
