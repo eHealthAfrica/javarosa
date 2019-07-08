@@ -1,7 +1,7 @@
 package org.javarosa.benchmarks;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.getMinifiedNigeriaWardsXMLWithInternal2ndryInstance;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getMinifiedNigeriaWardsXMLWithInternal2ndryInstance;
 
 import java.io.IOException;
 import java.nio.file.Path;

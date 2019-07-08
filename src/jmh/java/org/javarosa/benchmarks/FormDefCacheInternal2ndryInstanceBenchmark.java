@@ -1,5 +1,6 @@
 package org.javarosa.benchmarks;
 
+import org.javarosa.benchmarks.utils.BenchmarkUtils;
 import org.javarosa.benchmarks.utils.FormDefCache;
 import org.javarosa.core.model.CoreModelModule;
 import org.javarosa.core.model.FormDef;
@@ -17,8 +18,8 @@ import org.openjdk.jmh.infra.Blackhole;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
-import static org.javarosa.benchmarks.BenchmarkUtils.getCachePath;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.utils.BenchmarkUtils.getCachePath;
 
 public class FormDefCacheInternal2ndryInstanceBenchmark {
     public static void main(String[] args) {
