@@ -46,6 +46,7 @@ import static org.javarosa.xform.parse.RandomizeHelper.cleanSeedDefinition;
 import static org.javarosa.xform.parse.RangeParser.populateQuestionWithRangeAttributes;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,7 +76,6 @@ import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
 import org.javarosa.core.model.instance.FormInstance;
-import org.javarosa.core.model.instance.InternalDataInstance;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.core.model.instance.utils.IAnswerResolver;
@@ -95,9 +95,6 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
-import org.javarosa.xml.ElementSkipper;
-import org.javarosa.xml.InternalDataInstanceParser;
-import org.javarosa.xml.KXmlElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
@@ -130,7 +127,6 @@ public class XFormParser implements IXFormParserFunctions {
 
     //Constants to clean up code and prevent user error
     private static final String FORM_ATTR = "form";
-    private static final String INSTANCE_ELEMENT = "instance";
     private static final String APPEARANCE_ATTR = "appearance";
     private static final String LABEL_ELEMENT = "label";
     private static final String VALUE = "value";
@@ -353,28 +349,37 @@ public class XFormParser implements IXFormParserFunctions {
         _instDoc = instance;
     }
 
-    public FormDef parse() throws IOException {
-        return parse(null, null);
+    public FormDef parse(File formXmlSrc) throws IOException {
+        return parse(formXmlSrc.getPath(), null);
     }
 
     public FormDef parse(String lastSavedSrc) throws IOException {
         return parse(null, lastSavedSrc);
     }
 
+
+    public FormDef parse() throws IOException {
+        return parse(null, null);
+    }
+
+
     /**
+     * @see #parse(File formXmlSrc)
+     * @see #parse(String lastSavedSrc)
      * @see #parse()
      *
      * @param lastSavedSrc The src of the last-saved instance of this form (for auto-filling). If null,
      *                     no data will be loaded and the instance will be blank.
      */
-    public FormDef parse(String xFormFile, String lastSavedSrc) throws IOException {
+    public FormDef parse(String formXmlSrc, String lastSavedSrc) throws IOException {
         if (_f == null) {
             logger.info("Parsing form...");
 
-            boolean skipSecondaryInstance = xFormFile != null;
-            _xmldoc = getXMLDocument(_reader, stringCache, skipSecondaryInstance);
+            if (_xmldoc == null) {
+                _xmldoc = getXMLDocument(_reader, stringCache);
+            }
 
-            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()),xFormFile, lastSavedSrc);
+            parseDoc(formXmlSrc, buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
 
             //load in a custom xml instance, if applicable
             if (_instReader != null) {
@@ -400,16 +405,7 @@ public class XFormParser implements IXFormParserFunctions {
     }
 
     public static Document getXMLDocument(Reader reader) throws IOException {
-        return getXMLDocument(reader,null, false);
-    }
-
-    public static Document getXMLDocument(Reader reader, boolean skipSecondaryInstance) throws IOException {
-        return getXMLDocument(reader,null, skipSecondaryInstance);
-    }
-
-    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
-        throws IOException {
-        return getXMLDocument(reader, stringCache, false);
+        return getXMLDocument(reader, null);
     }
 
     /**
@@ -423,39 +419,23 @@ public class XFormParser implements IXFormParserFunctions {
      * @deprecated The InterningKXmlParser is not used.
      */
     @Deprecated
-    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache, boolean skipInternalInstance)
+    public static Document getXMLDocument(Reader reader, CacheTable<String> stringCache)
         throws IOException {
         final StopWatch ctParse = StopWatch.start();
-        Document doc;
+        Document doc = new Document();
 
         try {
             KXmlParser parser;
 
             if (stringCache != null) {
-                doc = new Document();
                 parser = new InterningKXmlParser(stringCache);
-                parser.setInput(reader);
-                parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                doc.parse(parser);
             } else {
-
-                if (skipInternalInstance) {
-                    ElementSkipper elementSkipper = new ElementSkipper(INSTANCE_ELEMENT,1);
-                    parser = KXmlElementParser.instantiateParser(reader);
-                    KXmlElementParser kxmlElementParser = new KXmlElementParser(parser, elementSkipper);
-                    doc = kxmlElementParser.parseDoc();
-                } else {
-                    parser = new KXmlParser();
-                    doc = new Document();
-                    //Parses the whole xform
-                    parser.setInput(reader);
-                    parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
-                    doc.parse(parser);
-
-                }
-
+                parser = new KXmlParser();
             }
 
+            parser.setInput(reader);
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, true);
+            doc.parse(parser);
         } catch (XmlPullParserException e) {
             String errorMsg = "XML Syntax Error at Line: " + e.getLineNumber() + ", Column: " + e.getColumnNumber() + "!";
             logger.error(errorMsg, e);
@@ -482,9 +462,10 @@ public class XFormParser implements IXFormParserFunctions {
         return doc;
     }
 
-    private void parseDoc(Map<String, String> namespacePrefixesByUri,String  xFormPath, String lastSavedSrc) {
+    private void parseDoc(String formXmlSrc, Map<String, String> namespacePrefixesByUri, String lastSavedSrc) {
         final StopWatch codeTimer = StopWatch.start();
         _f = new FormDef();
+        _f.setFormXmlPath(formXmlSrc);
 
         initState();
         final String defaultNamespace = _xmldoc.getRootElement().getNamespaceUri(null);
@@ -518,26 +499,11 @@ public class XFormParser implements IXFormParserFunctions {
                     }
                     _f.addNonMainInstance(externalDataInstance);
                 } else {
-                    if(xFormPath == null){
-                        FormInstance fi = instanceParser.parseInstance(instance, false,
-                            instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
-                        loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
-                        loadInstanceData(instance, fi.getRoot(), _f);
-                        _f.addNonMainInstance(fi);
-                    }else{
-                        //Internal secondary instances were not parsed with xform - skipped
-                        final InternalDataInstance internalDataInstance;
-                        try{
-                            internalDataInstance = InternalDataInstanceParser.build( xFormPath, instanceId);
-                        } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
-                            XmlPullParserException | InvalidReferenceException e) {
-                            String msg = "Unable to parse internal secondary instance";
-                            logger.error(msg, e);
-                            throw new XFormParseException(msg + ": " + e.toString(), null);
-                        }
-                        _f.addNonMainInstance(internalDataInstance);
-                    }
-
+                    FormInstance fi = instanceParser.parseInstance(instance, false,
+                        instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
+                    loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
+                    loadInstanceData(instance, fi.getRoot(), _f);
+                    _f.addNonMainInstance(fi);
                 }
             }
         }
