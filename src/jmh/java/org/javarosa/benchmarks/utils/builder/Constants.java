@@ -9,7 +9,7 @@ public class Constants {
     public static String CLOSE_TOKEN = ">";
     public static String FORWARD_SLASH = "/";
     public static String EQUALS = "=";
-    public static String HTML = "html";
+    public static String HTML = "h:html";
     public static String HEAD = "head";
     public static String BODY = "body";
     public static String TITLE = "title";
