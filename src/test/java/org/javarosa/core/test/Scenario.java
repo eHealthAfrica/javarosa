@@ -16,6 +16,31 @@
 
 package org.javarosa.core.test;
 
+import org.javarosa.core.model.FormDef;
+import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.QuestionDef;
+import org.javarosa.core.model.SelectChoice;
+import org.javarosa.core.model.data.IAnswerData;
+import org.javarosa.core.model.data.MultipleItemsData;
+import org.javarosa.core.model.data.StringData;
+import org.javarosa.core.model.data.helper.Selection;
+import org.javarosa.core.model.instance.InstanceInitializationFactory;
+import org.javarosa.core.model.instance.TreeElement;
+import org.javarosa.core.model.instance.TreeReference;
+import org.javarosa.form.api.FormEntryController;
+import org.javarosa.form.api.FormEntryModel;
+import org.javarosa.form.api.FormEntryPrompt;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 import static org.javarosa.core.model.instance.TreeReference.CONTEXT_ABSOLUTE;
 import static org.javarosa.core.model.instance.TreeReference.INDEX_TEMPLATE;
 import static org.javarosa.core.model.instance.TreeReference.REF_ABSOLUTE;
@@ -28,27 +53,6 @@ import static org.javarosa.form.api.FormEntryController.EVENT_QUESTION;
 import static org.javarosa.form.api.FormEntryController.EVENT_REPEAT;
 import static org.javarosa.form.api.FormEntryController.EVENT_REPEAT_JUNCTURE;
 import static org.javarosa.test.utils.ResourcePathHelper.r;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import org.javarosa.core.model.FormDef;
-import org.javarosa.core.model.FormIndex;
-import org.javarosa.core.model.QuestionDef;
-import org.javarosa.core.model.SelectChoice;
-import org.javarosa.core.model.data.IAnswerData;
-import org.javarosa.core.model.data.StringData;
-import org.javarosa.core.model.instance.InstanceInitializationFactory;
-import org.javarosa.core.model.instance.TreeElement;
-import org.javarosa.core.model.instance.TreeReference;
-import org.javarosa.form.api.FormEntryController;
-import org.javarosa.form.api.FormEntryModel;
-import org.javarosa.form.api.FormEntryPrompt;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <div style="border: 1px 1px 1px 1px; background-color: #556B2F; color: white; padding: 20px">
@@ -97,8 +101,12 @@ public class Scenario {
      * Creates and prepares the test scenario loading and parsing the given form
      */
     public static Scenario init(String formFileName) {
+        return init(r(formFileName));
+    }
+
+    public static Scenario init(Path formFile) {
         // TODO explain why this sequence of calls
-        FormParseInit fpi = new FormParseInit(r(formFileName));
+        FormParseInit fpi = new FormParseInit(formFile);
         FormDef formDef = fpi.getFormDef();
         formDef.initialize(true, new InstanceInitializationFactory());
         FormEntryModel formEntryModel = new FormEntryModel(formDef);
@@ -127,6 +135,18 @@ public class Scenario {
         // calculate formula depending on this field, or itemsets rendering this
         // field's value as a choice)
         formDef.setValue(new StringData(value), element.getRef(), true);
+    }
+
+    /**
+     * Sets the value of the element located at the given xPath in the main instance to a multiple select selection
+     * created from the given values.
+     */
+    public void answer(String xPath, String... selectionValues) {
+        createMissingRepeats(xPath);
+        TreeElement element = Objects.requireNonNull(resolve(xPath));
+
+        List<Selection> selections = Arrays.stream(selectionValues).map(Selection::new).collect(Collectors.toList());
+        formDef.setValue(new MultipleItemsData(selections), element.getRef(), true);
     }
 
     /**
@@ -281,7 +301,7 @@ public class Scenario {
      * Returns an absolute reference of the given xPath taking multiplicity of each
      * xPath part into account.
      */
-    private TreeReference absoluteRef(String xPath) {
+    public static TreeReference absoluteRef(String xPath) {
         TreeReference tr = new TreeReference();
         tr.setRefLevel(REF_ABSOLUTE);
         tr.setContext(CONTEXT_ABSOLUTE);
@@ -292,11 +312,11 @@ public class Scenario {
         return tr;
     }
 
-    private String parseName(String xPathPart) {
+    private static String parseName(String xPathPart) {
         return xPathPart.contains("[") ? xPathPart.substring(0, xPathPart.indexOf("[")) : xPathPart;
     }
 
-    private int parseMultiplicity(String xPathPart) {
+    private static int parseMultiplicity(String xPathPart) {
         return xPathPart.contains("[") ? Integer.parseInt(xPathPart.substring(xPathPart.indexOf("[") + 1, xPathPart.indexOf("]"))) : 0;
     }
 

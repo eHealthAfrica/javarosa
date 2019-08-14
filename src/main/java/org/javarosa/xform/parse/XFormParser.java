@@ -16,48 +16,6 @@
 
 package org.javarosa.xform.parse;
 
-import static java.util.Arrays.asList;
-import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableSet;
-import static org.javarosa.core.model.Constants.CONTROL_AUDIO_CAPTURE;
-import static org.javarosa.core.model.Constants.CONTROL_FILE_CAPTURE;
-import static org.javarosa.core.model.Constants.CONTROL_IMAGE_CHOOSE;
-import static org.javarosa.core.model.Constants.CONTROL_INPUT;
-import static org.javarosa.core.model.Constants.CONTROL_OSM_CAPTURE;
-import static org.javarosa.core.model.Constants.CONTROL_RANGE;
-import static org.javarosa.core.model.Constants.CONTROL_RANK;
-import static org.javarosa.core.model.Constants.CONTROL_SECRET;
-import static org.javarosa.core.model.Constants.CONTROL_SELECT_MULTI;
-import static org.javarosa.core.model.Constants.CONTROL_SELECT_ONE;
-import static org.javarosa.core.model.Constants.CONTROL_TRIGGER;
-import static org.javarosa.core.model.Constants.CONTROL_UPLOAD;
-import static org.javarosa.core.model.Constants.CONTROL_VIDEO_CAPTURE;
-import static org.javarosa.core.model.Constants.DATATYPE_CHOICE;
-import static org.javarosa.core.model.Constants.DATATYPE_MULTIPLE_ITEMS;
-import static org.javarosa.core.model.Constants.XFTAG_UPLOAD;
-import static org.javarosa.core.services.ProgramFlow.die;
-import static org.javarosa.xform.parse.Constants.ID_ATTR;
-import static org.javarosa.xform.parse.Constants.NODESET_ATTR;
-import static org.javarosa.xform.parse.Constants.RANK;
-import static org.javarosa.xform.parse.Constants.SELECT;
-import static org.javarosa.xform.parse.Constants.SELECTONE;
-import static org.javarosa.xform.parse.RandomizeHelper.cleanNodesetDefinition;
-import static org.javarosa.xform.parse.RandomizeHelper.cleanSeedDefinition;
-import static org.javarosa.xform.parse.RangeParser.populateQuestionWithRangeAttributes;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.javarosa.core.model.DataBinding;
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.GroupDef;
@@ -71,6 +29,8 @@ import org.javarosa.core.model.SubmissionProfile;
 import org.javarosa.core.model.actions.Action;
 import org.javarosa.core.model.actions.ActionController;
 import org.javarosa.core.model.actions.SetValueAction;
+import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
+import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
@@ -109,6 +69,49 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+import static org.javarosa.core.model.Constants.CONTROL_AUDIO_CAPTURE;
+import static org.javarosa.core.model.Constants.CONTROL_FILE_CAPTURE;
+import static org.javarosa.core.model.Constants.CONTROL_IMAGE_CHOOSE;
+import static org.javarosa.core.model.Constants.CONTROL_INPUT;
+import static org.javarosa.core.model.Constants.CONTROL_OSM_CAPTURE;
+import static org.javarosa.core.model.Constants.CONTROL_RANGE;
+import static org.javarosa.core.model.Constants.CONTROL_RANK;
+import static org.javarosa.core.model.Constants.CONTROL_SECRET;
+import static org.javarosa.core.model.Constants.CONTROL_SELECT_MULTI;
+import static org.javarosa.core.model.Constants.CONTROL_SELECT_ONE;
+import static org.javarosa.core.model.Constants.CONTROL_TRIGGER;
+import static org.javarosa.core.model.Constants.CONTROL_UPLOAD;
+import static org.javarosa.core.model.Constants.CONTROL_VIDEO_CAPTURE;
+import static org.javarosa.core.model.Constants.DATATYPE_CHOICE;
+import static org.javarosa.core.model.Constants.DATATYPE_MULTIPLE_ITEMS;
+import static org.javarosa.core.model.Constants.XFTAG_UPLOAD;
+import static org.javarosa.core.services.ProgramFlow.die;
+import static org.javarosa.xform.parse.Constants.ID_ATTR;
+import static org.javarosa.xform.parse.Constants.NODESET_ATTR;
+import static org.javarosa.xform.parse.Constants.RANK;
+import static org.javarosa.xform.parse.Constants.SELECT;
+import static org.javarosa.xform.parse.Constants.SELECTONE;
+import static org.javarosa.xform.parse.RandomizeHelper.cleanNodesetDefinition;
+import static org.javarosa.xform.parse.RandomizeHelper.cleanSeedDefinition;
+import static org.javarosa.xform.parse.RangeParser.populateQuestionWithRangeAttributes;
 
 /* droos: i think we need to start storing the contents of the <bind>s in the formdef again */
 
@@ -170,6 +173,9 @@ public class XFormParser implements IXFormParserFunctions {
     private List<String> itextKnownForms;
     private static HashMap<String, IElementHandler> actionHandlers;
 
+    /** The string IDs of all instances that are referenced in a instance() function call in the primary instance **/
+    private static Set<String> referencedInstanceIds;
+
     private final List<WarningCallback> warningCallbacks = new ArrayList<>();
     private final List<ErrorCallback> errorCallbacks = new ArrayList<>();
 
@@ -198,6 +204,8 @@ public class XFormParser implements IXFormParserFunctions {
         initProcessingRules();
         modelPrototypes = new PrototypeFactoryDeprecated();
         submissionParsers = new ArrayList<>(1);
+
+        referencedInstanceIds = new HashSet<>();
     }
 
     private static void initProcessingRules() {
@@ -306,6 +314,10 @@ public class XFormParser implements IXFormParserFunctions {
     private static void setUpActionHandlers() {
         actionHandlers = new HashMap<>();
         registerActionHandler(SetValueAction.ELEMENT_NAME, SetValueAction.getHandler());
+
+        // Register a stub odk:setgeopoint action handler. Clients that want to actually collect location need to
+        // register their own subclass handler which will replace this one.
+        registerActionHandler(SetGeopointActionHandler.ELEMENT_NAME, new StubSetGeopointActionHandler());
     }
 
     private void initState() {
@@ -348,17 +360,21 @@ public class XFormParser implements IXFormParserFunctions {
         _instDoc = instance;
     }
 
+    public FormDef parse(String lastSavedSrc) throws IOException {
+        return parse(null, lastSavedSrc);
+    }
+
+
     public FormDef parse() throws IOException {
-        return parse(null);
+        return parse(null, null);
     }
 
     /**
-     * @see #parse()
-     *
+     * @param formXmlSrc The path of the form definition.
      * @param lastSavedSrc The src of the last-saved instance of this form (for auto-filling). If null,
      *                     no data will be loaded and the instance will be blank.
      */
-    public FormDef parse(String lastSavedSrc) throws IOException {
+    public FormDef parse(String formXmlSrc, String lastSavedSrc) throws IOException {
         if (_f == null) {
             logger.info("Parsing form...");
 
@@ -366,7 +382,7 @@ public class XFormParser implements IXFormParserFunctions {
                 _xmldoc = getXMLDocument(_reader, stringCache);
             }
 
-            parseDoc(buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
+            parseDoc(formXmlSrc, buildNamespacesMap(_xmldoc.getRootElement()), lastSavedSrc);
 
             //load in a custom xml instance, if applicable
             if (_instReader != null) {
@@ -449,13 +465,17 @@ public class XFormParser implements IXFormParserFunctions {
         return doc;
     }
 
-    private void parseDoc(Map<String, String> namespacePrefixesByUri, String lastSavedSrc) {
+    private void parseDoc(String formXmlSrc, Map<String, String> namespacePrefixesByUri, String lastSavedSrc) {
         final StopWatch codeTimer = StopWatch.start();
         _f = new FormDef();
+        _f.setFormXmlPath(formXmlSrc);
 
         initState();
         final String defaultNamespace = _xmldoc.getRootElement().getNamespaceUri(null);
+
+        referencedInstanceIds.clear();
         parseElement(_xmldoc.getRootElement(), _f, topLevelHandlers);
+
         collapseRepeatGroups(_f);
 
         final FormInstanceParser instanceParser = new FormInstanceParser(_f, defaultNamespace,
@@ -471,25 +491,27 @@ public class XFormParser implements IXFormParserFunctions {
                 final String instanceId = instanceNodeIdStrs.get(instanceIndex);
                 final String instanceSrc = parseInstanceSrc(instance, lastSavedSrc);
 
-                // Disable jr://file-csv/ support by explicitly only supporting jr://file/
-                // until https://github.com/opendatakit/javarosa/issues/417 is addressed
-                if (instanceSrc != null && instanceSrc.toLowerCase().startsWith("jr://file/")) {
-                    final ExternalDataInstance externalDataInstance;
-                    try {
-                        externalDataInstance = ExternalDataInstance.build(instanceSrc, instanceId);
-                    } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
+                // Only read in an secondary instance if its ID is used in the primary instance as an argument to an
+                // instance() call
+                if (referencedInstanceIds.contains(instanceId)) {
+                    if (instanceSrc != null) {
+                        final ExternalDataInstance externalDataInstance;
+                        try {
+                            externalDataInstance = ExternalDataInstance.build(instanceSrc, instanceId);
+                        } catch (IOException | UnfullfilledRequirementsException | InvalidStructureException |
                             XmlPullParserException | InvalidReferenceException e) {
-                        String msg = "Unable to parse external secondary instance";
-                        logger.error(msg, e);
-                        throw new XFormParseException(msg + ": " + e.toString(), instance);
+                            String msg = "Unable to parse external secondary instance";
+                            logger.error(msg, e);
+                            throw new XFormParseException(msg + ": " + e.toString(), instance);
+                        }
+                        _f.addNonMainInstance(externalDataInstance);
+                    } else {
+                        FormInstance fi = instanceParser.parseInstance(instance, false,
+                            instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
+                        loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
+                        loadInstanceData(instance, fi.getRoot(), _f);
+                        _f.addNonMainInstance(fi);
                     }
-                    _f.addNonMainInstance(externalDataInstance);
-                } else {
-                    FormInstance fi = instanceParser.parseInstance(instance, false,
-                        instanceNodeIdStrs.get(instanceNodes.indexOf(instance)), namespacePrefixesByUri);
-                    loadNamespaces(_xmldoc.getRootElement(), fi); // same situation as below
-                    loadInstanceData(instance, fi.getRoot(), _f);
-                    _f.addNonMainInstance(fi);
                 }
             }
         }
@@ -576,6 +598,13 @@ public class XFormParser implements IXFormParserFunctions {
                 }
             }
         }
+    }
+
+    /**
+     * Records that the given instance ID was used as the argument to an instance() function call.
+     */
+    public static void recordInstanceFunctionCall(String instanceId) {
+        referencedInstanceIds.add(instanceId);
     }
 
     private void parseTitle(Element e) {
@@ -694,8 +723,11 @@ public class XFormParser implements IXFormParserFunctions {
         if (!(parent instanceof IFormElement)) {
             // parent must either be a FormDef or QuestionDef, both of which are IFormElements
             throw new XFormParseException("An action element occurred in an invalid location. " +
-                    "Must be either a child of a control element, or a child of the <model>");
+            "Must be either a child of a control element, or a child of the <model>");
         }
+        
+        _f.registerAction(e.getName());
+
         specificHandler.handle(this, e, parent);
     }
 
@@ -805,13 +837,18 @@ public class XFormParser implements IXFormParserFunctions {
     private void saveInstanceNode(Element instance) {
         Element instanceNode = null;
         String instanceId = instance.getAttributeValue("", "id");
+        String instanceSrc = instance.getAttributeValue("", "src");
 
-        for (int i = 0; i < instance.getChildCount(); i++) {
-            if (instance.getType(i) == Node.ELEMENT) {
-                if (instanceNode != null) {
-                    throw new XFormParseException("XForm Parse: <instance> has more than one child element", instance);
-                } else {
-                    instanceNode = instance.getElement(i);
+        // Only consider child nodes if the instance declaration does not include a source.
+        // TODO: revisit this to allow for a mix of static and dynamic data but beware of https://github.com/opendatakit/javarosa/issues/451
+        if (instanceSrc == null) {
+            for (int i = 0; i < instance.getChildCount(); i++) {
+                if (instance.getType(i) == Node.ELEMENT) {
+                    if (instanceNode != null) {
+                        throw new XFormParseException("XForm Parse: <instance> has more than one child element", instance);
+                    } else {
+                        instanceNode = instance.getElement(i);
+                    }
                 }
             }
         }

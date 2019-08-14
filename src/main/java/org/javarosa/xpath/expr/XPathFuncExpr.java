@@ -31,6 +31,7 @@ import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.core.util.externalizable.ExtWrapListPoly;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
+import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xpath.IExprDataType;
 import org.javarosa.xpath.XPathArityException;
 import org.javarosa.xpath.XPathNodeset;
@@ -70,6 +71,10 @@ public class XPathFuncExpr extends XPathExpression {
     public XPathFuncExpr (XPathQName id, XPathExpression[] args) {
         this.id = id;
         this.args = args;
+
+        if (id.name.equals("instance") && args[0] instanceof XPathStringLiteral) {
+            XFormParser.recordInstanceFunctionCall(((XPathStringLiteral) args[0]).s);
+        }
     }
 
     public String toString () {
@@ -386,6 +391,9 @@ public class XPathFuncExpr extends XPathExpression {
         } else if (name.equals("string-length")) {
             assertArgsCount(name, args, 1);
             return stringLength(argVals[0]);
+        } else if (name.equals("normalize-space")) {
+            assertArgsCount(name, args, 1);
+            return normalizeSpace(argVals[0]);
         } else if (name.equals("checklist") && args.length >= 2) { //non-standard
             if (args.length == 3 && argVals[2] instanceof XPathNodeset) {
                 return checklist(argVals[0], argVals[1], ((XPathNodeset) argVals[2]).toArgList());
@@ -602,6 +610,12 @@ public class XPathFuncExpr extends XPathExpression {
             return 0.0;
         }
         return (double) s.length();
+    }
+
+    public static String normalizeSpace (Object o) {
+        String s = toString(o);
+        String normalized = s.trim().replaceAll("\\s+", " ");
+        return normalized;
     }
 
     /**
