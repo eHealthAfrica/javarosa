@@ -27,8 +27,10 @@ import org.javarosa.core.util.externalizable.Externalizable;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
 import org.javarosa.model.xform.XPathReference;
 import org.javarosa.xpath.XPathConditional;
+import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +81,23 @@ public class ItemsetBinding implements Externalizable, Localizable {
                 choices.add(selectChoice);
             }
         }
+    }
+
+    public TreeReference getNodeSetIndex(){
+
+        TreeReference queryRef = null;
+        XPathPathExpr path = ((XPathPathExpr)nodesetExpr);
+        for(int i = 0; i < path.steps.length; i++){
+            XPathStep xPathStep = path.steps[i];
+            if(xPathStep.predicates.length > 0){
+                if(xPathStep.predicates[0] instanceof XPathEqExpr){
+                    XPathEqExpr xPathEqExpr = (XPathEqExpr) xPathStep.predicates[0];
+                    XPathPathExpr leftEqPath = (XPathPathExpr) xPathEqExpr.a;
+                    queryRef = leftEqPath.getReference();
+                }
+            }
+        }
+        return queryRef;
     }
 
     public List<SelectChoice> getChoicesFromMap (String key) {

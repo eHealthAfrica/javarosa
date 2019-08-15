@@ -87,6 +87,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.crypto.Data;
+
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
@@ -518,6 +520,21 @@ public class XFormParser implements IXFormParserFunctions {
                 }
             }
         }
+
+//        List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
+//            new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
+
+
+//        if (pathType == "HAS_PREDICATE") {
+//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(queryRef.getParentRef(), queryRef);
+//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  queryRef);
+//        } else {
+//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(path.getReference(), null);
+//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  null);
+//        }
+
+
+
         //now parse the main instance
         if (mainInstanceNode != null) {
             FormInstance fi = instanceParser.parseInstance(mainInstanceNode, true,
@@ -532,6 +549,37 @@ public class XFormParser implements IXFormParserFunctions {
             loadNamespaces(_xmldoc.getRootElement(), fi);
             addMainInstanceToFormDef(mainInstanceNode, fi);
         }
+
+
+        FormDef.updateItemsetReferences(             _f.getChildren());
+
+        for(IFormElement iFormElement: _f.getChildren()){
+            if(iFormElement instanceof QuestionDef){
+                QuestionDef questionDef = (QuestionDef) iFormElement;
+                if(questionDef.getDynamicChoices() != null){
+                    ItemsetBinding itemsetBinding = questionDef.getDynamicChoices();
+//
+                    TreeReference iRef =  (TreeReference) questionDef.getBind().getReference();
+                    TreeElement  questionRef = _f.getMainInstance().resolveReference(iRef);
+//
+//                    String dataInstanceName = ((XPathPathExpr)((XPathConditional) itemsetBinding.nodesetExpr).getExpr()).getReference().getInstanceName();
+//                    DataInstance dataInstance = _f.getNonMainInstance(dataInstanceName);
+//                    EvaluationContext ec = _f.getEvaluationContext();
+//                    List<TreeReference> treeReferences = itemsetBinding.nodesetExpr
+//                        .evalNodeset(dataInstance, new EvaluationContext(ec, itemsetRef));
+//                        ((XPathPathExpr)((XPathConditional) questionDef.getDynamicChoices().nodesetExpr).getExpr()).getReference();
+
+                    _f.populateDynamicChoices(itemsetBinding, questionRef.getRef());
+
+                    for (SelectChoice selectChoice : itemsetBinding.getChoices()){
+                        questionDef.addSelectChoice(selectChoice);
+                    }
+                    questionDef.setDynamicChoices(null);
+                }
+            }
+        }
+
+
 
         // Clear the caches, as these may not have been initialized
         // entirely correctly during the validation steps.
@@ -1364,15 +1412,6 @@ public class XFormParser implements IXFormParserFunctions {
         }
     }
 
-
-    public Map<String, List<TreeElement>> createPathIndex(TreeReference list, TreeReference index){
-       TreeElement treeElement = (TreeElement) _f.getNonMainInstance(list.getInstanceName()).resolveReference(list);
-        Map<String,  List<TreeElement>> map = new HashMap<>();
-        map.put("", treeElement.getChildrenWithName("item"));
-        return map;
-    }
-
-
     private void parseItemset(QuestionDef q, Element e, IFormElement qparent) {
         ItemsetBinding itemset = new ItemsetBinding();
 
@@ -1487,28 +1526,6 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
 
-        List<XPathPathExpr> xPathPathExprs = null;
-        String pathType = "";
-        TreeReference queryRef = null;
-        XPathPathExpr xPathPathExpr = null;
-        for(int i = 0; i < path.steps.length; i++){
-            XPathStep xPathStep = path.steps[i];
-            if(xPathStep.predicates.length > 0){
-                if(xPathStep.predicates[0] instanceof XPathPathExpr){
-                    XPathEqExpr xPathEqExpr = (XPathEqExpr) xPathStep.predicates[0];
-                    XPathPathExpr leftEqualizer = (XPathPathExpr) xPathEqExpr.a;
-                    queryRef = leftEqualizer.getReference();
-                }
-            }
-        }
-
-        if (pathType == "HAS_PREDICATE") {
-            Map<String, List<TreeElement>> pathDictionary = createPathIndex(queryRef.getParentRef(), queryRef);
-            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  queryRef);
-        } else {
-            Map<String, List<TreeElement>> pathDictionary = createPathIndex(path.getReference(), null);
-            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  null);
-        }
 
         if (itemset.labelExpr == null) {
             throw new XFormParseException("<itemset> requires <label>");
