@@ -1309,7 +1309,83 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
         Collection<QuickTriggerable> qts = initializeTriggerables(TreeReference.rootRef(), false);
         dagImpl.publishSummary("Form initialized", qts);
+
+        initializeSelectChoices();
     }
+
+
+    private void initializeSelectChoices(){
+
+        for(IFormElement iFormElement: getChildren()){
+            if(iFormElement instanceof QuestionDef){
+                QuestionDef questionDef = (QuestionDef) iFormElement;
+                if(questionDef.getDynamicChoices() != null){
+                    ItemsetBinding itemsetBinding = questionDef.getDynamicChoices();
+                    // for(XPathStep xPathStep : itemsetBinding. )
+                    TreeReference iRef =  getMainInstance().resolveReference((TreeReference) questionDef.getBind().getReference()).getRef();
+                    populateDynamicChoices(itemsetBinding, iRef);
+                    for (SelectChoice selectChoice : itemsetBinding.getChoices()){
+                        questionDef.addSelectChoice(selectChoice);
+                    }
+                    questionDef.setDynamicChoices(null);
+                }
+            }
+        }
+
+    }
+
+    private List<TreeReference> getIndexKeyRef(ItemsetBinding itemsetBinding){
+        List<TreeReference> refs = new ArrayList<>();
+        XPathPathExpr xPathPathExpr = ((XPathPathExpr)((XPathConditional) itemsetBinding.nodesetExpr).getExpr());
+        for(int i = 0; i < xPathPathExpr.steps.length; i++){
+            XPathStep xPathStep = xPathPathExpr.steps[i];
+            if(xPathStep.predicates.length > 0){
+                for(XPathExpression xPathExpression: xPathStep.predicates){
+                    if(xPathExpression instanceof XPathEqExpr){
+                        XPathEqExpr xPathEqExpr =  (XPathEqExpr) xPathExpression;
+
+                        refs.add(((XPathPathExpr) xPathEqExpr.a).getReference().contextualize(xPathPathExpr.getReference()));
+                        refs.add(((XPathPathExpr) xPathEqExpr.b).getReference());
+
+                    }
+                }
+            }
+        }
+        return refs;
+    }
+
+
+    Map<String, List<SelectChoice>> choicesCache = new HashMap<>();
+    private  List<SelectChoice> collateChoices(TreeReference nodesetRef, TreeReference labelRef, TreeReference valueRef){
+        TreeElement treeElement = (TreeElement) getNonMainInstance(nodesetRef.getInstanceName()).resolveReference(nodesetRef.getParentRef());
+        if(choicesCache.get(nodesetRef.toString(false)) == null){
+            List<SelectChoice> c = new ArrayList<>();
+            List<TreeElement> nodesetChildren = treeElement.getChildrenWithName(nodesetRef.getNameLast());
+            choicesCache.put(nodesetRef.toString(false), c);
+            for(TreeElement childTreeElement : nodesetChildren){
+                int noOfChildren = childTreeElement.getNumChildren();
+                String label = "";
+                String value = "";
+                Map otherValues = new HashMap();
+                for(int i = 0; i < noOfChildren; i++){
+                    TreeElement leafElement = childTreeElement.getChildAt(i);
+                    IAnswerData val = leafElement.getValue();
+                    if(leafElement.getName().equals(labelRef.getNameLast())) {
+                        label = val.getDisplayText();
+                    }else  if(leafElement.getName().equals(valueRef.getNameLast())) {
+                        value = val.getDisplayText();
+                    }else {
+                        otherValues.put(leafElement.getName(), val);
+                    }
+                }
+                SelectChoice choice = new SelectChoice(label, value, false);
+                choice.map = otherValues;
+            }
+        }
+        return
+            choicesCache.get(nodesetRef.toString(false));
+    }
+
 
     /**
      * Writes the form definition object to the supplied stream.
