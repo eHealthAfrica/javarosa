@@ -63,7 +63,12 @@ import org.javarosa.model.xform.XPathReference;
 import org.javarosa.xform.parse.XFormParseException;
 import org.javarosa.xform.util.XFormAnswerDataSerializer;
 import org.javarosa.xml.InternalDataInstanceParser;
+import org.javarosa.xpath.XPathConditional;
 import org.javarosa.xpath.XPathException;
+import org.javarosa.xpath.expr.XPathEqExpr;
+import org.javarosa.xpath.expr.XPathExpression;
+import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1013,11 +1018,10 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         getEventNotifier().publishEvent(new Event("Dynamic choices", new EvaluationResult(curQRef, null)));
 
         List<SelectChoice> choices = new ArrayList<>();
-
         List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
                 new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
 
-        DataInstance formInstance;
+       DataInstance formInstance;
         if (itemset.nodesetRef.getInstanceName() != null) { // a secondary instance is specified
             formInstance = getNonMainInstance(itemset.nodesetRef.getInstanceName());
             if (formInstance == null) {
@@ -1048,7 +1052,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
         for (int i = 0; i < matches.size(); i++) {
             TreeReference item = matches.get(i);
-
             String label = itemset.labelExpr.evalReadable(formInstance, new EvaluationContext(exprEvalContext,
                     item));
             String value = null;
@@ -1098,6 +1101,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
         itemset.clearChoices();
         itemset.setChoices(choices, getMainInstance(), exprEvalContext, this.getLocalizer());
+
     }
 
     /**

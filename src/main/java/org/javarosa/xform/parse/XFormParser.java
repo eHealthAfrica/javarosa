@@ -18,6 +18,7 @@ package org.javarosa.xform.parse;
 
 import org.javarosa.core.model.DataBinding;
 import org.javarosa.core.model.FormDef;
+import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.GroupDef;
 import org.javarosa.core.model.IDataReference;
 import org.javarosa.core.model.IFormElement;
@@ -395,6 +396,8 @@ public class XFormParser implements IXFormParserFunctions {
             } else if (_instDoc != null) {
                 loadXmlInstance(_f, _instDoc);
             }
+
+
         }
         return _f;
     }
@@ -551,35 +554,6 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
 
-        FormDef.updateItemsetReferences(             _f.getChildren());
-
-        for(IFormElement iFormElement: _f.getChildren()){
-            if(iFormElement instanceof QuestionDef){
-                QuestionDef questionDef = (QuestionDef) iFormElement;
-                if(questionDef.getDynamicChoices() != null){
-                    ItemsetBinding itemsetBinding = questionDef.getDynamicChoices();
-//
-                    TreeReference iRef =  (TreeReference) questionDef.getBind().getReference();
-                    TreeElement  questionRef = _f.getMainInstance().resolveReference(iRef);
-//
-//                    String dataInstanceName = ((XPathPathExpr)((XPathConditional) itemsetBinding.nodesetExpr).getExpr()).getReference().getInstanceName();
-//                    DataInstance dataInstance = _f.getNonMainInstance(dataInstanceName);
-//                    EvaluationContext ec = _f.getEvaluationContext();
-//                    List<TreeReference> treeReferences = itemsetBinding.nodesetExpr
-//                        .evalNodeset(dataInstance, new EvaluationContext(ec, itemsetRef));
-//                        ((XPathPathExpr)((XPathConditional) questionDef.getDynamicChoices().nodesetExpr).getExpr()).getReference();
-
-                    _f.populateDynamicChoices(itemsetBinding, questionRef.getRef());
-
-                    for (SelectChoice selectChoice : itemsetBinding.getChoices()){
-                        questionDef.addSelectChoice(selectChoice);
-                    }
-                    questionDef.setDynamicChoices(null);
-                }
-            }
-        }
-
-
 
         // Clear the caches, as these may not have been initialized
         // entirely correctly during the validation steps.
@@ -594,6 +568,8 @@ public class XFormParser implements IXFormParserFunctions {
         }
         _f.getMainInstance().getRoot().clearChildrenCaches();
         _f.getMainInstance().getRoot().clearCaches();
+
+
 
         logger.info(codeTimer.logLine("Creating FormDef from parsed XML"));
     }

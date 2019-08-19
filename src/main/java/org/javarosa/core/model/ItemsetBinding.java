@@ -69,41 +69,6 @@ public class ItemsetBinding implements Externalizable, Localizable {
 
     private static Map<String, List<SelectChoice>> choiceDictionary;
 
-    public static void  populateChoicesDictionary(Map<String, List<TreeElement>> choiceElementDictionary, TreeReference labelKey, TreeReference valueKey, TreeReference indexKey){
-        for(Map.Entry<String, List<TreeElement>> set : choiceElementDictionary.entrySet()){
-            List<SelectChoice> choices = choiceDictionary.get(set.getKey());
-            if(choices == null){ choices = new ArrayList<>(); choiceDictionary.put(set.getKey(), choices); }
-            for(TreeElement treeElement : set.getValue()){
-                String label = treeElement.getChild(labelKey.getNameLast(), 0).getChildAt(0).toString();
-                String value = treeElement.getChild(valueKey.getNameLast(), 0).getChildAt(0).toString();
-                String index = treeElement.getChild(indexKey.getNameLast(), 0).getChildAt(0).toString();
-                SelectChoice selectChoice = new SelectChoice(label, label, value, false);
-                choices.add(selectChoice);
-            }
-        }
-    }
-
-    public TreeReference getNodeSetIndex(){
-
-        TreeReference queryRef = null;
-        XPathPathExpr path = ((XPathPathExpr)nodesetExpr);
-        for(int i = 0; i < path.steps.length; i++){
-            XPathStep xPathStep = path.steps[i];
-            if(xPathStep.predicates.length > 0){
-                if(xPathStep.predicates[0] instanceof XPathEqExpr){
-                    XPathEqExpr xPathEqExpr = (XPathEqExpr) xPathStep.predicates[0];
-                    XPathPathExpr leftEqPath = (XPathPathExpr) xPathEqExpr.a;
-                    queryRef = leftEqPath.getReference();
-                }
-            }
-        }
-        return queryRef;
-    }
-
-    public List<SelectChoice> getChoicesFromMap (String key) {
-        return choiceDictionary.get(key);
-    }
-
     public List<SelectChoice> getChoices () {
         return choices;
     }
