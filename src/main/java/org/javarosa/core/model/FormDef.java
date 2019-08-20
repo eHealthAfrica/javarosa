@@ -1311,31 +1311,41 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         Collection<QuickTriggerable> qts = initializeTriggerables(TreeReference.rootRef(), false);
         dagImpl.publishSummary("Form initialized", qts);
 
-        initializeSelectChoices();
+        initializeDynamicChoices();
     }
 
-    private void initializeSelectChoices(){
-
-        for(IFormElement iFormElement: getChildren()){
-            if(iFormElement instanceof QuestionDef){
+    private void initializeDynamicChoices(){
+        for (IFormElement iFormElement: getChildren()) {
+            if (iFormElement instanceof QuestionDef) {
                 QuestionDef questionDef = (QuestionDef) iFormElement;
-                if(questionDef.getDynamicChoices() != null){
-                    //populateDynamicChoices(itemsetBinding, iRef);
+                if (questionDef.getDynamicChoices() != null) {
+                    //Manually evaluate the TreeReference and convert to SelectChoices
                     List<SelectChoice> choices = mineNodesetRefChoices(questionDef);
+                    //Add all the choices to cache so they aren't re-evaluated
                     populateChoicesDictionary(questionDef, choices);
+                    //Analyze Predicates to see if to re-index
+                    ItemsetBinding itemset = questionDef.getDynamicChoices();
+                    if (itemset != null) {
+                        XPathPathExpr nodesetPathExpr = ((XPathPathExpr)((XPathConditional) itemset.nodesetExpr).getExpr());
+                        String nodesetPathString = nodesetPathExpr.getReference().toString(false);
+                        XPathEqExpr lastStepEqualizePredicate = getEqPredicateExpr(itemset);
+                        if (choicesCache.get(nodesetPathString) != null && lastStepEqualizePredicate != null) {
+                            if (lastStepEqualizePredicate != null) {
+                                String indexRef = ((XPathPathExpr) lastStepEqualizePredicate.a).getReference().contextualize(nodesetPathExpr.getReference()).toString(false);
+                                collateChoicesByEqPredicate(choices, indexRef);
+                            }
+                        }
+                    }
                 }
             }
         }
-
     }
-
 
     private List<SelectChoice> mineNodesetRefChoices(QuestionDef questionDef){
         ItemsetBinding itemsetBinding = questionDef.getDynamicChoices();
         List<SelectChoice> choices = collateChoices(itemsetBinding.nodesetRef, itemsetBinding.labelRef, itemsetBinding.valueRef);
         return choices;
     }
-
 
     Map<String, List<SelectChoice>> choiceDictionary = new HashMap<>();
     public void  populateChoicesDictionary(QuestionDef questionDef, List<SelectChoice> choices){
@@ -1345,10 +1355,8 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     public void populateDynamicChoices(ItemsetBinding itemset, TreeReference curQRef){
         XPathPathExpr xPathPathExpr = ((XPathPathExpr)((XPathConditional) itemset.nodesetExpr).getExpr());
-//        XPathEqExpr predicateFilter = getIndexKeyRef(itemset);
-
         String nodesetRef = xPathPathExpr.getReference().toString(false);
-        XPathEqExpr predicateEq = getIndexKeyRef(itemset);
+        XPathEqExpr predicateEq = getEqPredicateExpr(itemset);
 
         if(choicesCache.get(nodesetRef) != null){
             List<SelectChoice> choices = choicesCache.get(nodesetRef);
@@ -1360,7 +1368,8 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
                 if(choicesCache.get(indexRef+"="+filterValue) != null){
                     choices = choicesCache.get(indexRef+"="+filterValue);
                 }else{
-                    Map<String, List<SelectChoice>> collated = collateChoicesByAttribute(choices, indexRef);
+                    Map<String, List<SelectChoice>> collated =
+                     collateChoicesByEqPredicate(choices, indexRef);
                     choicesCache.putAll(collated);
                     if(choicesCache.get(indexRef+"="+filterValue) != null){
                         choices = choicesCache.get(indexRef+"="+filterValue);
@@ -1368,7 +1377,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
                         populateDynamicChoicess(itemset, curQRef);
                     }
                 }
-
             }
             itemset.clearChoices();
             itemset.setChoices(choices, getMainInstance(), exprEvalContext, this.getLocalizer());
@@ -1379,18 +1387,19 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
 
     }
 
-    private XPathEqExpr getIndexKeyRef(ItemsetBinding itemsetBinding){
-        XPathPathExpr xPathPathExpr = ((XPathPathExpr)((XPathConditional) itemsetBinding.nodesetExpr).getExpr());
-        for(int i = 0; i < xPathPathExpr.steps.length; i++){
-            XPathStep xPathStep = xPathPathExpr.steps[i];
-            if(xPathStep.predicates.length > 0){
-                for(XPathExpression xPathExpression: xPathStep.predicates){
+    private XPathEqExpr getEqPredicateExpr(ItemsetBinding itemsetBinding){
+        if(itemsetBinding.nodesetExpr instanceof XPathConditional &&
+            ((XPathConditional) itemsetBinding.nodesetExpr).getExpr() instanceof XPathPathExpr
+        ){
+            XPathPathExpr xPathPathExpr = ((XPathPathExpr)((XPathConditional) itemsetBinding.nodesetExpr).getExpr());
+            //We can only handle if last step is a predicates now
+            if(xPathPathExpr.steps.length > 0){
+                XPathStep xPathStep = xPathPathExpr.steps[xPathPathExpr.steps.length -1];
+                if(xPathStep.predicates.length > 0){
+                    XPathExpression xPathExpression = xPathStep.predicates[0];
                     if(xPathExpression instanceof XPathEqExpr){
                         XPathEqExpr xPathEqExpr =  (XPathEqExpr) xPathExpression;
                         return xPathEqExpr;
-//                        refs.add(((XPathPathExpr) xPathEqExpr.a).getReference().contextualize(xPathPathExpr.getReference()));
-//                        refs.add(((XPathPathExpr) xPathEqExpr.b).getReference());
-
                     }
                 }
             }
@@ -1398,7 +1407,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         return null;
     }
 
-    private Map<String, List<SelectChoice>> collateChoicesByAttribute(List<SelectChoice> choices, String collateBy) {
+    private Map<String, List<SelectChoice>> collateChoicesByEqPredicate(List<SelectChoice> choices, String collateBy) {
         Map<String, List<SelectChoice>> collatedSubChoices = new HashMap<>();
         for(SelectChoice choice : choices){
             IAnswerData data =  choice.map.get(collateBy);
@@ -1407,7 +1416,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
                 List<SelectChoice> group = collatedSubChoices.get(subKey);
                 if(group == null){
                     group = new ArrayList<>();
-                    collatedSubChoices.put(collateBy, group);
+                    collatedSubChoices.put(subKey, group);
                 }
                 group.add(choice);
             }
@@ -1417,7 +1426,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
     }
 
 
-        Map<String, List<SelectChoice>> choicesCache = new HashMap<>();
+    Map<String, List<SelectChoice>> choicesCache = new HashMap<>();
     private  List<SelectChoice> collateChoices(TreeReference nodesetRef, TreeReference labelRef, TreeReference valueRef){
         TreeElement treeElement = (TreeElement) getNonMainInstance(nodesetRef.getInstanceName()).resolveReference(nodesetRef.getParentRef());
         if(choicesCache.get(nodesetRef.toString(false)) == null){
