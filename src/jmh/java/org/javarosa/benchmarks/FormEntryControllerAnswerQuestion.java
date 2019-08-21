@@ -40,19 +40,34 @@ public class FormEntryControllerAnswerQuestion {
             formEntryController = new FormEntryController(formEntryModel);
 
             formEntryController.stepToNextEvent();
-            while (formEntryModel.getFormIndex().isInForm()) {
-                FormIndex questionIndex = formEntryController.getModel().getFormIndex();
-                QuestionDef question = formEntryModel.getQuestionPrompt(questionIndex).getQuestion();
-                //Resolve DynamicChoices
-                ItemsetBinding itemsetBinding = question.getDynamicChoices();
-                if (itemsetBinding != null) {
-                    formDef.populateDynamicChoices(itemsetBinding, (TreeReference) question.getBind().getReference());
-                }
-                formEntryController.stepToNextEvent();
-            }
+//            while (formEntryModel.getFormIndex().isInForm()) {
+//
+//                FormIndex questionIndex = formEntryController.getModel().getFormIndex();
+//                QuestionDef question = formEntryModel.getQuestionPrompt(questionIndex).getQuestion();
+//                //Resolve DynamicChoices
+////                ItemsetBinding itemsetBinding = question.getDynamicChoices();
+////                if (itemsetBinding != null) {
+////                    formDef.populateDynamicChoices(itemsetBinding, (TreeReference) question.getBind().getReference());
+////                }
+//                formEntryController.stepToNextEvent();
+//            }
             formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
         }
     }
+
+    @Benchmark
+    public void benchmark1(FormControllerAnswerQuestionState state) {
+        state.formEntryController.stepToNextEvent();
+        while (state.formEntryModel.getFormIndex().isInForm()) {
+            AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
+            FormIndex questionIndex = action.getQuestionIndex();
+            IAnswerData answer = action.getAnswer();
+            state.formEntryController.saveAnswer(questionIndex, answer, true);
+            state.formEntryController.stepToNextEvent();
+        }
+        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+    }
+
 
     @Benchmark
     public void benchmarkAnswerAndSaveAll(FormControllerAnswerQuestionState state) {
