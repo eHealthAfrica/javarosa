@@ -26,7 +26,7 @@ public class OptimizeFormDefQuestions20 {
 
         @Setup(Level.Trial)
         public void initialize() {
-            //FormDef.OPTIMZE_DYNAMIC_CHOICES = false;
+            FormDef.OPTIMZE_DYNAMIC_CHOICES = false;
             xFormFilePath = getNigeriaWardsXMLWithInternal2ndryInstance();
         }
     }

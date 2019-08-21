@@ -35,7 +35,7 @@ public class OptimizeFormDefQuestions10 {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
-            //FormDef.OPTIMZE_DYNAMIC_CHOICES = false;
+            FormDef.OPTIMZE_DYNAMIC_CHOICES = false;
             Path formFile = BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance();
             FormDef formDef = FormParserHelper.parse(formFile);
             formDef.initialize(true, new InstanceInitializationFactory());
@@ -48,6 +48,7 @@ public class OptimizeFormDefQuestions10 {
 
     @Benchmark
     public void benchmarkAnswerOne(FormControllerAnswerQuestionState state) {
+        state.formEntryController.stepToNextEvent();
         AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
         FormIndex questionIndex = action.getQuestionIndex();
         IAnswerData answer = action.getAnswer();
