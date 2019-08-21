@@ -1016,7 +1016,11 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      *                used to determine the values to be chosen from
      */
     public void populateDynamicChoices(ItemsetBinding itemset, TreeReference curQRef) {
-        if(!OPTIMZE_DYNAMIC_CHOICES && !populateDynamicChoicesFromCache(itemset, curQRef)){
+        if(OPTIMZE_DYNAMIC_CHOICES) {
+
+            populateDynamicChoicesFromCache(itemset, curQRef);
+
+        } else if(!OPTIMZE_DYNAMIC_CHOICES){
             getEventNotifier().publishEvent(new Event("Dynamic choices", new EvaluationResult(curQRef, null)));
 
             List<SelectChoice> choices = new ArrayList<>();
