@@ -18,6 +18,7 @@ package org.javarosa.xform.parse;
 
 import org.javarosa.core.model.DataBinding;
 import org.javarosa.core.model.FormDef;
+import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.GroupDef;
 import org.javarosa.core.model.IDataReference;
 import org.javarosa.core.model.IFormElement;
@@ -31,6 +32,7 @@ import org.javarosa.core.model.actions.ActionController;
 import org.javarosa.core.model.actions.SetValueAction;
 import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
 import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
+import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
@@ -58,8 +60,10 @@ import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
 import org.javarosa.xpath.XPathParseTool;
+import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 import org.javarosa.xpath.parser.XPathSyntaxException;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Document;
@@ -83,6 +87,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.xml.crypto.Data;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -390,6 +396,8 @@ public class XFormParser implements IXFormParserFunctions {
             } else if (_instDoc != null) {
                 loadXmlInstance(_f, _instDoc);
             }
+
+
         }
         return _f;
     }
@@ -515,6 +523,21 @@ public class XFormParser implements IXFormParserFunctions {
                 }
             }
         }
+
+//        List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
+//            new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
+
+
+//        if (pathType == "HAS_PREDICATE") {
+//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(queryRef.getParentRef(), queryRef);
+//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  queryRef);
+//        } else {
+//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(path.getReference(), null);
+//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  null);
+//        }
+
+
+
         //now parse the main instance
         if (mainInstanceNode != null) {
             FormInstance fi = instanceParser.parseInstance(mainInstanceNode, true,
@@ -530,6 +553,8 @@ public class XFormParser implements IXFormParserFunctions {
             addMainInstanceToFormDef(mainInstanceNode, fi);
         }
 
+
+
         // Clear the caches, as these may not have been initialized
         // entirely correctly during the validation steps.
         Enumeration<DataInstance> e = _f.getNonMainInstances();
@@ -543,6 +568,8 @@ public class XFormParser implements IXFormParserFunctions {
         }
         _f.getMainInstance().getRoot().clearChildrenCaches();
         _f.getMainInstance().getRoot().clearCaches();
+
+
 
         logger.info(codeTimer.logLine("Creating FormDef from parsed XML"));
     }
@@ -1381,7 +1408,7 @@ public class XFormParser implements IXFormParserFunctions {
          * At this point in time, we cannot construct a valid nodesetRef
          *
          * Leave all ...Ref entries as null and test the ...Expr entries for null / non-null values.
-         *
+         *seedStr
          * We will patch this all up in the verifyItemsetBindings() method.
          */
         String nodesetStr = e.getAttributeValue("", NODESET_ATTR);
@@ -1399,7 +1426,10 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         XPathPathExpr path = XPathReference.getPathExpr(nodesetStr);
+
+
         itemset.nodesetExpr = new XPathConditional(path);
+
         itemset.contextRef = getFormElementRef(q);
         // this is not valid yet...
         itemset.nodesetRef = null;
@@ -1470,6 +1500,8 @@ public class XFormParser implements IXFormParserFunctions {
                 itemset.valueExpr = new XPathConditional(valuePath);
             }
         }
+
+
 
         if (itemset.labelExpr == null) {
             throw new XFormParseException("<itemset> requires <label>");

@@ -214,7 +214,7 @@ public class XPathPathExpr extends XPathExpression {
         if (ec.isConstraint && ref.equals(ec.getContextRef())) {
             //ITEMSET TODO: need to update this; for itemset/copy constraints, need to simulate a whole xml sub-tree here
             Object result = unpackValue(ec.candidateValue);
-            logger.trace("getRefValue returning candidate value {} for {}", result, ref);
+            //logger.trace("getRefValue returning candidate value {} for {}", result, ref);
             return result;
         }
         AbstractTreeElement node = model.resolveReference(ref);
@@ -225,11 +225,11 @@ public class XPathPathExpr extends XPathExpression {
 
         IAnswerData maybeNodeValue = node.isRelevant() ? node.getValue() : null;
         Object result = unpackValue(maybeNodeValue);
-        if (maybeNodeValue == null) {
-            logger.trace("getRefValue returning empty node value for {}", ref);
-        } else {
-            logger.trace("getRefValue returning node value {} for {}", result, ref);
-        }
+//        if (maybeNodeValue == null) {
+//            logger.trace("getRefValue returning empty node value for {}", ref);
+//        } else {
+//            logger.trace("getRefValue returning node value {} for {}", result, ref);
+//        }
         return result;
     }
 
