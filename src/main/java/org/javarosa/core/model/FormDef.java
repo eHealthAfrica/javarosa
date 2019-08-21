@@ -1015,94 +1015,98 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      * @param curQRef a reference to the current question's element, which will be
      *                used to determine the values to be chosen from
      */
-    public void populateDynamicChoicess(ItemsetBinding itemset, TreeReference curQRef) {
-        getEventNotifier().publishEvent(new Event("Dynamic choices", new EvaluationResult(curQRef, null)));
+    public void populateDynamicChoices(ItemsetBinding itemset, TreeReference curQRef) {
+        if(OPTIMZE_DYNAMIC_CHOICES) {
 
-        List<SelectChoice> choices = new ArrayList<>();
-        List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
-                new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
+            populateDynamicChoicesFromCache(itemset, curQRef);
 
-       DataInstance formInstance;
-        if (itemset.nodesetRef.getInstanceName() != null) { // a secondary instance is specified
-            formInstance = getNonMainInstance(itemset.nodesetRef.getInstanceName());
-            if (formInstance == null) {
-                throw new XPathException("Instance " + itemset.nodesetRef.getInstanceName() + " not found");
-            }
-        } else {
-            formInstance = getMainInstance();
-        }
+        } else if(!OPTIMZE_DYNAMIC_CHOICES){
+            getEventNotifier().publishEvent(new Event("Dynamic choices", new EvaluationResult(curQRef, null)));
 
-        if (matches == null) {
-            throw new XPathException("Could not find references depended on by" + itemset.nodesetRef.getInstanceName());
-        }
+            List<SelectChoice> choices = new ArrayList<>();
+            List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
+                    new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
 
-        // Get the answer to the current question to remove selection(s) that are no longer in the choice list.
-        Map<String, Boolean> currentAnswersInNewChoices = null;
-        IAnswerData rawValue = getMainInstance().resolveReference(curQRef).getValue();
-        if (rawValue != null) {
-            currentAnswersInNewChoices = new HashMap<>();
-
-            if (rawValue instanceof MultipleItemsData) {
-                for (Selection selection : (List<Selection>) rawValue.getValue()) {
-                    currentAnswersInNewChoices.put(selection.choice != null ? selection.choice.getValue() : selection.xmlValue, false);
+           DataInstance formInstance;
+            if (itemset.nodesetRef.getInstanceName() != null) { // a secondary instance is specified
+                formInstance = getNonMainInstance(itemset.nodesetRef.getInstanceName());
+                if (formInstance == null) {
+                    throw new XPathException("Instance " + itemset.nodesetRef.getInstanceName() + " not found");
                 }
             } else {
-                currentAnswersInNewChoices.put(rawValue.getDisplayText(), false);
+                formInstance = getMainInstance();
             }
+            if (matches == null) {
+                throw new XPathException("Could not find references depended on by" + itemset.nodesetRef.getInstanceName());
+            }
+
+            // Get the answer to the current question to remove selection(s) that are no longer in the choice list.
+            Map<String, Boolean> currentAnswersInNewChoices = null;
+            IAnswerData rawValue = getMainInstance().resolveReference(curQRef).getValue();
+            if (rawValue != null) {
+                currentAnswersInNewChoices = new HashMap<>();
+
+                if (rawValue instanceof MultipleItemsData) {
+                    for (Selection selection : (List<Selection>) rawValue.getValue()) {
+                        currentAnswersInNewChoices.put(selection.choice != null ? selection.choice.getValue() : selection.xmlValue, false);
+                    }
+                } else {
+                    currentAnswersInNewChoices.put(rawValue.getDisplayText(), false);
+                }
+            }
+
+            for (int i = 0; i < matches.size(); i++) {
+                TreeReference item = matches.get(i);
+                String label = itemset.labelExpr.evalReadable(formInstance, new EvaluationContext(exprEvalContext,
+                        item));
+                String value = null;
+                TreeElement copyNode = null;
+                if (itemset.copyMode) {
+                    copyNode = this.getMainInstance().resolveReference(itemset.copyRef.contextualize(item));
+                }
+                if (itemset.valueRef != null) {
+                    value = itemset.valueExpr
+                            .evalReadable(formInstance, new EvaluationContext(exprEvalContext, item));
+                }
+
+                // Provide a default value if none is specified
+                value = value != null ? value : "dynamic:" + i;
+
+                if (currentAnswersInNewChoices != null && currentAnswersInNewChoices.keySet().contains(value)) {
+                    currentAnswersInNewChoices.put(value, true);
+                }
+
+                SelectChoice choice = new SelectChoice(label, value, itemset.labelIsItext);
+                choice.setIndex(i);
+                if (itemset.copyMode)
+                    choice.copyNode = copyNode;
+
+                choices.add(choice);
+            }
+
+            if (choices.size() == 0) {
+                logger.info("Dynamic select question has no choices! [{}]. If this occurs while " +
+                    "filling out a form (and not while saving an incomplete form), the filter " +
+                    "condition may have eliminated all the choices. Is that what you intended?"
+                    , itemset.nodesetRef);
+
+            }
+
+            // Remove values that are no longer in choices.
+            if (currentAnswersInNewChoices != null && currentAnswersInNewChoices.containsValue(false)) {
+                IAnswerData filteredAnswer;
+                if (rawValue instanceof MultipleItemsData) {
+                    filteredAnswer = getFilteredSelections((MultipleItemsData) rawValue, currentAnswersInNewChoices);
+                } else {
+                    filteredAnswer = new StringData("");
+                }
+
+                getMainInstance().resolveReference(curQRef).setAnswer(filteredAnswer);
+            }
+
+            itemset.clearChoices();
+            itemset.setChoices(choices, getMainInstance(), exprEvalContext, this.getLocalizer());
         }
-
-        for (int i = 0; i < matches.size(); i++) {
-            TreeReference item = matches.get(i);
-            String label = itemset.labelExpr.evalReadable(formInstance, new EvaluationContext(exprEvalContext,
-                    item));
-            String value = null;
-            TreeElement copyNode = null;
-            if (itemset.copyMode) {
-                copyNode = this.getMainInstance().resolveReference(itemset.copyRef.contextualize(item));
-            }
-            if (itemset.valueRef != null) {
-                value = itemset.valueExpr
-                        .evalReadable(formInstance, new EvaluationContext(exprEvalContext, item));
-            }
-
-            // Provide a default value if none is specified
-            value = value != null ? value : "dynamic:" + i;
-
-            if (currentAnswersInNewChoices != null && currentAnswersInNewChoices.keySet().contains(value)) {
-                currentAnswersInNewChoices.put(value, true);
-            }
-
-            SelectChoice choice = new SelectChoice(label, value, itemset.labelIsItext);
-            choice.setIndex(i);
-            if (itemset.copyMode)
-                choice.copyNode = copyNode;
-
-            choices.add(choice);
-        }
-
-        if (choices.size() == 0) {
-            logger.info("Dynamic select question has no choices! [{}]. If this occurs while " +
-                "filling out a form (and not while saving an incomplete form), the filter " +
-                "condition may have eliminated all the choices. Is that what you intended?"
-                , itemset.nodesetRef);
-
-        }
-
-        // Remove values that are no longer in choices.
-        if (currentAnswersInNewChoices != null && currentAnswersInNewChoices.containsValue(false)) {
-            IAnswerData filteredAnswer;
-            if (rawValue instanceof MultipleItemsData) {
-                filteredAnswer = getFilteredSelections((MultipleItemsData) rawValue, currentAnswersInNewChoices);
-            } else {
-                filteredAnswer = new StringData("");
-            }
-
-            getMainInstance().resolveReference(curQRef).setAnswer(filteredAnswer);
-        }
-
-        itemset.clearChoices();
-        itemset.setChoices(choices, getMainInstance(), exprEvalContext, this.getLocalizer());
-
     }
 
     /**
@@ -1225,8 +1229,6 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      *
      * @param dis - the stream to read from
      * @throws IOException
-     * @throws InstantiationException
-     * @throws IllegalAccessException
      */
     @Override
     public void readExternal(DataInputStream dis, PrototypeFactory pf) throws IOException,
@@ -1311,10 +1313,13 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         Collection<QuickTriggerable> qts = initializeTriggerables(TreeReference.rootRef(), false);
         dagImpl.publishSummary("Form initialized", qts);
 
-        initializeDynamicChoices();
+        if(OPTIMZE_DYNAMIC_CHOICES){
+            initializeDynamicChoices();
+        }
     }
 
-    private void initializeDynamicChoices(){
+    public static boolean OPTIMZE_DYNAMIC_CHOICES = true;
+    public void initializeDynamicChoices(){
         for (IFormElement iFormElement: getChildren()) {
             if (iFormElement instanceof QuestionDef) {
                 QuestionDef questionDef = (QuestionDef) iFormElement;
@@ -1353,13 +1358,13 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         choiceDictionary.put(nodesetRef, choices);
     }
 
-    public void populateDynamicChoices(ItemsetBinding itemset, TreeReference curQRef){
+    public boolean populateDynamicChoicesFromCache(ItemsetBinding itemset, TreeReference curQRef){
+        List<SelectChoice> choices = null;
         XPathPathExpr xPathPathExpr = ((XPathPathExpr)((XPathConditional) itemset.nodesetExpr).getExpr());
         String nodesetRef = xPathPathExpr.getReference().toString(false);
         XPathEqExpr predicateEq = getEqPredicateExpr(itemset);
-
         if(choicesCache.get(nodesetRef) != null){
-            List<SelectChoice> choices = choicesCache.get(nodesetRef);
+            choices = choicesCache.get(nodesetRef);
             if(predicateEq != null){
                 String filterValue = XPathFuncExpr.toString(
                     XPathFuncExpr.unpack(predicateEq.b.eval( getMainInstance(), new EvaluationContext(exprEvalContext, getMainInstance().getBase().getRef())))
@@ -1374,16 +1379,14 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
                     if(choicesCache.get(indexRef+"="+filterValue) != null){
                         choices = choicesCache.get(indexRef+"="+filterValue);
                     }else{
-                        populateDynamicChoicess(itemset, curQRef);
+                        populateDynamicChoices(itemset, curQRef);
                     }
                 }
             }
             itemset.clearChoices();
             itemset.setChoices(choices, getMainInstance(), exprEvalContext, this.getLocalizer());
         }
-        else {
-            populateDynamicChoicess(itemset, curQRef);
-        }
+        return choices != null;
 
     }
 
