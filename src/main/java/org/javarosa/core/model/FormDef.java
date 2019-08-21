@@ -1016,7 +1016,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
      *                used to determine the values to be chosen from
      */
     public void populateDynamicChoices(ItemsetBinding itemset, TreeReference curQRef) {
-        if(OPTIMZE_DYNAMIC_CHOICES && !populateDynamicChoicesFromCache(itemset, curQRef)){
+        if(!OPTIMZE_DYNAMIC_CHOICES && !populateDynamicChoicesFromCache(itemset, curQRef)){
             getEventNotifier().publishEvent(new Event("Dynamic choices", new EvaluationResult(curQRef, null)));
 
             List<SelectChoice> choices = new ArrayList<>();
@@ -1314,7 +1314,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         }
     }
 
-    public static boolean OPTIMZE_DYNAMIC_CHOICES = false;
+    public static boolean OPTIMZE_DYNAMIC_CHOICES = true;
     public void initializeDynamicChoices(){
         for (IFormElement iFormElement: getChildren()) {
             if (iFormElement instanceof QuestionDef) {
