@@ -2,6 +2,8 @@ package org.javarosa.xml;
 
 import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.model.instance.TreeElement;
+import org.javarosa.core.model.instance.TreeReference;
+import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Node;
@@ -30,6 +32,12 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         this.instanceId = instanceId;
     }
 
+    private static String currentPath = null;
+    private static TreeReference currentTreeReference = null;
+
+    //Nodeset context
+    public static List<XFormParser.Indexer> indexers = new ArrayList<>();
+
     @Override
     public TreeElement parse() throws InvalidStructureException, IOException, XmlPullParserException {
         final int depth = parser.getDepth();
@@ -38,10 +46,16 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             element.setAttribute(parser.getAttributeNamespace(i), parser.getAttributeName(i), parser.getAttributeValue(i));
         }
-
+        if(currentPath == null){
+            currentPath =  "instance(" + element.getInstanceName() + ")" + "/" + element.getName();
+            currentTreeReference = TreeReference.rootRef();
+            currentTreeReference.setInstanceName(element.getInstanceName());
+            currentTreeReference.setContext(TreeReference.CONTEXT_INSTANCE);
+            currentTreeReference.add(element.getName(), 0);
+        }
         final Map<String, Integer> multiplicitiesByName = new HashMap<>();
-
         // loop parses all siblings at a given depth
+
         while (parser.getDepth() >= depth) {
             switch (nextNonWhitespace()) {
                 case KXmlParser.START_TAG:
@@ -49,12 +63,28 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                     final Integer multiplicity = multiplicitiesByName.get(name);
                     int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
                     multiplicitiesByName.put(name, newMultiplicity);
+
+                    currentPath += "/" + name + "[" + newMultiplicity + "]";
+                    currentTreeReference.add(name, newMultiplicity);
+
                     TreeElement childTreeElement = new TreeElementParser(parser, newMultiplicity, instanceId).parse();
+
                     element.addChild(childTreeElement);
+
+                    childTreeElement.xpath = currentPath;
+
                     break;
                 case KXmlParser.END_TAG:
+                    if(parser.getDepth() == depth && currentPath.lastIndexOf("/") > 0){
+                        element.xpath = currentPath;
+                        currentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+                        currentTreeReference.removeLastLevel();
+                    }
                     return element;
                 case KXmlParser.TEXT:
+                    for(XFormParser.Indexer indexer: indexers) {
+                        indexer.addToIndex(currentTreeReference);
+                    }
                     element.setValue(new UncastData(parser.getText().trim()));
                     break;
                 default:

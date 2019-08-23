@@ -71,6 +71,7 @@ import org.javarosa.xpath.expr.XPathStringLiteral;
     private String name; // can be null only for hidden root node
     protected int multiplicity = -1; // see TreeReference for special values
     private AbstractTreeElement parent;
+    public String xpath;
 
     private IAnswerData value;
 

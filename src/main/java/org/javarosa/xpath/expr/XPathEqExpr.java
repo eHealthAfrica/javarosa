@@ -33,7 +33,8 @@ import static org.javarosa.xpath.expr.XPathFuncExpr.toBoolean;
 import static org.javarosa.xpath.expr.XPathFuncExpr.toNumeric;
 import static org.javarosa.xpath.expr.XPathFuncExpr.unpack;
 
-public class XPathEqExpr extends XPathBinaryOpExpr {
+public class
+XPathEqExpr extends XPathBinaryOpExpr {
     private static final Logger logger = LoggerFactory.getLogger(XPathEqExpr.class.getSimpleName());
     public boolean equal;
 

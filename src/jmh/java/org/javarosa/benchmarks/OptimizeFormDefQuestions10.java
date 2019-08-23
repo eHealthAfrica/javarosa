@@ -57,6 +57,23 @@ public class OptimizeFormDefQuestions10 {
         state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
     }
 
+
+    @Benchmark
+    public void benchmarkAnswerFirstTwo(FormControllerAnswerQuestionState state) {
+        state.formEntryController.stepToNextEvent();
+        AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
+        FormIndex questionIndex = action.getQuestionIndex();
+        IAnswerData answer = action.getAnswer();
+        state.formEntryController.saveAnswer(questionIndex, answer, true);
+        state.formEntryController.stepToNextEvent();
+        AnswerCurrentQuestionAction action2 = new AnswerCurrentQuestionAction(state).invoke();
+        FormIndex questionIndex2 = action.getQuestionIndex();
+        IAnswerData answer2 = action.getAnswer();
+        state.formEntryController.saveAnswer(questionIndex, answer, true);
+        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+    }
+
+
     @Benchmark
     public void benchmarkAnswerAll(FormControllerAnswerQuestionState state) {
         state.formEntryController.stepToNextEvent();

@@ -33,6 +33,7 @@ import org.javarosa.core.model.actions.SetValueAction;
 import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
 import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
 import org.javarosa.core.model.condition.EvaluationContext;
+import org.javarosa.core.model.condition.IConditionExpr;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
@@ -56,11 +57,13 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
+import org.javarosa.xml.TreeElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
 import org.javarosa.xpath.XPathParseTool;
 import org.javarosa.xpath.expr.XPathEqExpr;
+import org.javarosa.xpath.expr.XPathExpression;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
 import org.javarosa.xpath.expr.XPathStep;
@@ -523,20 +526,6 @@ public class XFormParser implements IXFormParserFunctions {
                 }
             }
         }
-
-//        List<TreeReference> matches = itemset.nodesetExpr.evalNodeset(this.getMainInstance(),
-//            new EvaluationContext(exprEvalContext, itemset.contextRef.contextualize(curQRef)));
-
-
-//        if (pathType == "HAS_PREDICATE") {
-//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(queryRef.getParentRef(), queryRef);
-//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  queryRef);
-//        } else {
-//            Map<String, List<TreeElement>> pathDictionary = createPathIndex(path.getReference(), null);
-//            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  null);
-//        }
-
-
 
         //now parse the main instance
         if (mainInstanceNode != null) {
@@ -1013,6 +1002,104 @@ public class XFormParser implements IXFormParserFunctions {
         return parseControl(parent, e, controlType, additionalUsedAtts, null);
     }
 
+    public enum NodesetType{
+        GENERIC_PATH,
+        LAST_EQUAL_PREDICATE_PATH,
+       MID_EQUAL_PREDICATE_PATH
+    }
+
+    public static class Indexer {
+        public TreeReference indexRef;
+        public NodesetType indexType;
+        public Map<TreeReference, List<TreeReference>> treeReferenceListMap;
+
+        public Indexer(TreeReference indexRef, NodesetType indexType) {
+            this.indexRef = indexRef;
+            this.indexType = indexType;
+            treeReferenceListMap = new HashMap<>();
+        }
+
+
+        public void addToIndex(TreeReference currentTreeReference) {
+
+            TreeReference indexKey = getIndexKey(currentTreeReference.clone());
+            if (indexKey != null) {
+                if (treeReferenceListMap.get(indexKey) == null) {
+                    treeReferenceListMap.put(indexKey, new ArrayList<>());
+                }
+                List<TreeReference> matches = treeReferenceListMap.get(indexKey);
+                matches.add(currentTreeReference.clone());
+            }
+
+
+        }
+
+        TreeReference getIndexKey(TreeReference treeReference) {
+            if (indexType == NodesetType.GENERIC_PATH) {
+                return treeReference.genericize();
+            } else if (indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH) {
+                treeReference.removeLastLevel();
+                return treeReference;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    private Indexer analyzeNodesetExpr(XPathPathExpr xPathPathExpr) {
+        //Check if it's a genericized ref
+        boolean isGenericPath = true;
+        boolean onlyLastPredicate = false;
+        int noOfSteps = xPathPathExpr.steps.length;
+        for(int i = 0; i < noOfSteps; i++){
+            XPathStep xPathStep = xPathPathExpr.steps[i];
+            if(xPathStep.axis == XPathStep.AXIS_CHILD){
+                //Check if step has predicate
+                if(xPathStep.predicates.length > 0){
+                    //Having a predicate makes isGenericPath false
+                    isGenericPath = false;
+                    int lastIndex = noOfSteps - 1;
+                    //Only last index has predicate
+                    if(onlyLastPredicate == false && i == lastIndex){
+                        onlyLastPredicate = true;
+                    } else {
+                        onlyLastPredicate = false;
+                    }
+                }
+            }
+        }
+
+        if(isGenericPath) {
+            return new Indexer(xPathPathExpr.getReference(), NodesetType.GENERIC_PATH);
+        } else if(onlyLastPredicate) {
+            XPathStep lastXPathStep = xPathPathExpr.steps[noOfSteps - 1];
+            //We are currently handling only one predicate
+            if(lastXPathStep.predicates.length == 1){
+                XPathExpression predicateXpression = lastXPathStep.predicates[0];
+                //We are currently handling only XPathEqExpr
+                if(predicateXpression instanceof XPathEqExpr){
+                    //We want to get the absolute path
+                    TreeReference left = ((XPathPathExpr)((XPathEqExpr) predicateXpression).a).getReference().contextualize(xPathPathExpr.getReference());
+                    return new Indexer(left, NodesetType.LAST_EQUAL_PREDICATE_PATH);
+                }
+            }
+        }
+
+
+        return null;
+
+    }
+
+    private XPathPathExpr getXPathPathExpr(IConditionExpr iConditionExpr){
+        if(iConditionExpr instanceof  XPathConditional){
+            XPathConditional xPathConditional =  (XPathConditional) iConditionExpr;
+            if(xPathConditional.getExpr() instanceof XPathPathExpr){
+                return (XPathPathExpr) xPathConditional.getExpr();
+            }
+        }
+        return null;
+    }
+
     /**
      * Parses a form control element into a {@link org.javarosa.core.model.QuestionDef} and attaches it to its parent.
      *
@@ -1097,6 +1184,13 @@ public class XFormParser implements IXFormParserFunctions {
                 parseItem(question, child);
             } else if (isItem && "itemset".equals(childName)) {
                 parseItemset(question, child, parent);
+                XPathPathExpr nodesetXPathPathExpr = getXPathPathExpr(question.getDynamicChoices().nodesetExpr);
+                if(nodesetXPathPathExpr != null){
+                    TreeElementParser.indexers.add(
+                        analyzeNodesetExpr(nodesetXPathPathExpr)
+                    );
+                }
+
             } else if (actionHandlers.containsKey(childName)) {
                 actionHandlers.get(childName).handle(this, child, question);
             }

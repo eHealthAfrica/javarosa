@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
+import static org.javarosa.benchmarks.BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance;
 import static org.javarosa.benchmarks.BenchmarkUtils.getNigeriaWardsXMLWithInternal2ndryInstance;
 
 public class OptimizeFormDefQuestions21 {
@@ -27,7 +28,7 @@ public class OptimizeFormDefQuestions21 {
         @Setup(Level.Trial)
         public void initialize() {
             FormDef.OPTIMZE_DYNAMIC_CHOICES = true;
-            xFormFilePath = getNigeriaWardsXMLWithInternal2ndryInstance();
+            xFormFilePath = getNigeriaWardsXMLWithExternal2ndryInstance();
         }
     }
 

@@ -8,6 +8,7 @@ import org.javarosa.core.reference.ReferenceManager;
 import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
+import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xml.TreeElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
