@@ -26,6 +26,7 @@ import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
+import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xpath.IExprDataType;
 import org.javarosa.xpath.expr.XPathExpression;
 
@@ -38,6 +39,9 @@ public class EvaluationContext {
     private TreeReference contextNode;
     private HashMap<String, IFunctionHandler> functionHandlers;
     private HashMap<String, Object> variables;
+
+    //Nodeset context
+    public static List<XFormParser.Indexer> indexers = new ArrayList<>();
 
     public boolean isConstraint; //true if we are evaluating a constraint
     public IAnswerData candidateValue; //if isConstraint, this is the value being validated

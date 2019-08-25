@@ -16,6 +16,7 @@ public class XmlExternalInstance {
         KXmlParser xmlParser = ElementParser.instantiateParser(inputStream);
         TreeElementParser treeElementParser = new TreeElementParser(xmlParser, 0, instanceId);
         TreeElement treeElement = treeElementParser.parse();
+        TreeElementParser.currentTreeReference = null;
         return  treeElement;
     }
 }

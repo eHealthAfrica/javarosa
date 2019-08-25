@@ -2,10 +2,13 @@ package org.javarosa.benchmarks;
 
 import org.javarosa.core.model.FormDef;
 import org.javarosa.core.model.FormIndex;
+import org.javarosa.core.model.IFormElement;
 import org.javarosa.core.model.ItemsetBinding;
 import org.javarosa.core.model.QuestionDef;
+import org.javarosa.core.model.SelectChoice;
 import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.instance.InstanceInitializationFactory;
+import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.form.api.FormEntryController;
 import org.javarosa.form.api.FormEntryModel;
@@ -19,6 +22,7 @@ import org.openjdk.jmh.annotations.State;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.javarosa.benchmarks.BenchmarkUtils.dryRun;
 import static org.javarosa.benchmarks.BenchmarkUtils.getStubAnswer;
@@ -54,38 +58,39 @@ public class OptimizeFormDefQuestions10 {
         IAnswerData answer = action.getAnswer();
         state.formEntryController.saveAnswer(questionIndex, answer, true);
         state.formEntryController.stepToNextEvent();
+        action.getSelectChoices(state.formEntryModel.getForm(), state.formEntryModel.getFormIndex());
         state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
     }
 
 
-    @Benchmark
-    public void benchmarkAnswerFirstTwo(FormControllerAnswerQuestionState state) {
-        state.formEntryController.stepToNextEvent();
-        AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
-        FormIndex questionIndex = action.getQuestionIndex();
-        IAnswerData answer = action.getAnswer();
-        state.formEntryController.saveAnswer(questionIndex, answer, true);
-        state.formEntryController.stepToNextEvent();
-        AnswerCurrentQuestionAction action2 = new AnswerCurrentQuestionAction(state).invoke();
-        FormIndex questionIndex2 = action.getQuestionIndex();
-        IAnswerData answer2 = action.getAnswer();
-        state.formEntryController.saveAnswer(questionIndex, answer, true);
-        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-    }
-
-
-    @Benchmark
-    public void benchmarkAnswerAll(FormControllerAnswerQuestionState state) {
-        state.formEntryController.stepToNextEvent();
-        while (state.formEntryModel.getFormIndex().isInForm()) {
-            AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
-            FormIndex questionIndex = action.getQuestionIndex();
-            IAnswerData answer = action.getAnswer();
-            state.formEntryController.saveAnswer(questionIndex, answer, true);
-            state.formEntryController.stepToNextEvent();
-        }
-        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-    }
+//    @Benchmark
+//    public void benchmarkAnswerFirstTwo(FormControllerAnswerQuestionState state) {
+//        state.formEntryController.stepToNextEvent();
+//        AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
+//        FormIndex questionIndex = action.getQuestionIndex();
+//        IAnswerData answer = action.getAnswer();
+//        state.formEntryController.saveAnswer(questionIndex, answer, true);
+//        state.formEntryController.stepToNextEvent();
+//        AnswerCurrentQuestionAction action2 = new AnswerCurrentQuestionAction(state).invoke();
+//        FormIndex questionIndex2 = action.getQuestionIndex();
+//        IAnswerData answer2 = action.getAnswer();
+//        state.formEntryController.saveAnswer(questionIndex, answer, true);
+//        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+//    }
+//
+//
+//    @Benchmark
+//    public void benchmarkAnswerAll(FormControllerAnswerQuestionState state) {
+//        state.formEntryController.stepToNextEvent();
+//        while (state.formEntryModel.getFormIndex().isInForm()) {
+//            AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
+//            FormIndex questionIndex = action.getQuestionIndex();
+//            IAnswerData answer = action.getAnswer();
+//            state.formEntryController.saveAnswer(questionIndex, answer, true);
+//            state.formEntryController.stepToNextEvent();
+//        }
+//        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+//    }
 
 //
 //    @Benchmark
@@ -181,5 +186,18 @@ public class OptimizeFormDefQuestions10 {
             state.formEntryController.answerQuestion(questionIndex, answer, true);
             return this;
         }
+
+    public List<SelectChoice> getSelectChoices(FormDef formDef, FormIndex formIndex) {
+        IFormElement iFormElement = formDef.getChild(formIndex);
+        QuestionDef q = (QuestionDef) iFormElement;
+        TreeElement mTreeElement = formDef.getMainInstance().resolveReference(formIndex.getReference());
+        ItemsetBinding itemset = q.getDynamicChoices();
+        if (itemset != null) {
+            formDef.populateDynamicChoices(itemset, mTreeElement.getRef());
+            return itemset.getChoices();
+        } else { //static choices
+            return q.getChoices();
+        }
+    }
     }
 }

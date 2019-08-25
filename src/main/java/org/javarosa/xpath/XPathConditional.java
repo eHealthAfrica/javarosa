@@ -33,10 +33,13 @@ import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.core.util.externalizable.ExtWrapTagged;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
+import org.javarosa.xml.TreeElementParser;
 import org.javarosa.xpath.expr.XPathBinaryOpExpr;
+import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathExpression;
 import org.javarosa.xpath.expr.XPathFuncExpr;
 import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 import org.javarosa.xpath.expr.XPathUnaryOpExpr;
 import org.javarosa.xpath.parser.XPathSyntaxException;
 
@@ -80,6 +83,18 @@ public class XPathConditional implements IConditionExpr {
         }
     }
 
+    public TreeReference preEvaluateInContext(DataInstance model, EvaluationContext evalContext){
+        XPathStep lastStep = ((XPathPathExpr) expr).steps[((XPathPathExpr) expr).steps.length -1];
+        XPathExpression[] predicatePathExprs = lastStep.predicates;
+        if(predicatePathExprs.length == 1 && predicatePathExprs[0] instanceof XPathEqExpr){
+            XPathEqExpr xpathEqExpr = (XPathEqExpr) predicatePathExprs[0];
+            xpathEqExpr.transformBValue(model, evalContext);
+            TreeReference treeReference = ((XPathPathExpr) expr).getReference();
+            return treeReference;
+        }
+        return null;
+    }
+
     public boolean eval (DataInstance model, EvaluationContext evalContext) {
         return XPathFuncExpr.toBoolean(evalRaw(model, evalContext)).booleanValue();
     }
@@ -90,7 +105,12 @@ public class XPathConditional implements IConditionExpr {
 
     public List<TreeReference> evalNodeset (DataInstance model, EvaluationContext evalContext) {
         if (expr instanceof XPathPathExpr) {
-            return ((XPathPathExpr)expr).eval(model, evalContext).getReferences();
+            TreeReference treeReference = preEvaluateInContext(model, evalContext);
+            if(treeReference != null && TreeElementParser.getFromIndex(treeReference) != null){
+                return TreeElementParser.getFromIndex(treeReference);
+            }else {
+                return ((XPathPathExpr)expr).eval(model, evalContext).getReferences();
+            }
         } else {
             throw new FatalException("evalNodeset: must be path expression");
         }

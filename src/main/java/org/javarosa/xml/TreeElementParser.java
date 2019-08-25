@@ -5,6 +5,9 @@ import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xml.util.InvalidStructureException;
+import org.javarosa.xpath.expr.XPathEqExpr;
+import org.javarosa.xpath.expr.XPathExpression;
+import org.javarosa.xpath.expr.XPathStringLiteral;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Node;
 import org.xmlpull.v1.XmlPullParserException;
@@ -12,6 +15,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -32,11 +36,36 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         this.instanceId = instanceId;
     }
 
-    private static String currentPath = null;
-    private static TreeReference currentTreeReference = null;
+
+    public static TreeReference currentTreeReference = null;
 
     //Nodeset context
     public static List<XFormParser.Indexer> indexers = new ArrayList<>();
+
+    public static List<TreeReference>  getFromIndex(TreeReference treeReference){
+
+
+        for(XFormParser.Indexer indexer : indexers ){
+
+            Iterator<TreeReference> iterator = indexer.treeReferenceListMap.keySet().iterator();
+            while (iterator.hasNext()){
+                TreeReference tr = iterator.next();
+                //System.out.println((XPathStringLiteral)(((XPathEqExpr)iterator.next().getPredicate(1).get(0)).b));
+                System.out.println(tr.equals(treeReference));
+                System.out.println(tr.genericize().equals(treeReference.genericize()));
+                System.out.println(tr.genericize().toString() + "===" + treeReference.genericize().toString());
+            }
+
+
+
+
+
+            if(indexer.getFromIndex(treeReference) != null){
+                return indexer.getFromIndex(treeReference);
+            }
+        }
+        return null;
+    }
 
     @Override
     public TreeElement parse() throws InvalidStructureException, IOException, XmlPullParserException {
@@ -46,8 +75,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             element.setAttribute(parser.getAttributeNamespace(i), parser.getAttributeName(i), parser.getAttributeValue(i));
         }
-        if(currentPath == null){
-            currentPath =  "instance(" + element.getInstanceName() + ")" + "/" + element.getName();
+        if(currentTreeReference == null){
             currentTreeReference = TreeReference.rootRef();
             currentTreeReference.setInstanceName(element.getInstanceName());
             currentTreeReference.setContext(TreeReference.CONTEXT_INSTANCE);
@@ -64,28 +92,26 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                     int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
                     multiplicitiesByName.put(name, newMultiplicity);
 
-                    currentPath += "/" + name + "[" + newMultiplicity + "]";
                     currentTreeReference.add(name, newMultiplicity);
 
                     TreeElement childTreeElement = new TreeElementParser(parser, newMultiplicity, instanceId).parse();
 
                     element.addChild(childTreeElement);
 
-                    childTreeElement.xpath = currentPath;
 
                     break;
                 case KXmlParser.END_TAG:
-                    if(parser.getDepth() == depth && currentPath.lastIndexOf("/") > 0){
-                        element.xpath = currentPath;
-                        currentPath = currentPath.substring(0, currentPath.lastIndexOf("/"));
+                    if(parser.getDepth() == depth && currentTreeReference.getNameLast() != null){
                         currentTreeReference.removeLastLevel();
                     }
                     return element;
                 case KXmlParser.TEXT:
-                    for(XFormParser.Indexer indexer: indexers) {
-                        indexer.addToIndex(currentTreeReference);
-                    }
                     element.setValue(new UncastData(parser.getText().trim()));
+                    for(XFormParser.Indexer indexer: indexers) {
+                        if(indexer.belong(currentTreeReference, element)){
+                            indexer.addToIndex(currentTreeReference, element);
+                        }
+                    }
                     break;
                 default:
                     throw new InvalidStructureException(

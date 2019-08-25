@@ -1318,7 +1318,7 @@ public class FormDef implements IFormElement, Localizable, Persistable, IMetaDat
         }
     }
 
-    public static boolean OPTIMZE_DYNAMIC_CHOICES = true;
+    public static boolean OPTIMZE_DYNAMIC_CHOICES = false;
     public void initializeDynamicChoices(){
         for (IFormElement iFormElement: getChildren()) {
             if (iFormElement instanceof QuestionDef) {

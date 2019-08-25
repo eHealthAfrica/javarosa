@@ -18,7 +18,6 @@ package org.javarosa.xform.parse;
 
 import org.javarosa.core.model.DataBinding;
 import org.javarosa.core.model.FormDef;
-import org.javarosa.core.model.FormIndex;
 import org.javarosa.core.model.GroupDef;
 import org.javarosa.core.model.IDataReference;
 import org.javarosa.core.model.IFormElement;
@@ -32,7 +31,6 @@ import org.javarosa.core.model.actions.ActionController;
 import org.javarosa.core.model.actions.SetValueAction;
 import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
 import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
-import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.condition.IConditionExpr;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
@@ -66,7 +64,9 @@ import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathExpression;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathQName;
 import org.javarosa.xpath.expr.XPathStep;
+import org.javarosa.xpath.expr.XPathStringLiteral;
 import org.javarosa.xpath.parser.XPathSyntaxException;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Document;
@@ -83,6 +83,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -90,8 +91,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.xml.crypto.Data;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -1019,34 +1018,65 @@ public class XFormParser implements IXFormParserFunctions {
             treeReferenceListMap = new HashMap<>();
         }
 
-
-        public void addToIndex(TreeReference currentTreeReference) {
-
-            TreeReference indexKey = getIndexKey(currentTreeReference.clone());
+        public void addToIndex(TreeReference currentTreeReference, TreeElement currentTreeElement) {
+            TreeReference currentReferenceClone = currentTreeReference.clone();
+            TreeReference indexKey = getIndexKey(currentReferenceClone, currentTreeElement);
             if (indexKey != null) {
                 if (treeReferenceListMap.get(indexKey) == null) {
                     treeReferenceListMap.put(indexKey, new ArrayList<>());
                 }
                 List<TreeReference> matches = treeReferenceListMap.get(indexKey);
-                matches.add(currentTreeReference.clone());
+                currentReferenceClone.removeLastLevel();
+                matches.add(currentReferenceClone);
             }
-
-
         }
 
-        TreeReference getIndexKey(TreeReference treeReference) {
+        public List<TreeReference> getFromIndex(TreeReference treeReference) {
+            return treeReferenceListMap.get(treeReference);
+        }
+
+        public boolean belong(TreeReference currentTreeReference, TreeElement currentTreeElement){
+            TreeReference indexKey = getIndexKey(currentTreeReference.clone(), currentTreeElement);
+            if (indexKey != null) {
+                return true;
+            }
+            return false;
+        }
+
+        TreeReference getIndexKey(TreeReference treeReference, TreeElement treeElement) {
             if (indexType == NodesetType.GENERIC_PATH) {
                 return treeReference.genericize();
             } else if (indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH) {
-                treeReference.removeLastLevel();
-                return treeReference;
+
+                TreeReference refToIndex = treeReference.genericize();
+                TreeReference templateIndex = indexRef.removePredicates();
+
+                String refLastLevel = refToIndex.getNameLast();
+                String indexLastLevel = templateIndex.getNameLast();
+
+                refToIndex.removeLastLevel();
+                templateIndex.removeLastLevel();
+
+                if(refToIndex.equals(templateIndex) && refLastLevel.equals(indexLastLevel)){
+                    XPathStep[] xPathSteps = new XPathStep[]{new XPathStep(XPathStep.AXIS_CHILD, new XPathQName(refLastLevel))};
+                    XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE,xPathSteps);
+                    XPathStringLiteral b = new XPathStringLiteral(treeElement.getValue().getDisplayText());
+                    XPathEqExpr xPathEqExpr = new XPathEqExpr(true, a, b);
+                    refToIndex.addPredicate(1, Arrays.asList(xPathEqExpr));
+                    indexRef.genericize().removeLastLevel();
+                    return refToIndex;
+                }
+                return null;
+
+
+
             } else {
                 return null;
             }
         }
     }
 
-    private Indexer analyzeNodesetExpr(XPathPathExpr xPathPathExpr) {
+    private Indexer getIndexer(XPathPathExpr xPathPathExpr) {
         //Check if it's a genericized ref
         boolean isGenericPath = true;
         boolean onlyLastPredicate = false;
@@ -1186,9 +1216,11 @@ public class XFormParser implements IXFormParserFunctions {
                 parseItemset(question, child, parent);
                 XPathPathExpr nodesetXPathPathExpr = getXPathPathExpr(question.getDynamicChoices().nodesetExpr);
                 if(nodesetXPathPathExpr != null){
-                    TreeElementParser.indexers.add(
-                        analyzeNodesetExpr(nodesetXPathPathExpr)
-                    );
+                    Indexer indexer = getIndexer(nodesetXPathPathExpr);
+                    if(indexer != null){
+                        TreeElementParser
+                            .indexers.add(indexer);
+                    }
                 }
 
             } else if (actionHandlers.containsKey(childName)) {
