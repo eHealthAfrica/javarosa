@@ -80,7 +80,8 @@ public class XPathConditional implements IConditionExpr {
                  refsFromIndex.get(0).add("label", 0);
                 return refsFromIndex;
             }else {
-                return XPathFuncExpr.unpack(expr.eval(model, evalContext));
+                return "";
+                //return XPathFuncExpr.unpack(expr.eval(model, evalContext));
             }
         } catch(XPathUnsupportedException e){
             if(xpath != null){

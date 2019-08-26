@@ -1021,19 +1021,19 @@ public class XFormParser implements IXFormParserFunctions {
     public static class Indexer {
 
 
-        public TreeReference keyRef;
-        public TreeReference valueRef;
+        public TreeReference expressionRef;
+        public TreeReference resultRef;
         public Predicator[] predicators;
         public NodesetType indexType;
         public Map<TreeReference, List<TreeReference>> treeReferenceListMap;
 
-        public Indexer(NodesetType indexType, TreeReference keyRef, TreeReference valueRef) {
-            this(indexType, keyRef, valueRef, null);
+        public Indexer(NodesetType indexType, TreeReference expressionRef, TreeReference resultRef) {
+            this(indexType, expressionRef, resultRef, null);
         }
 
-        public Indexer(NodesetType indexType, TreeReference keyRef, TreeReference valueRef, Predicator[] predicators) {
-            this.keyRef = keyRef.removePredicates().genericize();
-            this.valueRef = valueRef.removePredicates().genericize();
+        public Indexer(NodesetType indexType, TreeReference expressionRef, TreeReference resultRef, Predicator[] predicators) {
+            this.expressionRef = expressionRef.removePredicates().genericize();
+            this.resultRef = resultRef.removePredicates().genericize();
             this.indexType = indexType;
             this.predicators = predicators == null ? new Predicator[0] : predicators;
             treeReferenceListMap = new HashMap<>();
@@ -1043,32 +1043,31 @@ public class XFormParser implements IXFormParserFunctions {
 
         public void addToIndex(TreeReference currentTreeReference, TreeElement currentTreeElement) {
             if (indexType == NodesetType.GENERIC_PATH) {
-                if (treeReferenceListMap.get(keyRef) == null) {
-                    treeReferenceListMap.put(keyRef, new ArrayList<>());
+                if (treeReferenceListMap.get(expressionRef) == null) {
+                    treeReferenceListMap.put(expressionRef, new ArrayList<>());
                 }
-                List<TreeReference> matches = treeReferenceListMap.get(keyRef);
-                //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                List<TreeReference> matches = treeReferenceListMap.get(expressionRef);
+                //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
                 matches.add(currentTreeReference);
-            } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH ||
-                indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH
-            ) {
-                if (currentTreeReference.genericize().removePredicates().equals(keyRef) ||
-                    currentTreeReference.genericize().removePredicates().equals(valueRef)
+            } else if (indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH) {
+                if (currentTreeReference.genericize().removePredicates().equals(expressionRef) ||
+                    currentTreeReference.genericize().removePredicates().equals(resultRef)
                 ) {
                     TreeReference currentReferenceClone = currentTreeReference.clone();
                     TreeReference indexKey = getIndexKey(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
                     boolean currentReferenceIsKey = indexKey != null;
-                    boolean currentReferenceIsValue = valueRef.equals(currentReferenceClone.genericize().removePredicates());
+                    boolean currentReferenceIsValue = resultRef.equals(currentReferenceClone.genericize().removePredicates());
                     if (currentReferenceIsKey) {
-                        TreeReference valueRef = tempKeyValueKepper.get(currentTreeReference.getParentRef());
-                        boolean valueRefFound = valueRef != null;
+                        TreeReference valueReff = tempKeyValueKepper.get(currentTreeReference.getParentRef());
+                        boolean valueRefFound = valueReff != null;
                         if (valueRefFound) {
                             if (treeReferenceListMap.get(indexKey) == null) {
                                 treeReferenceListMap.put(indexKey, new ArrayList<>());
                             }
                             List<TreeReference> matches = treeReferenceListMap.get(indexKey);
-                            //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
-                            matches.add(valueRef);
+                            //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            valueReff.removeLastLevel();
+                            matches.add(valueReff);
                         } else {
                             //Put the common parent as the key
                             tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
@@ -1082,19 +1081,62 @@ public class XFormParser implements IXFormParserFunctions {
                                 treeReferenceListMap.put(keyRef, new ArrayList<>());
                             }
                             List<TreeReference> matches = treeReferenceListMap.get(keyRef);
-                            //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            currentTreeReference.removeLastLevel();
                             matches.add(currentTreeReference);
                         }else{
                             tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
                         }
                     }
                 }
+            } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH ) {
+                if (currentTreeReference.genericize().removePredicates().equals(expressionRef) ||
+                    currentTreeReference.genericize().removePredicates().equals(resultRef)
+                ) {
+                    TreeReference currentReferenceClone = currentTreeReference.clone();
+                    TreeReference indexKey = getIndexKey(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
+                    boolean currentReferenceIsKey = indexKey != null;
+                    boolean currentReferenceIsValue = resultRef.equals(currentReferenceClone.genericize().removePredicates());
+                    if (currentReferenceIsKey) {
+                        TreeReference valueRef = tempKeyValueKepper.get(currentTreeReference.getParentRef());
+                        boolean valueRefFound = valueRef != null;
+                        if (valueRefFound) {
+                            if (treeReferenceListMap.get(indexKey) == null) {
+                                treeReferenceListMap.put(indexKey, new ArrayList<>());
+                            }
+                            List<TreeReference> matches = treeReferenceListMap.get(indexKey);
+                            //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            matches.add(valueRef);
+                        } else {
+                            //Put the common parent as the key
+                            tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
+                        }
+                    }
+                    if (currentReferenceIsValue) {
+                        TreeReference keyRef = tempKeyValueKepper.get( currentTreeReference.getParentRef());
+                        boolean keyRefFound = keyRef != null && keyRef.genericize().removePredicates().equals(expressionRef);
+                        if (keyRefFound ) {
+                            indexKey = getIndexKey(keyRef, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
+
+                            if (treeReferenceListMap.get(indexKey) == null) {
+                                treeReferenceListMap.put(indexKey, new ArrayList<>());
+                            }
+                            List<TreeReference> matches = treeReferenceListMap.get(indexKey);
+                            //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            matches.add(currentTreeReference);
+                        }else{
+                            tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
+                        }
+                    }//TargerRef
+                }
             }
+
         }
 
-//        public TreeReference trimToLevel(TreeReference template, TreeReference toTrim){
-//            TreeReference trimmed = toTrim.clone()
-//        }
+        public TreeReference trimToLevel(TreeReference template, TreeReference toTrim){
+            TreeReference trimmed = toTrim.clone().getSubReference(template.size()-1);
+            return trimmed;
+        }
 
         public List<TreeReference> getFromIndex(TreeReference treeReference) {
             return treeReferenceListMap.get(treeReference);
@@ -1102,8 +1144,8 @@ public class XFormParser implements IXFormParserFunctions {
 
         public boolean belong(TreeReference currentTreeReference) {
             TreeReference genericizedTreeRef = currentTreeReference.genericize().removePredicates();
-            if ( genericizedTreeRef.getInstanceName().equals(keyRef.getInstanceName()) &&
-                (genericizedTreeRef.equals(keyRef) ||  genericizedTreeRef.equals(valueRef))) {
+            if ( genericizedTreeRef.getInstanceName().equals(expressionRef.getInstanceName()) &&
+                (genericizedTreeRef.equals(expressionRef) ||  genericizedTreeRef.equals(resultRef))) {
                 return true;
             }
             return false;
@@ -1112,14 +1154,14 @@ public class XFormParser implements IXFormParserFunctions {
         TreeReference getIndexKey(TreeReference refToIndex, String value) {
             if(value == null){ return null; }
             if (indexType == NodesetType.GENERIC_PATH) {
-                return keyRef;
+                return expressionRef;
             } else if (indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH) {
 
                 Predicator predicator = predicators[0];
                 TreeReference genericizedRefToIndex = refToIndex.genericize();
                 String refLastLevel = ((XPathPathExpr) ((XPathEqExpr) predicator.predicate).a).getReference().getNameLast();
 
-                if (keyRef.equals(genericizedRefToIndex)) {
+                if (expressionRef.equals(genericizedRefToIndex)) {
                     XPathStep[] xPathSteps = new XPathStep[]{new XPathStep(XPathStep.AXIS_CHILD, new XPathQName(refLastLevel))};
                     XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE, xPathSteps);
                     XPathStringLiteral b = new XPathStringLiteral(value);
@@ -1135,13 +1177,14 @@ public class XFormParser implements IXFormParserFunctions {
                 TreeReference genericizedRefToIndex = refToIndex.genericize();
                 String refLastLevel = ((XPathPathExpr) ((XPathEqExpr) predicator.predicate).a).getReference().getNameLast();
 
-                if (keyRef.equals(genericizedRefToIndex)) {
+                if (expressionRef.equals(genericizedRefToIndex)) {
                     XPathStep[] xPathSteps = new XPathStep[]{new XPathStep(XPathStep.AXIS_CHILD, new XPathQName(refLastLevel))};
                     XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE, xPathSteps);
                     XPathStringLiteral b = new XPathStringLiteral(value);
                     XPathEqExpr xPathEqExpr = new XPathEqExpr(true, a, b);
                     genericizedRefToIndex.addPredicate(predicator.stepIndex, Arrays.asList(xPathEqExpr));
                     genericizedRefToIndex.removeLastLevel();
+                    genericizedRefToIndex.add("label", -1);
                     return genericizedRefToIndex;
                 }
             }
@@ -1724,7 +1767,7 @@ public class XFormParser implements IXFormParserFunctions {
 
                 XPathPathExpr valuePath = XPathReference.getPathExpr(valueXpath);
                 itemset.valueRef = null;
-                // itemset.valueRef = FormInstance.unpackReference(getAbsRef(new XPathReference(valuePath), itemset.nodesetRef));
+                // itemset.resultRef = FormInstance.unpackReference(getAbsRef(new XPathReference(valuePath), itemset.nodesetRef));
                 itemset.valueExpr = new XPathConditional(valuePath);
             }
         }

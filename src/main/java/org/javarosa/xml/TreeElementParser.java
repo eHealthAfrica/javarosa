@@ -86,12 +86,12 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
                     break;
                 case KXmlParser.END_TAG:
-                    if(parser.getDepth() == depth && currentTreeReference.getNameLast() != null){
-                        for(XFormParser.Indexer indexer: indexers) {
-                            if(indexer.belong(currentTreeReference)){
-                                indexer.addToIndex(currentTreeReference, element);
-                            }
-                        }
+                    if(parser.getDepth() == depth && currentTreeReference.size() > 0 && currentTreeReference.getNameLast() != null){
+//                        for(XFormParser.Indexer indexer: indexers) {
+//                            if(indexer.belong(currentTreeReference)){
+//                                indexer.addToIndex(currentTreeReference, element);
+//                            }
+//                        }
                         currentTreeReference.removeLastLevel();
                     }
                     return element;
