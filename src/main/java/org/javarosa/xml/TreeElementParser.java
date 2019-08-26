@@ -44,22 +44,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
     public static List<TreeReference>  getFromIndex(TreeReference treeReference){
 
-
         for(XFormParser.Indexer indexer : indexers ){
-
-            Iterator<TreeReference> iterator = indexer.treeReferenceListMap.keySet().iterator();
-            while (iterator.hasNext()){
-                TreeReference tr = iterator.next();
-                //System.out.println((XPathStringLiteral)(((XPathEqExpr)iterator.next().getPredicate(1).get(0)).b));
-                System.out.println(tr.equals(treeReference));
-                System.out.println(tr.genericize().equals(treeReference.genericize()));
-                System.out.println(tr.genericize().toString() + "===" + treeReference.genericize().toString());
-            }
-
-
-
-
-
             if(indexer.getFromIndex(treeReference) != null){
                 return indexer.getFromIndex(treeReference);
             }
@@ -102,13 +87,18 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                     break;
                 case KXmlParser.END_TAG:
                     if(parser.getDepth() == depth && currentTreeReference.getNameLast() != null){
+                        for(XFormParser.Indexer indexer: indexers) {
+                            if(indexer.belong(currentTreeReference)){
+                                indexer.addToIndex(currentTreeReference, element);
+                            }
+                        }
                         currentTreeReference.removeLastLevel();
                     }
                     return element;
                 case KXmlParser.TEXT:
                     element.setValue(new UncastData(parser.getText().trim()));
                     for(XFormParser.Indexer indexer: indexers) {
-                        if(indexer.belong(currentTreeReference, element)){
+                        if(indexer.belong(currentTreeReference)){
                             indexer.addToIndex(currentTreeReference, element);
                         }
                     }

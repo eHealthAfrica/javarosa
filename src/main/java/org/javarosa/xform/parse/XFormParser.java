@@ -1004,75 +1004,148 @@ public class XFormParser implements IXFormParserFunctions {
     public enum NodesetType{
         GENERIC_PATH,
         LAST_EQUAL_PREDICATE_PATH,
-       MID_EQUAL_PREDICATE_PATH
+       SINGLE_MID_EQUAL_PREDICATE_PATH,
+    }
+
+    public class Predicator {
+
+        public Predicator(int stepIndex, XPathExpression predicate){
+            this.stepIndex = stepIndex;
+            this.predicate = predicate;
+        }
+
+        int stepIndex;
+        XPathExpression predicate;
     }
 
     public static class Indexer {
-        public TreeReference indexRef;
+
+
+        public TreeReference keyRef;
+        public TreeReference valueRef;
+        public Predicator[] predicators;
         public NodesetType indexType;
         public Map<TreeReference, List<TreeReference>> treeReferenceListMap;
 
-        public Indexer(TreeReference indexRef, NodesetType indexType) {
-            this.indexRef = indexRef;
+        public Indexer(NodesetType indexType, TreeReference keyRef, TreeReference valueRef) {
+            this(indexType, keyRef, valueRef, null);
+        }
+
+        public Indexer(NodesetType indexType, TreeReference keyRef, TreeReference valueRef, Predicator[] predicators) {
+            this.keyRef = keyRef.removePredicates().genericize();
+            this.valueRef = valueRef.removePredicates().genericize();
             this.indexType = indexType;
+            this.predicators = predicators == null ? new Predicator[0] : predicators;
             treeReferenceListMap = new HashMap<>();
         }
 
+        private Map<TreeReference, TreeReference> tempKeyValueKepper = new HashMap();
+
         public void addToIndex(TreeReference currentTreeReference, TreeElement currentTreeElement) {
-            TreeReference currentReferenceClone = currentTreeReference.clone();
-            TreeReference indexKey = getIndexKey(currentReferenceClone, currentTreeElement);
-            if (indexKey != null) {
-                if (treeReferenceListMap.get(indexKey) == null) {
-                    treeReferenceListMap.put(indexKey, new ArrayList<>());
+            if (indexType == NodesetType.GENERIC_PATH) {
+                if (treeReferenceListMap.get(keyRef) == null) {
+                    treeReferenceListMap.put(keyRef, new ArrayList<>());
                 }
-                List<TreeReference> matches = treeReferenceListMap.get(indexKey);
-                currentReferenceClone.removeLastLevel();
-                matches.add(currentReferenceClone);
+                List<TreeReference> matches = treeReferenceListMap.get(keyRef);
+                //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                matches.add(currentTreeReference);
+            } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH ||
+                indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH
+            ) {
+                if (currentTreeReference.genericize().removePredicates().equals(keyRef) ||
+                    currentTreeReference.genericize().removePredicates().equals(valueRef)
+                ) {
+                    TreeReference currentReferenceClone = currentTreeReference.clone();
+                    TreeReference indexKey = getIndexKey(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
+                    boolean currentReferenceIsKey = indexKey != null;
+                    boolean currentReferenceIsValue = valueRef.equals(currentReferenceClone.genericize().removePredicates());
+                    if (currentReferenceIsKey) {
+                        TreeReference valueRef = tempKeyValueKepper.get(currentTreeReference.getParentRef());
+                        boolean valueRefFound = valueRef != null;
+                        if (valueRefFound) {
+                            if (treeReferenceListMap.get(indexKey) == null) {
+                                treeReferenceListMap.put(indexKey, new ArrayList<>());
+                            }
+                            List<TreeReference> matches = treeReferenceListMap.get(indexKey);
+                            //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            matches.add(valueRef);
+                        } else {
+                            //Put the common parent as the key
+                            tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
+                        }
+                    }
+                    if (currentReferenceIsValue) {
+                        TreeReference keyRef = tempKeyValueKepper.get( currentTreeReference.getParentRef());
+                        boolean keyRefFound = keyRef != null;
+                        if (keyRefFound) {
+                            if (treeReferenceListMap.get(keyRef) == null) {
+                                treeReferenceListMap.put(keyRef, new ArrayList<>());
+                            }
+                            List<TreeReference> matches = treeReferenceListMap.get(keyRef);
+                            //TODO: equate with valueRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            matches.add(currentTreeReference);
+                        }else{
+                            tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
+                        }
+                    }
+                }
             }
         }
+
+//        public TreeReference trimToLevel(TreeReference template, TreeReference toTrim){
+//            TreeReference trimmed = toTrim.clone()
+//        }
 
         public List<TreeReference> getFromIndex(TreeReference treeReference) {
             return treeReferenceListMap.get(treeReference);
         }
 
-        public boolean belong(TreeReference currentTreeReference, TreeElement currentTreeElement){
-            TreeReference indexKey = getIndexKey(currentTreeReference.clone(), currentTreeElement);
-            if (indexKey != null) {
+        public boolean belong(TreeReference currentTreeReference) {
+            TreeReference genericizedTreeRef = currentTreeReference.genericize().removePredicates();
+            if ( genericizedTreeRef.getInstanceName().equals(keyRef.getInstanceName()) &&
+                (genericizedTreeRef.equals(keyRef) ||  genericizedTreeRef.equals(valueRef))) {
                 return true;
             }
             return false;
         }
 
-        TreeReference getIndexKey(TreeReference treeReference, TreeElement treeElement) {
+        TreeReference getIndexKey(TreeReference refToIndex, String value) {
+            if(value == null){ return null; }
             if (indexType == NodesetType.GENERIC_PATH) {
-                return treeReference.genericize();
+                return keyRef;
             } else if (indexType == NodesetType.LAST_EQUAL_PREDICATE_PATH) {
 
-                TreeReference refToIndex = treeReference.genericize();
-                TreeReference templateIndex = indexRef.removePredicates();
+                Predicator predicator = predicators[0];
+                TreeReference genericizedRefToIndex = refToIndex.genericize();
+                String refLastLevel = ((XPathPathExpr) ((XPathEqExpr) predicator.predicate).a).getReference().getNameLast();
 
-                String refLastLevel = refToIndex.getNameLast();
-                String indexLastLevel = templateIndex.getNameLast();
-
-                refToIndex.removeLastLevel();
-                templateIndex.removeLastLevel();
-
-                if(refToIndex.equals(templateIndex) && refLastLevel.equals(indexLastLevel)){
+                if (keyRef.equals(genericizedRefToIndex)) {
                     XPathStep[] xPathSteps = new XPathStep[]{new XPathStep(XPathStep.AXIS_CHILD, new XPathQName(refLastLevel))};
-                    XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE,xPathSteps);
-                    XPathStringLiteral b = new XPathStringLiteral(treeElement.getValue().getDisplayText());
+                    XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE, xPathSteps);
+                    XPathStringLiteral b = new XPathStringLiteral(value);
                     XPathEqExpr xPathEqExpr = new XPathEqExpr(true, a, b);
-                    refToIndex.addPredicate(1, Arrays.asList(xPathEqExpr));
-                    indexRef.genericize().removeLastLevel();
-                    return refToIndex;
+                    genericizedRefToIndex.addPredicate(predicator.stepIndex, Arrays.asList(xPathEqExpr));
+                    genericizedRefToIndex.removeLastLevel();
+                    return genericizedRefToIndex;
                 }
-                return null;
 
+            } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH) {
 
+                Predicator predicator = predicators[0];
+                TreeReference genericizedRefToIndex = refToIndex.genericize();
+                String refLastLevel = ((XPathPathExpr) ((XPathEqExpr) predicator.predicate).a).getReference().getNameLast();
 
-            } else {
-                return null;
+                if (keyRef.equals(genericizedRefToIndex)) {
+                    XPathStep[] xPathSteps = new XPathStep[]{new XPathStep(XPathStep.AXIS_CHILD, new XPathQName(refLastLevel))};
+                    XPathPathExpr a = new XPathPathExpr(XPathPathExpr.INIT_CONTEXT_RELATIVE, xPathSteps);
+                    XPathStringLiteral b = new XPathStringLiteral(value);
+                    XPathEqExpr xPathEqExpr = new XPathEqExpr(true, a, b);
+                    genericizedRefToIndex.addPredicate(predicator.stepIndex, Arrays.asList(xPathEqExpr));
+                    genericizedRefToIndex.removeLastLevel();
+                    return genericizedRefToIndex;
+                }
             }
+            return null;
         }
     }
 
@@ -1080,8 +1153,9 @@ public class XFormParser implements IXFormParserFunctions {
         //Check if it's a genericized ref
         boolean isGenericPath = true;
         boolean onlyLastPredicate = false;
+        boolean singleMiddlePredicate = false;
         int noOfSteps = xPathPathExpr.steps.length;
-        for(int i = 0; i < noOfSteps; i++){
+        for (int i = 0; i < noOfSteps; i++) {
             XPathStep xPathStep = xPathPathExpr.steps[i];
             if(xPathStep.axis == XPathStep.AXIS_CHILD){
                 //Check if step has predicate
@@ -1090,8 +1164,12 @@ public class XFormParser implements IXFormParserFunctions {
                     isGenericPath = false;
                     int lastIndex = noOfSteps - 1;
                     //Only last index has predicate
-                    if(onlyLastPredicate == false && i == lastIndex){
+                    if (onlyLastPredicate == false && i == lastIndex) {
                         onlyLastPredicate = true;
+                    } else if (singleMiddlePredicate == false && i < lastIndex){
+                        singleMiddlePredicate = true;
+                    } else if (singleMiddlePredicate == true && i < lastIndex){
+                        singleMiddlePredicate = false;
                     } else {
                         onlyLastPredicate = false;
                     }
@@ -1100,18 +1178,42 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         if(isGenericPath) {
-            return new Indexer(xPathPathExpr.getReference(), NodesetType.GENERIC_PATH);
+            TreeReference keyValueRef = xPathPathExpr.getReference();
+            return new Indexer(NodesetType.GENERIC_PATH, keyValueRef,keyValueRef);
         } else if(onlyLastPredicate) {
-            XPathStep lastXPathStep = xPathPathExpr.steps[noOfSteps - 1];
+            int lastStepIndex = noOfSteps - 1;
+            XPathStep lastXPathStep = xPathPathExpr.steps[lastStepIndex];
             //We are currently handling only one predicate
             if(lastXPathStep.predicates.length == 1){
                 XPathExpression predicateXpression = lastXPathStep.predicates[0];
                 //We are currently handling only XPathEqExpr
                 if(predicateXpression instanceof XPathEqExpr){
                     //We want to get the absolute path
-                    TreeReference left = ((XPathPathExpr)((XPathEqExpr) predicateXpression).a).getReference().contextualize(xPathPathExpr.getReference());
-                    return new Indexer(left, NodesetType.LAST_EQUAL_PREDICATE_PATH);
+                    TreeReference keyRef = ((XPathPathExpr)((XPathEqExpr) predicateXpression).a).getReference().contextualize(xPathPathExpr.getReference());
+                    TreeReference valueRef = xPathPathExpr.getReference().removePredicates().genericize();
+                    return new Indexer(NodesetType.LAST_EQUAL_PREDICATE_PATH, keyRef, valueRef,
+                        Arrays.asList(new Predicator(lastStepIndex, predicateXpression)).toArray(new Predicator[0]));
                 }
+            }
+        } else if (singleMiddlePredicate) {
+            int predicateStepIndex = -1;
+            for(int i = 0; i <  xPathPathExpr.steps.length; i++){
+                XPathStep xPathStep = xPathPathExpr.steps[i];
+                if(xPathStep.predicates.length > 0){
+                    predicateStepIndex = i;
+                    break;
+                }
+            }
+
+            XPathStep midPredicateStep = xPathPathExpr.steps[predicateStepIndex];
+            XPathExpression predicateXpression = midPredicateStep.predicates[0];
+            //We are currently handling only XPathEqExpr
+            if(predicateXpression instanceof XPathEqExpr){
+                //We want to get the absolute path
+                TreeReference keyRef = ((XPathPathExpr)((XPathEqExpr) predicateXpression).a).getReference().contextualize(xPathPathExpr.getReference().getSubReference(predicateStepIndex));
+                TreeReference valueRef = xPathPathExpr.getReference().removePredicates();
+                return new Indexer(NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH, keyRef, valueRef,
+                    Arrays.asList(new Predicator(predicateStepIndex, predicateXpression)).toArray(new Predicator[1]));
             }
         }
 
@@ -2046,6 +2148,18 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         addBinding(binding);
+
+        if(binding.calculate != null){
+            XPathPathExpr nodesetXPathPathExpr = getXPathPathExpr(binding.calculate.getExpr());
+            if(nodesetXPathPathExpr != null){
+                Indexer indexer = getIndexer(nodesetXPathPathExpr);
+                if(indexer != null){
+                    TreeElementParser
+                        .indexers.add(indexer);
+                }
+            }
+        }
+
     }
 
     private void addBinding(DataBinding binding) {

@@ -19,6 +19,7 @@ package org.javarosa.xpath;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.List;
@@ -42,6 +43,8 @@ import org.javarosa.xpath.expr.XPathPathExpr;
 import org.javarosa.xpath.expr.XPathStep;
 import org.javarosa.xpath.expr.XPathUnaryOpExpr;
 import org.javarosa.xpath.parser.XPathSyntaxException;
+
+import javax.xml.xpath.XPath;
 
 public class XPathConditional implements IConditionExpr {
     private XPathExpression expr;
@@ -71,28 +74,41 @@ public class XPathConditional implements IConditionExpr {
 
     public Object evalRaw (DataInstance model, EvaluationContext evalContext) {
         try{
-            return XPathFuncExpr.unpack(expr.eval(model, evalContext));
+            TreeReference treeReference = preEvaluateEqExprInContext(model, evalContext);
+            List<TreeReference> refsFromIndex = treeReference == null ? null : TreeElementParser.getFromIndex(treeReference);
+            if(treeReference != null && refsFromIndex != null){
+                 refsFromIndex.get(0).add("label", 0);
+                return refsFromIndex;
+            }else {
+                return XPathFuncExpr.unpack(expr.eval(model, evalContext));
+            }
         } catch(XPathUnsupportedException e){
             if(xpath != null){
                 throw new XPathUnsupportedException(xpath);
             }else{
                 throw e;
             }
-
-
         }
     }
 
-    public TreeReference preEvaluateInContext(DataInstance model, EvaluationContext evalContext){
-        XPathStep lastStep = ((XPathPathExpr) expr).steps[((XPathPathExpr) expr).steps.length -1];
-        XPathExpression[] predicatePathExprs = lastStep.predicates;
-        if(predicatePathExprs.length == 1 && predicatePathExprs[0] instanceof XPathEqExpr){
-            XPathEqExpr xpathEqExpr = (XPathEqExpr) predicatePathExprs[0];
-            xpathEqExpr.transformBValue(model, evalContext);
-            TreeReference treeReference = ((XPathPathExpr) expr).getReference();
-            return treeReference;
+    public TreeReference preEvaluateEqExprInContext(DataInstance model, EvaluationContext evalContext){
+        TreeReference treeReference = null;
+        if(expr instanceof XPathPathExpr){
+            XPathPathExpr xPathPathExpr =(XPathPathExpr) expr;
+            treeReference = xPathPathExpr.getReference();
+            for(int i = 0; i < xPathPathExpr.steps.length; i++){
+                XPathStep xPathStep = xPathPathExpr.steps[i];
+                if(xPathStep.predicates.length > 0){
+                    XPathExpression[] predicatePathExprs = xPathStep.predicates;
+                    if(predicatePathExprs.length == 1 && predicatePathExprs[0] instanceof XPathEqExpr){
+                        XPathEqExpr xpathEqExpr = (XPathEqExpr) predicatePathExprs[0];
+                        XPathEqExpr xpathEqExpr2 = xpathEqExpr.transformBValue(model, evalContext);
+                        treeReference.addPredicate(i, Arrays.asList(xpathEqExpr2));
+                    }
+                }
+            }
         }
-        return null;
+        return treeReference;
     }
 
     public boolean eval (DataInstance model, EvaluationContext evalContext) {
@@ -105,9 +121,10 @@ public class XPathConditional implements IConditionExpr {
 
     public List<TreeReference> evalNodeset (DataInstance model, EvaluationContext evalContext) {
         if (expr instanceof XPathPathExpr) {
-            TreeReference treeReference = preEvaluateInContext(model, evalContext);
-            if(treeReference != null && TreeElementParser.getFromIndex(treeReference) != null){
-                return TreeElementParser.getFromIndex(treeReference);
+            TreeReference treeReference = preEvaluateEqExprInContext(model, evalContext);
+            List<TreeReference> resFromIndex = TreeElementParser.getFromIndex(treeReference);
+            if(treeReference != null && resFromIndex != null){
+                return resFromIndex;
             }else {
                 return ((XPathPathExpr)expr).eval(model, evalContext).getReferences();
             }
