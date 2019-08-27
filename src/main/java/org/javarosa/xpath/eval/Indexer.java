@@ -113,7 +113,7 @@ public class Indexer {
         return nodesetExprDict.get(treeReference);
     }
 
-    public IAnswerData  getRVFromIndex(TreeReference treeReference) {
+    public IAnswerData getRawValueFromIndex(TreeReference treeReference) {
         return rawValueExprDict.get(treeReference);
     }
 
