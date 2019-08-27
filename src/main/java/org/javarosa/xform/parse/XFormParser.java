@@ -1070,36 +1070,29 @@ public class XFormParser implements IXFormParserFunctions {
 
 
             } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH ) {
-                if (currentTreeReference.genericize().removePredicates().equals(expressionRef) ||
-                    currentTreeReference.genericize().removePredicates().equals(resultRef)
-                ) {
+                if (currentTreeReference.genericize().removePredicates().equals(expressionRef)) {
                     TreeReference currentReferenceClone = currentTreeReference.clone();
                     TreeReference indexKey = withPredicates(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
-                    boolean currentReferenceIsKey = indexKey != null;
-                    boolean currentReferenceIsValue = resultRef.equals(currentReferenceClone.genericize().removePredicates());
-                    if (currentReferenceIsKey) {
-                        IAnswerData valueRef = tempValueKepper.get(currentTreeReference.getParentRef());
-                        boolean valueRefFound = valueRef != null;
-                        if (valueRefFound) {
-                            if (nodesetExprDict.get(indexKey) == null) {
-                                nodesetExprDict.put(indexKey, new ArrayList<>());
-                            }
-                            //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
-                            rawValueExprDict.put(indexKey, valueRef);
-                        } else {
-                            //Put the common parent as the key
-                            tempKeyKepper.put(currentTreeReference.getParentRef(), indexKey);
+                    IAnswerData valueRef = tempValueKepper.get(currentTreeReference.getParentRef());
+                    boolean valueRefFound = valueRef != null;
+                    if (valueRefFound) {
+                        if (nodesetExprDict.get(indexKey) == null) {
+                            nodesetExprDict.put(indexKey, new ArrayList<>());
                         }
+                        rawValueExprDict.put(indexKey, valueRef);
+                    } else {
+                        //Put the common parent as the key
+                        tempKeyKepper.put(currentTreeReference.getParentRef(), indexKey);
                     }
-                    if (currentReferenceIsValue) {
-                        TreeReference keyRef = tempKeyKepper.get(currentTreeReference.getParentRef());
-                        boolean keyRefFound = keyRef != null && keyRef.genericize().removePredicates().equals(expressionRef);
-                        if (keyRefFound ) {
-                            rawValueExprDict.put(keyRef, currentTreeElement.getValue());
-                        }else{
-                            tempValueKepper.put(currentTreeReference.getParentRef(), currentTreeElement.getValue());
-                        }
-                    }//TargerRef
+                } else if(currentTreeReference.genericize().removePredicates().equals(resultRef)){
+                    TreeReference keyRef = tempKeyKepper.get(currentTreeReference.getParentRef());
+                    boolean keyRefFound = keyRef != null && keyRef.genericize().removePredicates().equals(expressionRef);
+                    if (keyRefFound ) {
+                        rawValueExprDict.put(keyRef, currentTreeElement.getValue());
+                    }else{
+                        tempValueKepper.put(currentTreeReference.getParentRef(), currentTreeElement.getValue());
+                    }
+
                 }
             }
 
@@ -1118,11 +1111,28 @@ public class XFormParser implements IXFormParserFunctions {
             return rawValueExprDict.get(treeReference);
         }
 
+//        public boolean belong(TreeReference currentTreeReference) {
+//            TreeReference genericizedTreeRef = currentTreeReference.genericize().removePredicates();
+//            if ( genericizedTreeRef.getInstanceName().equals(expressionRef.getInstanceName()) &&
+//                (genericizedTreeRef.equals(expressionRef) ||  genericizedTreeRef.equals(resultRef))) {
+//                return true;
+//            }
+//            return false;
+//        }
+
         public boolean belong(TreeReference currentTreeReference) {
-            TreeReference genericizedTreeRef = currentTreeReference.genericize().removePredicates();
-            if ( genericizedTreeRef.getInstanceName().equals(expressionRef.getInstanceName()) &&
-                (genericizedTreeRef.equals(expressionRef) ||  genericizedTreeRef.equals(resultRef))) {
-                return true;
+            if(!currentTreeReference.getInstanceName().equals(expressionRef.getInstanceName())){
+                return  false;
+            }
+            String treeRefString = currentTreeReference.toString(false);
+            if (indexType.equals(NodesetType.GENERIC_PATH) ||
+                indexType.equals(NodesetType
+                    .LAST_EQUAL_PREDICATE_PATH)
+            ) {
+                return treeRefString.equals(expressionRef.toString(false));
+            }else if (indexType.equals(NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH)) {
+                return treeRefString.equals(expressionRef.toString(false)) ||
+                    treeRefString.equals(resultRef.toString(false));
             }
             return false;
         }
