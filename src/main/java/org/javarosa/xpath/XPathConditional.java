@@ -75,13 +75,16 @@ public class XPathConditional implements IConditionExpr {
     public Object evalRaw (DataInstance model, EvaluationContext evalContext) {
         try{
             TreeReference treeReference = preEvaluateEqExprInContext(model, evalContext);
-            List<TreeReference> refsFromIndex = treeReference == null ? null : TreeElementParser.getFromIndex(treeReference);
-            if(treeReference != null && refsFromIndex != null){
-                 refsFromIndex.get(0).add("label", 0);
-                return refsFromIndex;
-            }else {
+            if(treeReference != null && TreeElementParser.indexed(treeReference)) {
+                List<TreeReference> refsFromIndex = treeReference == null ? null : TreeElementParser.getFromIndex(treeReference);
+                if (treeReference != null && refsFromIndex != null) {
+                    refsFromIndex.get(0).add("label", 0);
+                    return refsFromIndex;
+                }
                 return "";
-                //return XPathFuncExpr.unpack(expr.eval(model, evalContext));
+            }
+            else {
+                return XPathFuncExpr.unpack(expr.eval(model, evalContext));
             }
         } catch(XPathUnsupportedException e){
             if(xpath != null){

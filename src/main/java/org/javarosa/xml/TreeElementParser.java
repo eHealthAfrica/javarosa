@@ -44,8 +44,8 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
     public static List<TreeReference>  getFromIndex(TreeReference treeReference){
 
-        for(XFormParser.Indexer indexer : indexers ){
-            if(indexer.getFromIndex(treeReference) != null){
+        for (XFormParser.Indexer indexer : indexers) {
+            if (indexer.getFromIndex(treeReference) != null) {
                 return indexer.getFromIndex(treeReference);
             }
         }
@@ -86,14 +86,7 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
                     break;
                 case KXmlParser.END_TAG:
-                    if(parser.getDepth() == depth && currentTreeReference.size() > 0 && currentTreeReference.getNameLast() != null){
-//                        for(XFormParser.Indexer indexer: indexers) {
-//                            if(indexer.belong(currentTreeReference)){
-//                                indexer.addToIndex(currentTreeReference, element);
-//                            }
-//                        }
-                        currentTreeReference.removeLastLevel();
-                    }
+                    currentTreeReference.removeLastLevel();
                     return element;
                 case KXmlParser.TEXT:
                     element.setValue(new UncastData(parser.getText().trim()));
@@ -110,6 +103,21 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         }
 
         return element;
+    }
+
+
+    public static boolean indexed(TreeReference treeReference){
+
+        for(XFormParser.Indexer indexer : indexers ){
+            if(indexer.resultRef.genericize().removePredicates()
+                .equals(treeReference.genericize().removePredicates())
+            ){
+                if(indexer.predicators.length > 0 &&
+                    treeReference.getPredicate(indexer.predicators[0].stepIndex) != null)
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**
