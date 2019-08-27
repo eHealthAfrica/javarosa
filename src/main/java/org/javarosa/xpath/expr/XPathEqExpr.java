@@ -75,7 +75,7 @@ XPathEqExpr extends XPathBinaryOpExpr {
     }
 
     public XPathEqExpr transformBValue(DataInstance model, EvaluationContext evalContext) {
-        String bValue = (String) XPathFuncExpr.unpack(b.eval(model, evalContext));
+        String bValue = XPathFuncExpr.unpack(b.eval(model, evalContext)).toString();
         if(bValue != null){
             return new XPathEqExpr(this.equal, this.a, new XPathStringLiteral(bValue));
         }
