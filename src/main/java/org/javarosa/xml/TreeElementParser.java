@@ -158,4 +158,16 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         }
         return null;
     }
+
+    //TODO:This may not be entirely correct
+    public static boolean indexed(TreeReference treeReference){
+        for(Indexer indexer : indexers ){
+            if(indexer.belong(treeReference)){
+                if(indexer.predicateSteps.length > 0 &&
+                    treeReference.getPredicate(indexer.predicateSteps[0].stepIndex) != null)
+                    return true;
+            }
+        }
+        return false;
+    }
 }
