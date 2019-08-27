@@ -32,6 +32,7 @@ import org.javarosa.core.model.actions.SetValueAction;
 import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
 import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
 import org.javarosa.core.model.condition.EvaluationContext;
+import org.javarosa.core.model.condition.IConditionExpr;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
@@ -55,11 +56,14 @@ import org.javarosa.xform.util.InterningKXmlParser;
 import org.javarosa.xform.util.XFormAnswerDataParser;
 import org.javarosa.xform.util.XFormSerializer;
 import org.javarosa.xform.util.XFormUtils;
+import org.javarosa.xml.TreeElementParser;
 import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
 import org.javarosa.xpath.XPathParseTool;
+import org.javarosa.xpath.eval.Indexer;
 import org.javarosa.xpath.expr.XPathEqExpr;
+import org.javarosa.xpath.expr.XPathExpression;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
 import org.javarosa.xpath.expr.XPathStep;
@@ -1073,6 +1077,7 @@ public class XFormParser implements IXFormParserFunctions {
                 parseItem(question, child);
             } else if (isItem && "itemset".equals(childName)) {
                 parseItemset(question, child, parent);
+                Indexer.keepIndex(question.getDynamicChoices().nodesetExpr);
             } else if (actionHandlers.containsKey(childName)) {
                 actionHandlers.get(childName).handle(this, child, question);
             }
@@ -1402,18 +1407,6 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         XPathPathExpr path = XPathReference.getPathExpr(nodesetStr);
-
-        List<XPathPathExpr> xPathPathExprs = null;
-        for(int i = 0; i < path.steps.length; i++){
-            XPathStep xPathStep = path.steps[i];
-            if (xPathStep.predicates.length > 0){
-                if(xPathStep.predicates[0] instanceof XPathEqExpr){
-                    XPathEqExpr xPathEqExpr = (XPathEqExpr) xPathStep.predicates[0];
-                    XPathPathExpr compareKey = ((XPathPathExpr) xPathEqExpr.a);
-                    String filtExpr = (String) compareKey.filtExpr.eval(new EvaluationContext(_f.getNonMainInstance("")));
-                }
-            }
-        }
 
         itemset.nodesetExpr = new XPathConditional(path);
 
@@ -1905,6 +1898,9 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         addBinding(binding);
+        if(binding.calculate != null){
+            Indexer.keepIndex(binding.calculate.getExpr());
+        }
     }
 
     private void addBinding(DataBinding binding) {
