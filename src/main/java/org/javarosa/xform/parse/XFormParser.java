@@ -1085,7 +1085,9 @@ public class XFormParser implements IXFormParserFunctions {
                             }
                             List<TreeReference> matches = nodesetExprDict.get(indexKey);
                             //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
+                            valueRef.setMultiplicity(valueRef.size() -1, -1);
                             matches.add(valueRef);
+                            rawValueExprDict.put(indexKey, currentTreeElement.getValue());
                         } else {
                             //Put the common parent as the key
                             tempKeyValueKepper.put(currentTreeReference, currentReferenceClone);
@@ -1102,7 +1104,9 @@ public class XFormParser implements IXFormParserFunctions {
                             }
                             List<TreeReference> matches = nodesetExprDict.get(indexKey);
                             //TODO: equate with resultRef here instead of removing last, but this is correct since it's last - see trimToLevel
-                            matches.add(currentTreeReference);
+                            currentReferenceClone.setMultiplicity(currentReferenceClone.size() -1, -1);
+                            matches.add(currentReferenceClone);
+                            rawValueExprDict.put(indexKey, currentTreeElement.getValue());
                         }else{
                             tempKeyValueKepper.put(currentTreeReference.getParentRef(), currentReferenceClone);
                         }
@@ -1119,6 +1123,10 @@ public class XFormParser implements IXFormParserFunctions {
 
         public List<TreeReference> getFromIndex(TreeReference treeReference) {
             return nodesetExprDict.get(treeReference);
+        }
+
+        public IAnswerData  getRVFromIndex(TreeReference treeReference) {
+            return rawValueExprDict.get(treeReference);
         }
 
         public boolean belong(TreeReference currentTreeReference) {

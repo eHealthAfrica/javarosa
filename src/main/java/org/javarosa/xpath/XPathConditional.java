@@ -28,12 +28,14 @@ import org.javarosa.core.log.FatalException;
 import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.condition.IConditionExpr;
 import org.javarosa.core.model.condition.pivot.UnpivotableExpressionException;
+import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.core.util.externalizable.DeserializationException;
 import org.javarosa.core.util.externalizable.ExtUtil;
 import org.javarosa.core.util.externalizable.ExtWrapTagged;
 import org.javarosa.core.util.externalizable.PrototypeFactory;
+import org.javarosa.model.xform.XPathReference;
 import org.javarosa.xml.TreeElementParser;
 import org.javarosa.xpath.expr.XPathBinaryOpExpr;
 import org.javarosa.xpath.expr.XPathEqExpr;
@@ -76,10 +78,9 @@ public class XPathConditional implements IConditionExpr {
         try{
             TreeReference treeReference = preEvaluateEqExprInContext(model, evalContext);
             if(treeReference != null && TreeElementParser.indexed(treeReference)) {
-                List<TreeReference> refsFromIndex = treeReference == null ? null : TreeElementParser.getFromIndex(treeReference);
-                if (treeReference != null && refsFromIndex != null) {
-                    refsFromIndex.get(0).add("label", 0);
-                    return refsFromIndex;
+                IAnswerData answerData = treeReference == null ? null : TreeElementParser.getRVFromIndex(treeReference);
+                if (treeReference != null && answerData != null) {
+                    return answerData.getDisplayText();
                 }
                 return "";
             }

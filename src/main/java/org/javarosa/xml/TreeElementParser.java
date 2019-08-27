@@ -1,5 +1,6 @@
 package org.javarosa.xml;
 
+import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
@@ -47,6 +48,16 @@ public class TreeElementParser extends ElementParser<TreeElement> {
         for (XFormParser.Indexer indexer : indexers) {
             if (indexer.getFromIndex(treeReference) != null) {
                 return indexer.getFromIndex(treeReference);
+            }
+        }
+        return null;
+    }
+
+    public static IAnswerData getRVFromIndex(TreeReference treeReference){
+
+        for (XFormParser.Indexer indexer : indexers) {
+            if (indexer.getFromIndex(treeReference) != null) {
+                return indexer.getRVFromIndex(treeReference);
             }
         }
         return null;
