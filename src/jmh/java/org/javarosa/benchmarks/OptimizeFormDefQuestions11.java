@@ -49,6 +49,10 @@ public class OptimizeFormDefQuestions11 {
     @Benchmark
     public void benchmarkAnswerOne(FormControllerAnswerQuestionState state) {
         state.formEntryController.stepToNextEvent();
+        state.formEntryController.stepToNextEvent();
+        state.formEntryController.stepToNextEvent();
+        state.formEntryController.stepToNextEvent();
+        state.formEntryController.stepToNextEvent();
         AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
         FormIndex questionIndex = action.getQuestionIndex();
         IAnswerData answer = action.getAnswer();
@@ -57,18 +61,18 @@ public class OptimizeFormDefQuestions11 {
         state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
     }
 
-    @Benchmark
-    public void benchmarkAnswerAll(FormControllerAnswerQuestionState state) {
-        state.formEntryController.stepToNextEvent();
-        while (state.formEntryModel.getFormIndex().isInForm()) {
-            AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
-            FormIndex questionIndex = action.getQuestionIndex();
-            IAnswerData answer = action.getAnswer();
-            state.formEntryController.saveAnswer(questionIndex, answer, true);
-            state.formEntryController.stepToNextEvent();
-        }
-        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
-    }
+//    @Benchmark
+//    public void benchmarkAnswerAll(FormControllerAnswerQuestionState state) {
+//        state.formEntryController.stepToNextEvent();
+//        while (state.formEntryModel.getFormIndex().isInForm()) {
+//            AnswerCurrentQuestionAction action = new AnswerCurrentQuestionAction(state).invoke();
+//            FormIndex questionIndex = action.getQuestionIndex();
+//            IAnswerData answer = action.getAnswer();
+//            state.formEntryController.saveAnswer(questionIndex, answer, true);
+//            state.formEntryController.stepToNextEvent();
+//        }
+//        state.formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
+//    }
 
 //
 //    @Benchmark

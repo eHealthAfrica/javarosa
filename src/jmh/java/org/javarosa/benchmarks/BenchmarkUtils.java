@@ -134,7 +134,7 @@ public class BenchmarkUtils {
             case "Comments":
                 return new StringData("No Comment");
             case "What population do you want to search for?":
-                return new LongData(699967);
+                return new StringData("699967");
             default:
                 return new StringData("");
         }
