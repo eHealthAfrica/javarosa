@@ -1057,7 +1057,7 @@ public class XFormParser implements IXFormParserFunctions {
                 if (currentTreeReference.genericize().removePredicates().equals(expressionRef)) {
 
                     TreeReference currentReferenceClone = currentTreeReference.clone();
-                    TreeReference expressionRefIndex = withPredicates(currentReferenceClone, currentTreeElement.getValue().getDisplayText());
+                    TreeReference expressionRefIndex = evaluatePredicatesWithValue(currentReferenceClone, currentTreeElement.getValue().getDisplayText());
 
                     TreeReference valueRef = currentTreeReference.getParentRef();
                     if (nodesetExprDict.get(expressionRefIndex) == null) {
@@ -1072,7 +1072,7 @@ public class XFormParser implements IXFormParserFunctions {
             } else if (indexType == NodesetType.SINGLE_MID_EQUAL_PREDICATE_PATH ) {
                 if (currentTreeReference.genericize().removePredicates().equals(expressionRef)) {
                     TreeReference currentReferenceClone = currentTreeReference.clone();
-                    TreeReference indexKey = withPredicates(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
+                    TreeReference indexKey = evaluatePredicatesWithValue(currentReferenceClone, currentTreeElement.getValue() != null ? currentTreeElement.getValue().getDisplayText() : null);
                     IAnswerData valueRef = tempValueKepper.get(currentTreeReference.getParentRef());
                     boolean valueRefFound = valueRef != null;
                     if (valueRefFound) {
@@ -1137,7 +1137,7 @@ public class XFormParser implements IXFormParserFunctions {
             return false;
         }
 
-        TreeReference withPredicates(TreeReference refToIndex, String value) {
+        TreeReference evaluatePredicatesWithValue(TreeReference refToIndex, String value) {
             if(value == null){ return null; }
             if (indexType == NodesetType.GENERIC_PATH) {
                 return expressionRef;
