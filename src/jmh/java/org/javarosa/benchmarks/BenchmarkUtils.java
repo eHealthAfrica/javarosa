@@ -208,7 +208,7 @@ public class BenchmarkUtils {
         return WORKING_DIR;
     }
 
-    public static FormEntryController getFormEntryController(Path formFile) throws IOException {
+    public synchronized static FormEntryController getFormEntryController(Path formFile) throws IOException {
         FormEntryController formEntryController;
         FormEntryModel formEntryModel;
         FormDef formDef = FormParserHelper.parse(formFile);
@@ -218,7 +218,9 @@ public class BenchmarkUtils {
         return formEntryController;
     }
 
-    public static boolean answerNextQuestion(FormEntryController formEntryController, boolean save){
+    static int i = 0;
+    public synchronized static boolean answerNextQuestion(FormEntryController formEntryController, boolean save){
+        System.out .println(i++);
         formEntryController.stepToNextEvent();
         FormIndex questionIndex = formEntryController.getModel().getFormIndex();
         FormEntryPrompt formEntryPrompt = formEntryController.getModel().getQuestionPrompt(questionIndex);

@@ -24,6 +24,7 @@ public class StaticFormAnswerQ1Benchmark {
 
         @Setup(Level.Trial)
         public void initialize() throws IOException {
+            System.out.print("initialixze");
             formEntryController = BenchmarkUtils.getFormEntryController(BenchmarkUtils.getNigeriaWardsXMLWithExternal2ndryInstance());
             formEntryController.stepToNextEvent();
             formEntryController.jumpToIndex(FormIndex.createBeginningOfFormIndex());
@@ -32,11 +33,13 @@ public class StaticFormAnswerQ1Benchmark {
 
     @Benchmark
     public void benchmarkAnswerQ1(FormControllerAnswerQuestionState state) {
+        System.out.println("benchmarkAnswerQ1 - "+ Thread.currentThread().getName());
         BenchmarkUtils.answerNextQuestion(state.formEntryController, false);
     }
 
     @Benchmark
     public void benchmarkAnswerSaveQ1(FormControllerAnswerQuestionState state) {
+        System.out.print("benchmarkAnswerSaveQ1 - "+ Thread.currentThread().getName());
         BenchmarkUtils.answerNextQuestion(state.formEntryController,true);
     }
 

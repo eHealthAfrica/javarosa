@@ -76,7 +76,7 @@ javadoc {
 }
 
 jmh {
-    include = "(StaticForm)"
+    include = "(StaticFormAnswerQ1Benchmark)"
     exclude = "(BenchmarkTemplate)"
     threads = 1
     fork = 1
@@ -88,8 +88,8 @@ jmh {
     iterations = 1
     timeOnIteration = '2s'
     timeUnit = 's'
-    benchmarkMode = ['avgt','ss']
-    includeTests = true
+    benchmarkMode = ['ss']
+    includeTests = false
     resultFormat = 'CSV'
     forceGC = true
 }
