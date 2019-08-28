@@ -220,8 +220,6 @@ public class BenchmarkUtils {
 
     static int i = 0;
     public synchronized static boolean answerNextQuestion(FormEntryController formEntryController, boolean save){
-        System.out .println(i++);
-        formEntryController.stepToNextEvent();
         FormIndex questionIndex = formEntryController.getModel().getFormIndex();
         FormEntryPrompt formEntryPrompt = formEntryController.getModel().getQuestionPrompt(questionIndex);
         QuestionDef question = formEntryPrompt.getQuestion();
