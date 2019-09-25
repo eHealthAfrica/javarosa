@@ -22,7 +22,7 @@ Evaluating xpath expressions that reference secondary instances with a large dat
 
 With the comprehensive structure of an XML document comes its verbosity. By verbosity, we specifically mean the larger number of nodes to traverse through when evaluating XPath queries (searching for a particular node/text or nodes that match the XPath expression) in the XML document. This causes a decrease in efficiency which becomes more noticeable when querying large XML documents.
 
-[XForms](https://opendatakit.github.io/xforms-spec/) in [ODK](https://docs.opendatakit.org/form-design-intro) are represented as XML documents. This means that they come with the benefits of referencing and querying the entities and attributes of the XML documents using XPath expressions; the entities and attributes of the XML Document can be evaluated when filling the form in order to present the user with dynamic data based on inputted or other non-static data.
+[XForms](https://opendatakit.github.io/xforms-spec/) in [ODK](https://docs.opendatakit.org/form-design-intro) are represented as XML documents. This means that they come with the benefits of being able to reference and query the entities and attributes of the underlying XML document using XPath expressions; the entities and attributes of the XML Document can be evaluated when filling the form in order to present the user with dynamic data based on inputted or other non-static data.
 
 XForms basically have two sections, the Head and the Body. The Head consists of the main instance which holds the form structure and, optionally, secondary instances which hold data. Secondary instances are mostly used for preloading read-only data that is used in the form.
 
@@ -35,9 +35,9 @@ Evaluation Results can be:
 - [Boolean](https://github.com/opendatakit/javarosa/blob/bad552bbecfd75d2d12ba2ff8cc8c028ecea77ab/src/main/java/org/javarosa/xpath/XPathConditional.java#L83) values (to specify conditions),
 - [Raw](https://github.com/opendatakit/javarosa/blob/bad552bbecfd75d2d12ba2ff8cc8c028ecea77ab/src/main/java/org/javarosa/xpath/XPathConditional.java#L69) values (which are values that haven&#39;t been cast)
 
-In [ODK Collect](https://docs.opendatakit.org/collect-intro), JavaRosa is the main library used for parsing XForms, secondary instances and also evaluating XPath expressions that reference the secondary instances contained in the form.
+In [ODK Collect](https://docs.opendatakit.org/collect-intro), JavaRosa is the main library used to parse XForms and secondary instances, and also to evaluate XPath expressions that reference the secondary instances contained in the form.
 
-In order to understand the JavaRosa parsing and evaluation, some important classes need to be understood.
+In order to understand JavaRosa parsing and evaluation, some important classes need to be understood.
 
 
 
@@ -45,9 +45,9 @@ In order to understand the JavaRosa parsing and evaluation, some important class
 
 1. [TreeElement](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/instance/TreeElement.java):
   - Represents a node or element in the form instance XML tree.
-  - Keeps information about the _node&#39;s [name](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L70)_,  [_children_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L78)(which are also TreeElements), [_parent_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L72), [_position_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L71) (Location within its siblings - see [multiplicity](https://github.com/opendatakit/javarosa/blob/bad552bbecfd75d2d12ba2ff8cc8c028ecea77ab/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L71)) and text element content (IAnswerData)
-  - All TreeElements have a parent (except the root node) and have children (except leaf nodes, which contain data - see [IAnswerData](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/data/IAnswerData.java)).
-  - A TreeElement node with a [IAnswerData](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/data/IAnswerData.java) is a leaf node.
+  - Keeps information about the _node&#39;s [name](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L70)_,  [_children_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L78)(which are also TreeElements), [_parent_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L72), [_position_](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L71) (location in relations to its siblings - see [multiplicity](https://github.com/opendatakit/javarosa/blob/bad552bbecfd75d2d12ba2ff8cc8c028ecea77ab/src/main/java/org/javarosa/core/model/instance/TreeElement.java#L71)) and text element content (IAnswerData)
+  - All TreeElements have a parent (except the root node) and children (except leaf nodes, which contain data - see [IAnswerData](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/data/IAnswerData.java)).
+  - A TreeElement node with an [IAnswerData](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/data/IAnswerData.java) is a leaf node.
   - The `<cars>...</cars>` TreeElement is the root TreeElement with 10000 children
   - The first `<car>...</car>` TreeElements has `<cars>` as it's Parent and a multiplicity of 1 since it's the first among it's siblings
 
@@ -70,26 +70,26 @@ In order to understand the JavaRosa parsing and evaluation, some important class
   - Subclasses of the class XPathExpression include :
     1. [XPathStringLiteral](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathStringLiteral.java): Represents a string variable value, for instance, `'John'`
     2. [XPathNumericLiteral](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathNumericLiteral.java): Represents a numeric variable value for instance, `10`
-    3. [XPathEqExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathEqExpr.java): Represents an expression which compares two sides of an equalizer, for instance, It is normally used as a predicate to filter nodeset that meet a condition
+    3. [XPathEqExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathEqExpr.java): Represents an expression which compares two sides of an equalizer, for instance, It is normally used as a predicate to filter a nodeset to return nodes of the set that meet a condition
     4. [XPathArithExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathArithExpr.java): Represents an arithmetic expression, used for basic arithmetic operations, for instance _/root/state/size | /root/state/area_
     5. [XPathPathExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathPathExpr.java): Represents a reference to an XML path; usually generic paths when converted to TreeReferences
-      1. [XPathStep](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathStep.java) represents each path of an [XPathPathExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathStep.java), it can also represent a TreeRef erenceLevel
+      1. [XPathStep](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathStep.java) represents each path of an [XPathPathExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathStep.java); it can also represent a TreeReferenceLevel
       2.  Each step could have [Predicates](https://github.com/opendatakit/javarosa/blob/bad552bbecfd75d2d12ba2ff8cc8c028ecea77ab/src/main/java/org/javarosa/xpath/expr/XPathStep.java#L76) which are also XPathExpressions used to subcategorize nodeSets.
     6. [XPathFuncExpr](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathFuncExpr.java): Used to represent XForm functions
     7. [XPathVariableReference](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/expr/XPathVariableReference.java) : Refers to a referenced element in the XML document.
 
  - These child classes can also be part of an XPathExpression.
 
-4. [EvaluationContext](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/condition/EvaluationContext.java) :
+4. [EvaluationContext](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/condition/EvaluationContext.java):
 
-  - XPathPathExpression(s) and TreeReference(s) are not always absolute, The EvaluationContext helps to keep track of context, dependent references of an expression and how it is being evaluated,
-  - XPathPathExpression(s) can consist of other expressions, the EvaluationContext keeps track of the flow of evaluations.
-  - Keeps information of the instances available in order to evaluate paths or references which aren&#39;t absolute.
+  - XPathPathExpressions and TreeReferences are not always absolute, The EvaluationContext helps to keep track of context, dependent references of an expression and how it is being evaluated,
+  - XPathPathExpressions can consist of other expressions; the EvaluationContext keeps track of the flow of evaluations.
+  - Keeps information about the instances available in order to evaluate paths or references which aren&#39;t absolute.
   - Keeps information on the current context of an XPathExpression
   - Helps to keep information about where the current expression is
   - expandReferenceAccumulator : traverses the entire references of the instance to accumulate nodes that match a supposedly ambiguous reference
 
-5. [XPathConditional](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/XPathConditional.java) :
+5. [XPathConditional](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/XPathConditional.java):
   - Represents a part of an XForm where an Expression is used to fetch data
   - Wraps XPathExpressions and used to cast the result to the appropriate usable value
   - Can be triggered when dependent fields change
@@ -101,34 +101,34 @@ In order to understand the JavaRosa parsing and evaluation, some important class
   - The method used in this class depends on where the expression is used in the form.
 6. FormDef
   - Referesents a Form
-6. [QuestionDef](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/QuestionDef.java):  Represent control elements used to get information or display information to the user
+6. [QuestionDef](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/core/model/QuestionDef.java):  Represents control elements used to get information or display information to the user
   - An ItemSet is used to query a FormInstance for elements that match an XPathPathExpression
   - Not all QuestionDefs have ItemSet Expression
 
 ## JavaRosa Expression Evaluation <a name="jee"/>
 
-XPath expressions are used in various parts of an XForm in other to dynamically reference data contained in the form instances. control and binding elements are one of the main parts there they are used. The XFormParser class has registered handlers that handle the interpretation of each of the elements contained in the XForm to the various parts of the FormDef.
+XPath expressions are used in various parts of an XForm in order to dynamically reference data contained in the form instances. control and binding elements are one of the main parts there they are used. The XFormParser class has registered handlers that handle the interpretation of each of the elements contained in the XForm to the various parts of the FormDef.
 
 During the parsing of the XForm, these handlers carry out the interpretation of the different elements contained in the XForm. XPathExpressions often occur as attributes of these elements as Strings.
 
 The class [XPathParseTool](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xpath/XPathParseTool.java) is then used to parse the XPathExpression string into an instance of a subclass of XPathExpression. The AST (Abstract Syntax Tree) structure parsing flow is used to parse the expression string depending on the type which could comprise of one or more XPathExpression subcomponents (just like an equation which could consists of equations - `(5+3)/(3-1)*(1+1)`). Predicates are also parsed if they exist in the expressions.
 
-After being parsed from strings to XPathExpression, the XPathExpression class is represented in JavaRosa Form components as XPathConditional. XPathConditional is used to hold, evaluate and convert the evaluation result to the appropriate types. When an XPathExpression is used in the FormDef, it is usually evaluated to get a result which can be used in a control. This result can be dynamic depending on the type of expression and the current state of the form.
+After being parsed from strings to XPathExpression, the XPathExpression class is represented in JavaRosa Form components as XPathConditional. XPathConditional is used to hold, evaluate and convert the evaluation result to the appropriate types. When an XPathExpression is used in the FormDef, it is usually evaluated to get a result which can be used in a control. This result can be dynamic, depending on the type of expression and the current state of the form.
 
 The XPathExpression is an abstract class that has an eval abstract method that returns an Object when called, the type of object returned depends on the type of XPathExpression.
 
-Evaluation of other XPath expressions are efficient except for the XPathPathExpression type. This is because evaluation of this type of expression most often traverses the XML Document it references in order to return the nodes of the XML document that match it.
+The evaluation of XPath expressions is efficient, except in the case of the XPathPathExpression type. This is because evaluation of this type of expression most often traverses the XML Document it references in order to return the nodes of the XML document that match it.
 
-An XPathPathExpression can be converted to a TreeReference which, when matched with the elements of the XML documents it represents, returns matching node(s) or value(s). In order for this to happen all the nodes of the document need to be traversed and matched with the TreeReference.
+An XPathPathExpression can be converted to a TreeReference which, when matched with the elements of the XML documents it represents, returns matching nodes or values. In order for this to happen all the nodes of the document need to be traversed and checked against the TreeReference.
 
-The time to evaluate XPathPathExpression, therefore, depends on the number of elements in the XML dataset of the instance.
+The time to evaluate an XPathPathExpression, therefore, depends on the number of elements in the XML dataset of the instance.
 
 Major use cases where reduced efficiency is detected:
 
-1. XPathPathExpression used to query ItemSet used for the choices of a select type question: in this case, the XPathPathExpression are generic paths which take a time of O(n) to evaluate since the whole XML tree of the instance tree has to be traversed in order to accumulate matches of the XPathPathExpression.
-2. XPathPathExpression in the calculate attribute of binding elements used to query values that match a specific condition used to prefill input values.
+1. An XPathPathExpression is used to query the ItemSet used for the choices of a select type question. In this case, the XPathPathExpression is a generic path which takes a time of O(n) to evaluate, since the whole XML tree of the instance tree has to be traversed in order to accumulate matches of the XPathPathExpression.
+2. XPathPathExpression in the calculate attribute of a binding element that is used to query values that match a specific condition, and then used to prefill an input value.
 
-The main reason for this O(n) time used to evaluate the queries is because all elements are traversed in order to match each element and node to the XPath expression.
+The main reason for this O(n) time used to evaluate these queries is that all elements are traversed in order to match each element and node against the XPath expression.
 
 For example, let&#39;s consider this secondary instance below
 
@@ -139,25 +139,25 @@ Interpreting the simple XPathPathExpressions
 3. instance(cars)/cars/car/brand : return all the car brands
 4. instance(cars)/cars/car[name=/form/car\_name]/brand : returns all brands with the specified car name
 
-During evaluation, JavaRosa evaluates like so
+During evaluation, JavaRosa evaluates like so:
 
 - When the Form is being parsed, the expression is anchored by an XPathConditional to the Form Control.
-- At the time the expression is to be evaluated, the XPathConditional **eval** method is called (evalRaw, evalNodeset, evalRaw, eval) depending on the expected result of the expression.
-- Converts the xpath string to a XPathPathExpression.
-- Converts the XPathPathExpresion to a generic TreeReference.
-- Traverses through the TreeElement of the Cars secondary instance.
-- Returns all matching nodes as a list of specific TreeReferences.
+- At the time the expression is to be evaluated, the XPathConditional `eval` method is called (`evalRaw`, `evalNodeset`, `evalRaw` or `eval`, depending on the expected result of the expression).
+- The XPath string is converted to an XPathPathExpression.
+- The XPathPathExpression is converted to a generic TreeReference.
+- JavaRosa traverses through the TreeElement of the Cars secondary instance.
+- All matching nodes are returned as a list of specific TreeReferences.
 - If the TreeReference is a leaf node on the TreeElement, it can be converted to a readable value.
 
 
 ## Proposed Solutions:
 
-The key concept being used for these solutions is based on analysing the patterns of the XPathPathExpr XPath expressions. And then creating appropriate dictionaries for the possible results when parsing and creating each node of the Secondary Instance, so that when the expression is evaluated during form initialization or loading, the result of the expression is fetched from the dictionary of the indexer instead of evaluating the expression by traversing the whole form. ** XPaths don't currently support attribute querying this means, Predicates can only be applied to the parents of leaf nodes **
+The key concept being used for these solutions is based on analysing the patterns of the XPathPathExpr XPath expressions, and then creating appropriate dictionaries for the possible results when parsing and creating each node of the Secondary Instance. When the expression is evaluated during form initialization or loading, the result of the expression is then fetched from the dictionary of the indexer instead of evaluating the expression by traversing the whole form. ** XPaths don't currently support attribute querying this means, Predicates can only be applied to the parents of leaf nodes **
 
 - When the XForm is being parsed, the analysis and indexing is hooked unto the respective element parsing handlers, see the handlers [here](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/xform/parse/XFormParser.java#L212).
 - The Question elements are [first handled](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/xform/parse/XFormParser.java#L477) before the [secondary instances](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/xform/parse/XFormParser.java#L488) in the [parseDoc](https://github.com/opendatakit/javarosa/blob/develop/src/main/java/org/javarosa/xform/parse/XFormParser.java) method.
 - When a question element is [handled](https://github.com/opendatakit/javarosa/blob/2acd222e43586e092dc13f76bb1d1a873564a32b/src/main/java/org/javarosa/xform/parse/XFormParser.java#L1000), if it&#39;s a MultipleChoice type and also has an Itemset attached to it:
-  - The nodeset expression of the ItemSet is analysed to see the kind of pattern it is, like the steps and the Predicates that occur in the expression.
+  - The nodeset expression of the ItemSet is analysed to see what kind of pattern it is, i.e. the steps and the predicates that occur in the expression.
   - An Indexer is then created for the expression
   - Appropriate indexers are created for appropriate expressions this way
   - When the instance elements are being interpreted and each node is created, each node is matched to the appropriate indexers to see if it belongs to that Indexer.
@@ -172,7 +172,7 @@ This is based on what has been done before the solutions below in other to solve
 See [@ggalmazor&#39;s](https://github.com/ggalmazor) PR [here](https://github.com/opendatakit/javarosa/pull/438)
 
 - Description:
-  - Basically, the approach the solution takes is Instead of traversing the whole document, The TreeElement is [first filtered based on the node names](https://github.com/opendatakit/javarosa/blob/112ed0bc6581b528dbadc4903b854f54c7b82d72/src/main/java/org/javarosa/core/model/instance/utils/TreeElementChildrenList.java#L123) and feild that match the node and predicate.
+  - Basically, the approach the solution takes is Instead of traversing the whole document, The TreeElement is [first filtered based on the node names](https://github.com/opendatakit/javarosa/blob/112ed0bc6581b528dbadc4903b854f54c7b82d72/src/main/java/org/javarosa/core/model/instance/utils/TreeElementChildrenList.java#L123) and field that match the node and predicate.
 
 - GitHub branch : [Find Here](https://github.com/ggalmazor/javarosa/tree/itemset_filtering)
 
