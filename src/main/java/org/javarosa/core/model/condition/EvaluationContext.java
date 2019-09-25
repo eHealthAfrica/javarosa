@@ -17,6 +17,7 @@
 package org.javarosa.core.model.condition;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +26,13 @@ import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.TreeElement;
 import org.javarosa.core.model.instance.TreeReference;
+import org.javarosa.xform.parse.XFormParser;
 import org.javarosa.xpath.IExprDataType;
+import org.javarosa.xpath.eval.IndexerResolver;
+import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathExpression;
+import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 
 /**
  * A collection of objects that affect the evaluation of an expression, like
@@ -84,6 +90,9 @@ public class EvaluationContext {
         //and is fixed on the context. Anything that changes the context should
         //invalidate this
         currentContextPosition = base.currentContextPosition;
+
+        //#Indexaton
+        indexerResolver = base.getIndexerResolver();
     }
 
     public EvaluationContext(EvaluationContext base, TreeReference context) {
@@ -112,6 +121,9 @@ public class EvaluationContext {
         this.contextNode = TreeReference.rootRef();
         functionHandlers = new HashMap<String, IFunctionHandler>();
         variables = new HashMap<String, Object>();
+
+        //#Indexation
+        indexerResolver = XFormParser.getIndexerResolver();
     }
 
     public DataInstance getInstance(String id) {
@@ -385,4 +397,16 @@ public class EvaluationContext {
             predicateEvaluationProgress = loadingDetails;
         }
     }
+
+    //#Indexation
+    private IndexerResolver indexerResolver;
+    public List<TreeReference> evalNodesetFromIndex(TreeReference treeReference){
+       return indexerResolver.getNodeset(treeReference);
+    }
+
+    public IndexerResolver getIndexerResolver(){
+        return indexerResolver;
+    }
+
+
 }

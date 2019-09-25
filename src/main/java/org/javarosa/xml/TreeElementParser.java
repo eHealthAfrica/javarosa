@@ -1,8 +1,15 @@
 package org.javarosa.xml;
 
+import org.javarosa.core.model.condition.IConditionExpr;
+import org.javarosa.core.model.data.IAnswerData;
 import org.javarosa.core.model.data.UncastData;
 import org.javarosa.core.model.instance.TreeElement;
+import org.javarosa.core.model.instance.TreeReference;
 import org.javarosa.xml.util.InvalidStructureException;
+import org.javarosa.xpath.eval.Indexer;
+import org.javarosa.xpath.eval.IndexerResolver;
+import org.javarosa.xpath.eval.IndexerType;
+import org.javarosa.xpath.eval.PredicateStep;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Node;
 import org.xmlpull.v1.XmlPullParserException;
@@ -32,11 +39,25 @@ public class TreeElementParser extends ElementParser<TreeElement> {
 
     @Override
     public TreeElement parse() throws InvalidStructureException, IOException, XmlPullParserException {
+       return parse(null, null);
+    }
+
+    @Override
+    public TreeElement parse(TreeReference currentTreeReference, IndexerResolver indexerResolver) throws InvalidStructureException, IOException, XmlPullParserException {
         final int depth = parser.getDepth();
         final TreeElement element = new TreeElement(parser.getName(), multiplicity);
         element.setInstanceName(instanceId);
         for (int i = 0; i < parser.getAttributeCount(); ++i) {
             element.setAttribute(parser.getAttributeNamespace(i), parser.getAttributeName(i), parser.getAttributeValue(i));
+        }
+
+        //#Indexation: Create a root TreeReference
+        if(indexerResolver != null && indexerResolver.getIndexers().size() > 0)
+        if(currentTreeReference == null){
+            currentTreeReference = TreeReference.rootRef();
+            currentTreeReference.setInstanceName(element.getInstanceName());
+            currentTreeReference.setContext(TreeReference.CONTEXT_INSTANCE);
+            currentTreeReference.add(element.getName(), 0);
         }
 
         final Map<String, Integer> multiplicitiesByName = new HashMap<>();
@@ -48,21 +69,53 @@ public class TreeElementParser extends ElementParser<TreeElement> {
                     String name = parser.getName();
                     final Integer multiplicity = multiplicitiesByName.get(name);
                     int newMultiplicity = (multiplicity != null) ? multiplicity + 1 : 0;
+
+                    //#Indexation: update current TreeReference
+                    if(indexerResolver != null && indexerResolver.getIndexers().size() > 0)
+                    currentTreeReference.add(name, newMultiplicity);
+
                     multiplicitiesByName.put(name, newMultiplicity);
-                    TreeElement childTreeElement = new TreeElementParser(parser, newMultiplicity, instanceId).parse();
+                    TreeElement childTreeElement = new TreeElementParser(parser, newMultiplicity, instanceId).parse(currentTreeReference,  indexerResolver);
                     element.addChild(childTreeElement);
                     break;
                 case KXmlParser.END_TAG:
+                    //#Indexation
+                    if(indexerResolver != null && indexerResolver.getIndexers().size() > 0) {
+                        //update current TreeReference
+                        currentTreeReference.removeLastLevel();
+                        //if the tree reference is at the end of the document
+                        //Call the finalize to persist the index if necessary
+                        if (currentTreeReference.size() == 0) {
+                            for (Indexer indexer : indexerResolver.getIndexers()) {
+                                indexer.finalizeIndex();
+                                currentTreeReference = null;
+                            }
+                        } else if (parser.getDepth() == depth) { //Index this element if it should be
+                            for (Indexer indexer : indexerResolver.getIndexers()) {
+                                if (indexer.belong(currentTreeReference) && indexer.getIndexerType().equals(IndexerType.GENERIC_PATH)) {
+                                    indexer.addToIndex(currentTreeReference, element);
+                                }
+                            }
+                        }
+                    }
                     return element;
                 case KXmlParser.TEXT:
                     element.setValue(new UncastData(parser.getText().trim()));
+
+                    //#Indexation
+                    //Only generic paths are refIsIndexed like this
+                    if(indexerResolver != null && indexerResolver.getIndexers().size() > 0)
+                    for(Indexer indexer: indexerResolver.getIndexers()) {
+                        if(indexer.belong(currentTreeReference) && !indexer.getIndexerType().equals(IndexerType.GENERIC_PATH)){
+                            indexer.addToIndex(currentTreeReference, element);
+                        }
+                    }
                     break;
                 default:
                     throw new InvalidStructureException(
                         "Exception while trying to parse an XML Tree, got something other than tags and text", parser);
             }
         }
-
         return element;
     }
 
@@ -82,7 +135,6 @@ public class TreeElementParser extends ElementParser<TreeElement> {
             boolean primaryInstanceSkipped = false;
             while (parser.getDepth() >= depth) {
                 nextNonWhitespace();
-
                 if (currentNodeIsInternalInstance()) {
                     // The primary instance is the first instance defined
                     if (!primaryInstanceSkipped) {
@@ -109,4 +161,5 @@ public class TreeElementParser extends ElementParser<TreeElement> {
             && parser.getName().equals(INSTANCE_ELEMENT)
             && parser.getAttributeValue(null,"src") == null;
     }
+
 }

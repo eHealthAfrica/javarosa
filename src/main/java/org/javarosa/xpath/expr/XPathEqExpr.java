@@ -45,7 +45,7 @@ public class XPathEqExpr extends XPathBinaryOpExpr {
     public XPathEqExpr(boolean equal, XPathExpression a, XPathExpression b) {
         super(a, b);
         this.equal = equal;
-        logger.debug("XPathEqExpr{}({}, {}, {})", id(), equal, a, b);
+        //logger.debug("XPathEqExpr{}({}, {}, {})", id(), equal, a, b);
     }
 
     @Override
@@ -98,4 +98,14 @@ public class XPathEqExpr extends XPathBinaryOpExpr {
     private String id() {
         return "@" + Integer.toHexString(System.identityHashCode(this));
     }
+
+    public XPathEqExpr transformBValue(DataInstance model, EvaluationContext evalContext) {
+        String bValue = XPathFuncExpr.unpack(b.eval(model, evalContext)).toString();
+        if(bValue != null){
+            return new XPathEqExpr(this.equal, this.a, new XPathStringLiteral(bValue));
+        }
+        return null;
+    }
+
+
 }
