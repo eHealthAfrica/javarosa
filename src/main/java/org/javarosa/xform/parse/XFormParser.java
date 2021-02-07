@@ -31,6 +31,7 @@ import org.javarosa.core.model.actions.ActionController;
 import org.javarosa.core.model.actions.SetValueAction;
 import org.javarosa.core.model.actions.setgeopoint.SetGeopointActionHandler;
 import org.javarosa.core.model.actions.setgeopoint.StubSetGeopointActionHandler;
+import org.javarosa.core.model.condition.EvaluationContext;
 import org.javarosa.core.model.instance.AbstractTreeElement;
 import org.javarosa.core.model.instance.DataInstance;
 import org.javarosa.core.model.instance.ExternalDataInstance;
@@ -58,8 +59,10 @@ import org.javarosa.xml.util.InvalidStructureException;
 import org.javarosa.xml.util.UnfullfilledRequirementsException;
 import org.javarosa.xpath.XPathConditional;
 import org.javarosa.xpath.XPathParseTool;
+import org.javarosa.xpath.expr.XPathEqExpr;
 import org.javarosa.xpath.expr.XPathNumericLiteral;
 import org.javarosa.xpath.expr.XPathPathExpr;
+import org.javarosa.xpath.expr.XPathStep;
 import org.javarosa.xpath.parser.XPathSyntaxException;
 import org.kxml2.io.KXmlParser;
 import org.kxml2.kdom.Document;
@@ -1361,6 +1364,15 @@ public class XFormParser implements IXFormParserFunctions {
         }
     }
 
+
+    public Map<String, List<TreeElement>> createPathIndex(TreeReference list, TreeReference index){
+       TreeElement treeElement = (TreeElement) _f.getNonMainInstance(list.getInstanceName()).resolveReference(list);
+        Map<String,  List<TreeElement>> map = new HashMap<>();
+        map.put("", treeElement.getChildrenWithName("item"));
+        return map;
+    }
+
+
     private void parseItemset(QuestionDef q, Element e, IFormElement qparent) {
         ItemsetBinding itemset = new ItemsetBinding();
 
@@ -1381,7 +1393,7 @@ public class XFormParser implements IXFormParserFunctions {
          * At this point in time, we cannot construct a valid nodesetRef
          *
          * Leave all ...Ref entries as null and test the ...Expr entries for null / non-null values.
-         *
+         *seedStr
          * We will patch this all up in the verifyItemsetBindings() method.
          */
         String nodesetStr = e.getAttributeValue("", NODESET_ATTR);
@@ -1399,7 +1411,10 @@ public class XFormParser implements IXFormParserFunctions {
         }
 
         XPathPathExpr path = XPathReference.getPathExpr(nodesetStr);
+
+
         itemset.nodesetExpr = new XPathConditional(path);
+
         itemset.contextRef = getFormElementRef(q);
         // this is not valid yet...
         itemset.nodesetRef = null;
@@ -1469,6 +1484,30 @@ public class XFormParser implements IXFormParserFunctions {
                 // itemset.valueRef = FormInstance.unpackReference(getAbsRef(new XPathReference(valuePath), itemset.nodesetRef));
                 itemset.valueExpr = new XPathConditional(valuePath);
             }
+        }
+
+
+        List<XPathPathExpr> xPathPathExprs = null;
+        String pathType = "";
+        TreeReference queryRef = null;
+        XPathPathExpr xPathPathExpr = null;
+        for(int i = 0; i < path.steps.length; i++){
+            XPathStep xPathStep = path.steps[i];
+            if(xPathStep.predicates.length > 0){
+                if(xPathStep.predicates[0] instanceof XPathPathExpr){
+                    XPathEqExpr xPathEqExpr = (XPathEqExpr) xPathStep.predicates[0];
+                    XPathPathExpr leftEqualizer = (XPathPathExpr) xPathEqExpr.a;
+                    queryRef = leftEqualizer.getReference();
+                }
+            }
+        }
+
+        if (pathType == "HAS_PREDICATE") {
+            Map<String, List<TreeElement>> pathDictionary = createPathIndex(queryRef.getParentRef(), queryRef);
+            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  queryRef);
+        } else {
+            Map<String, List<TreeElement>> pathDictionary = createPathIndex(path.getReference(), null);
+            itemset.populateChoicesDictionary(pathDictionary, itemset.labelRef, itemset.valueRef,  null);
         }
 
         if (itemset.labelExpr == null) {
